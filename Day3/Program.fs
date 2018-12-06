@@ -23,8 +23,11 @@ let part2 claims =
     |> List.find (fun (x, y, w, h, _) ->
         let overlap = 
             List.tryFind (fun (ox, oy, ow, oh, _) ->
-                true) claims
-        match overlap with Some _ -> true | _ -> false)
+                (ox < x && ox + ow >= x
+                || ox > x && ox <= x + w)
+                && (oy < y && oy + oh >= y
+                || oy > y && oy <= y + h)) claims
+        overlap = None)
     |> fun (_,_,_,_,id) -> id
 
 [<EntryPoint>]
@@ -49,7 +52,7 @@ let main _ =
         |> Seq.map (fun l -> l.[1], l.[2], l.[3], l.[4], l.[0])
         |> Seq.toList
 
-    printfn "%i" <| part1 claims
+    //printfn "%i" <| part1 claims
     printfn "%i" <| part2 claims
 
     0

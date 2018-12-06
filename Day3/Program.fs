@@ -8,25 +8,25 @@ let part1 claims =
             (Int32.MaxValue, Int32.MaxValue, 0, 0)
 
     let contains (x, y) (ox, oy, ow, oh) =
-        x >= ox && x <= ox + ow
-        && y >= oy && y <= oy + oh
+        x >= ox && x < ox + ow
+        && y >= oy && y < oy + oh
 
     [mx..mw] |> List.collect (fun x ->
     [my..mh] |> List.map (fun y -> 
         List.filter (contains (x, y)) claims
         |> fun l -> List.length l > 1))
-    |> List.filter id 
+    |> List.filter id
     |> List.length
 
 [<EntryPoint>]
 let main _ =
     
-    //let lines = File.ReadAllLines "input.txt"
-    let lines = [|
-        "#1 @ 1,3: 4x4"
-        "#2 @ 3,1: 4x4"
-        "#3 @ 5,5: 2x2"
-    |]
+    let lines = File.ReadAllLines "input.txt"
+    // let lines = [|
+    //     "#1 @ 1,3: 4x4"
+    //     "#2 @ 3,1: 4x4"
+    //     "#3 @ 5,5: 2x2"
+    // |]
 
     let splits = [|" ";":";",";"x"|]
     let splitOptions = StringSplitOptions.RemoveEmptyEntries

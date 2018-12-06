@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Day 2",
+            "name": "Day 3",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Day2/bin/Debug/netcoreapp2.1/Day2.dll",
+            "program": "${workspaceFolder}/Day3/bin/Debug/netcoreapp2.1/Day3.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Day2",
+            "cwd": "${workspaceFolder}/Day3",
             "console": "internalConsole",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"

@@ -20,13 +20,15 @@ let part1 claims =
 
 let part2 claims =
     claims
-    |> List.find (fun (x, y, w, h, _) ->
+    |> List.find (fun (x, y, w, h, id) ->
         let overlap = 
-            List.tryFind (fun (ox, oy, ow, oh, _) ->
-                (ox < x && ox + ow >= x
-                || ox > x && ox <= x + w)
-                && (oy < y && oy + oh >= y
-                || oy > y && oy <= y + h)) claims
+            claims 
+            |> List.except [(x, y, w, h, id)]
+            |> List.tryFind (fun (ox, oy, ow, oh, _) ->
+                    (ox <= x && ox + ow > x
+                    || ox >= x && ox < x + w)
+                    && (oy <= y && oy + oh > y
+                    || oy >= y && oy < y + h))
         overlap = None)
     |> fun (_,_,_,_,id) -> id
 

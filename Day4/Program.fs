@@ -1,4 +1,25 @@
-﻿open System.IO
+﻿open System
+open System.IO
+open FParsec.Primitives
+open FParsec.CharParsers
+
+type Event = 
+    | NewGuard of int
+    | WakesUp
+    | FallsAsleep
+
+let pDateElem : Parser<int32, string> = pint32 .>> (anyOf ['-';' ';':'])
+let pTimeElem = 
+    pDateElem .>>. pDateElem .>>. pDateElem .>>. pDateElem .>>. pDateElem 
+    |>> fun ((((y, m), d), h), M) -> new DateTime(y, m, d, h, M, 0)
+let pTime = pchar '[' >>. pTimeElem .>> pchar ']'
+
+let pNewGuard = pstring " Guard #" >>. pint32 .>> pstring " begins shift" |>> NewGuard
+let pWakesUp = pstring " wakes up" |>> fun _ -> WakesUp
+let pFallsAsleep = pstring " falls asleep" |>> fun _ -> FallsAsleep
+let pEvent = pNewGuard <|> pWakesUp <|> pFallsAsleep
+
+let pLine = pTime .>>. pEvent
 
 [<EntryPoint>]
 let main _ =

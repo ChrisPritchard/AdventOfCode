@@ -21,6 +21,11 @@ let pEvent = pNewGuard <|> pWakesUp <|> pFallsAsleep
 
 let pLine = pTime .>>. pEvent
 
+let processLine (line : string) =
+    match run pLine line with
+    | Success (result, _, _) -> result
+    | _ -> failwith "invalid line"
+
 [<EntryPoint>]
 let main _ =
     
@@ -44,5 +49,7 @@ let main _ =
         "[1518-11-05 00:45] falls asleep"
         "[1518-11-05 00:55] wakes up"
     |]
+
+    let processed = lines |> Seq.map (run pLine >> function | Success(r, _, _) -> r | _ -> ()) |> Seq.toList
 
     0

@@ -26,6 +26,41 @@ let processLine (line : string) =
     | Success (result, _, _) -> result
     | Failure (error, _, _) -> failwith error
 
+let part1 sleepsByGuard =
+    let id, sleeps = 
+        sleepsByGuard 
+        |> Map.toList
+        |> List.sortByDescending (fun (_, sleeps) -> sleeps |> List.sumBy (fun (startSleep, endSleep) -> endSleep - startSleep))
+        |> List.head
+
+    let sleepsPerMinute sleeps minute =
+        sleeps 
+        |> List.filter (fun (startSleep, endSleep) -> minute >= startSleep && minute <= endSleep)
+        |> List.length
+
+    let minute, _ = 
+        [0..59] 
+        |> List.map (fun m -> m, sleepsPerMinute sleeps m) 
+        |> List.sortByDescending snd
+        |> List.head 
+
+    minute * id
+
+let part2 sleepsByGuard =
+    let getMaxGuardSleeps guardMap minute =
+        guardMap 
+        |> Map.toList 
+        |> List.map (fun (id, sleeps) -> 
+            id, sleeps |> List.filter (fun (startSleep, endSleep) -> minute >= startSleep && minute <= endSleep) |> List.length)
+        |> List.sortByDescending snd
+        |> List.head
+
+    [0..59] 
+    |> List.map (fun m -> m, getMaxGuardSleeps sleepsByGuard m) 
+    |> List.sortByDescending (snd >> snd) 
+    |> List.head 
+    |> fun (m, (id, _)) -> m * id
+
 [<EntryPoint>]
 let main _ =
     
@@ -52,7 +87,7 @@ let main _ =
 
     let processed = lines |> Seq.map processLine |> Seq.sortBy fst |> Seq.toList
 
-    let (sleepByGuard, _, _) = 
+    let (sleepsByGuard, _, _) = 
         processed
         |> List.fold (fun (result, guard, sleepStart) (date, event) ->
             match event with
@@ -66,28 +101,8 @@ let main _ =
                     | None, Some sleepStart -> Map.add guard [(sleepStart, endSleep)] result
                     | _ -> result
                 (newResult, guard, None)) (Map.empty<int, (int * int) list>, 0, None)
-    
-    let id, sleeps = 
-        sleepByGuard 
-        |> Map.toList
-        |> List.sortByDescending (fun (_, sleeps) -> sleeps |> List.sumBy (fun (startSleep, endSleep) -> endSleep - startSleep))
-        |> List.head
+ 
+    printfn "part1: %i" <| part1 sleepsByGuard
+    printfn "part2: %i" <| part2 sleepsByGuard
 
-    let sleepsPerMinute sleeps minute =
-        sleeps 
-        |> List.filter (fun (startSleep, endSleep) -> minute >= startSleep && minute <= endSleep)
-        |> List.length
-
-    let minute, count = 
-        [0..59] 
-        |> List.map (fun m -> m, sleepsPerMinute sleeps m) 
-        |> List.sortByDescending snd
-        |> List.head 
-
-    printfn "part1: minute %i, count %i, id %i, multiplied %i" 
-        minute 
-        count
-        id 
-        (minute * id)
-    
     0

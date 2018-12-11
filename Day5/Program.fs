@@ -15,12 +15,20 @@ let rec part1 polymer =
     if List.length result = startLength then startLength
     else part1 (result |> Seq.ofList)
 
+let part2 polymer =
+    ['a'..'z'] 
+    |> List.filter (fun letter -> Seq.contains letter polymer)
+    |> List.map (fun letter -> 
+        polymer |> Seq.except [letter;toUpper letter] |> String.concat "" |> part1)
+    |> List.minBy id
+
 [<EntryPoint>]
 let main _ =
     
-    let polymer = File.ReadAllText "input.txt"
-    //let polymer = "dabAcCaCBAcCcaDA"
+    //let polymer = File.ReadAllText "input.txt"
+    let polymer = "dabAcCaCBAcCcaDA"
 
     printfn "part1: %i" <| part1 polymer
+    printfn "part2: %i" <| part2 polymer
 
     0

@@ -8,7 +8,7 @@ type Event =
     | WakesUp
     | FallsAsleep
 
-let pDateElem : Parser<int32, string> = pint32 .>> (anyOf ['-';' ';':'])
+let pDateElem : Parser<int32, unit> = pint32 .>> (anyOf ['-';' ';':'])
 let pTimeElem = 
     pDateElem .>>. pDateElem .>>. pDateElem .>>. pDateElem .>>. pDateElem 
     |>> fun ((((y, m), d), h), M) -> new DateTime(y, m, d, h, M, 0)
@@ -50,6 +50,6 @@ let main _ =
         "[1518-11-05 00:55] wakes up"
     |]
 
-    let processed = lines |> Seq.map (run pLine >> function | Success(r, _, _) -> r | _ -> ()) |> Seq.toList
+    let processed = lines |> Seq.map processLine |> Seq.toList
 
     0

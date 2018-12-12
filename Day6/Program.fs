@@ -103,16 +103,34 @@ let main _ =
             let dists = points |> List.map (fun p -> p, manhatten p coord) |> List.sortBy snd
             match dists with
             | (_, dist1)::(_, dist2)::_ when dist1 = dist2 -> None
-            | (p1, _)::_ when noninfinite |> Seq.contains p1 -> Some p1
+            | (p1, _)::_ when noninfinite |> Seq.contains p1 -> Some (coord, p1)
             | _ -> None))
+            |> List.choose id
+            |> Map.ofList
 
-    let part1 = 
-        candidates 
-        |> List.choose id
-        |> List.groupBy id
-        |> List.map (snd >> List.length)
-        |> List.max
+    let named = points |> List.mapi (fun i p -> p, sprintf "%2i" i) |> Map.ofList
 
-    printfn "part 1: %i" part1
+    let text = 
+        [miny..maxy] |> List.collect (fun y ->
+        "\r\n"::
+            ([miny..maxy] |> List.map (fun x -> 
+            match named.TryFind (x, y) with
+            | Some _ -> "XX"
+            | _ ->
+                match candidates.TryFind (x, y) with
+                | Some n -> named.[n]
+                | _ -> "__")))
+        |> String.Concat
+    System.IO.File.WriteAllText("test.txt", text)
+
+
+    // let part1 = 
+    //     candidates 
+    //     |> List.choose id
+    //     |> List.groupBy id
+    //     |> List.map (snd >> List.length)
+    //     |> List.max
+
+    // printfn "part 1: %i" part1
 
     0

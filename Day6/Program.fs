@@ -99,14 +99,12 @@ let main _ =
     let candidates =
         [minx..maxx] |> List.collect (fun x ->
         [miny..maxy] |> List.map (fun y ->
-            let closest =
-                points
-                |> List.map (fun p -> p, manhatten (x, y) p)
-                |> List.sortBy snd
-                |> List.take 2
-            if snd closest.[0] = snd closest.[1] then None
-            else if not <| Seq.contains (fst closest.[0]) noninfinite then None
-            else Some (fst closest.[0])))
+            let coord = x, y
+            let dists = points |> List.map (fun p -> p, manhatten p coord) |> List.sortBy snd
+            match dists with
+            | (_, dist1)::(_, dist2)::_ when dist1 = dist2 -> None
+            | (p1, _)::_ when noninfinite |> Seq.contains p1 -> Some p1
+            | _ -> None))
 
     let part1 = 
         candidates 

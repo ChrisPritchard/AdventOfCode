@@ -1,4 +1,6 @@
 ﻿open System.IO
+open FParsec.CharParsers
+open FParsec
 
 [<EntryPoint>]
 let main _ =
@@ -12,5 +14,13 @@ let main _ =
         "5, 5"
         "8, 9"
     |]
+
+    let pline = pint32 .>> pstring ", " .>>. pint32
+    let processLine line =
+        match run pline line with
+        | Success (result, _, _) -> result
+        | Failure (error, _, _) -> failwith error
+
+    let points = lines |> Seq.map processLine |> Seq.toList
 
     0

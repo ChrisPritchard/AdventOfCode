@@ -12,6 +12,14 @@ let part2 lines =
 [<EntryPoint>]
 let main _ =
 
+    let ppre = pstring "Step " >>. pchar
+    let psub = pstring "must be finished before step " >>. pchar .>> pstring "can begin."
+    let pline = ppre .>>. psub
+    let processLine line =
+        match run pline line with
+        | Success (result, _, _) -> result
+        | Failure (error, _, _) -> failwith error
+        
     let lines = File.ReadAllLines "input.txt"
 
     printfn "part 1: %i" <| part1 lines

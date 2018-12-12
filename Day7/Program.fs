@@ -5,7 +5,7 @@ open FParsec
 
 let nextAvailable rules finished remaining = 
     remaining 
-    |> Seq.filter (fun char ->
+    |> List.filter (fun char ->
         rules 
         |> List.filter (fun (pre, c) -> c = char && not (Seq.contains pre finished)) 
         |> List.map fst
@@ -22,30 +22,24 @@ let processJobs working idle finished =
     working 
     |> List.fold (fun (nw, ni, nf) (char, time) ->
         match time with
-        | 0 -> nw, ni + 1, char::nf
+        | 1 -> nw, ni + 1, char::nf
         | _ -> (char, time - 1)::nw, ni, nf) 
         ([], idle, finished)
 
 let rec part2 (finished : char list) working idle baseJobTime rules remaining totalTime =
-    let newTotalTime = totalTime + 1
-    let newWorking, newIdle, newFinished = processJobs working idle finished
-
-    if List.isEmpty remaining && List.isEmpty newWorking 
-        then newTotalTime
-    else if List.isEmpty remaining || newIdle = 0
-        then part2 newFinished newWorking newIdle baseJobTime rules remaining newTotalTime
-    else
-        let available = nextAvailable rules newFinished remaining
+    let available = nextAvailable rules finished remaining
+    if not (List.isEmpty available) && idle > 0 then
         let newJobs = 
                 available 
-                |> Seq.truncate newIdle 
-                |> Seq.map (fun c -> c, baseJobTime + 1 + (int c - int 'A')) 
-                |> Seq.toList
-
+                |> List.truncate idle 
+                |> List.map (fun c -> c, baseJobTime + 1 + (int c - int 'A')) 
         let newRemaining = remaining |> List.except (newJobs |> List.map fst)
-        let newIdle = newIdle - List.length newJobs
-        let newWorking = List.append newJobs newWorking
-        part2 newFinished newWorking newIdle baseJobTime rules newRemaining newTotalTime
+        part2 finished (newJobs @ working) (idle - List.length newJobs) baseJobTime rules newRemaining totalTime
+    else if List.isEmpty remaining && List.isEmpty working then
+        totalTime
+    else
+        let newWorking, newIdle, newFinished = processJobs working idle finished
+        part2 newFinished newWorking newIdle baseJobTime rules remaining (totalTime + 1)
 
 [<EntryPoint>]
 let main _ =
@@ -63,6 +57,6 @@ let main _ =
     let letters = rules |> List.collect (fun (a, b) -> [a;b]) |> List.distinct |> List.sortBy id
 
     printfn "part 1: %s" <| part1 [] rules letters
-    printfn "part 2: %i" <| part2 [] [] 2 0 rules letters -1
+    printfn "part 2: %i" <| part2 [] [] 5 60 rules letters 0
 
     0

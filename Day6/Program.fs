@@ -16,7 +16,7 @@ let input () =
 
 let manhatten (x,y) (ox, oy) = abs (x - ox) + abs (y - oy)
 
-let part1 points (minx, miny, maxx, maxy)=
+let part1 points (minx, miny, maxx, maxy) =
     let invalid (x, y) = x <= minx || x >= maxx || y <= miny || y >= maxy
 
     [minx..maxx] |> List.collect (fun x ->
@@ -34,6 +34,14 @@ let part1 points (minx, miny, maxx, maxy)=
         |> List.maxBy (fun (_, list) -> List.length list)
         |> snd |> List.length
 
+let part2 points (minx, miny, maxx, maxy) =
+    [minx..maxx] |> List.collect (fun x ->
+    [miny..maxy] |> List.filter (fun y ->
+        let coord = x, y
+        let dists = points |> List.sumBy (fun p -> manhatten p coord)
+        dists < 10000))
+    |> List.length
+
 [<EntryPoint>]
 let main _ =
 
@@ -46,5 +54,6 @@ let main _ =
             (if y > maxy then y else maxy)) (System.Int32.MaxValue, System.Int32.MaxValue, 0, 0)
 
     printfn "part 1: %i" <| part1 points bounds
+    printfn "part 2: %i" <| part2 points bounds
 
     0

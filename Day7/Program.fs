@@ -5,7 +5,7 @@ open FParsec
 
 let nextAvailable rules finished remaining = 
     remaining 
-    |> Seq.tryFind (fun char ->
+    |> Seq.filter (fun char ->
         rules 
         |> List.filter (fun (pre, c) -> c = char && not (Seq.contains pre finished)) 
         |> List.map fst
@@ -15,10 +15,8 @@ let rec part1 (finished : char list) rules =
     function
     | [] -> String.Concat (List.rev finished)
     | remaining ->
-        match nextAvailable rules finished remaining with
-        | Some next ->
-            part1 (next::finished) rules (remaining |> List.filter (fun char -> char <> next))
-        | _ -> failwith "invalid input"
+        let next = nextAvailable rules finished remaining |> Seq.head
+        part1 (next::finished) rules (remaining |> List.filter (fun char -> char <> next))
 
 let processJobs working idle finished =
     working 
@@ -31,19 +29,18 @@ let processJobs working idle finished =
 let rec part2 (finished : char list) working idle baseJobTime rules remaining totalTime =
     let newTotalTime = totalTime + 1
     let newWorking, newIdle, newFinished = processJobs working idle finished
-            
+
     if List.isEmpty remaining && List.isEmpty newWorking 
         then newTotalTime
     else if List.isEmpty remaining || newIdle = 0
         then part2 newFinished newWorking newIdle baseJobTime rules remaining newTotalTime
     else
-        let newJobs = [0..newIdle] |> List.fold (fun jobs i -> 
-            let available = remaining |> List.except (jobs |> List.map fst)
-            match nextAvailable rules newFinished available with
-            | None -> jobs
-            | Some n -> 
-                let time = baseJobTime + 1 + (int n - int 'A')
-                (n, time)::jobs) []
+        let available = nextAvailable rules newFinished remaining
+        let newJobs = 
+                available 
+                |> Seq.truncate newIdle 
+                |> Seq.map (fun c -> c, baseJobTime + 1 + (int c - int 'A')) 
+                |> Seq.toList
 
         let newRemaining = remaining |> List.except (newJobs |> List.map fst)
         let newIdle = newIdle - List.length newJobs

@@ -14,7 +14,16 @@ let rec part1 (finished : char list) rules =
             |> List.isEmpty)
         part1 (next::finished) rules (remaining |> List.filter (fun char -> char <> next))
 
-let part2 lines =
+let rec part2 (finished : char list) working idle rules =
+    function
+    | [] -> String.Concat (List.rev finished)
+    | remaining ->
+        let newWorking = working |> List.map (fun i -> i - 1) |> List.except [0]
+        let newIdle = idle + (List.length working - List.length newWorking)
+        if newIdle = 0 then
+            part2 finished newWorking newIdle rules remaining
+        else
+            
     0
 
 [<EntryPoint>]
@@ -32,6 +41,6 @@ let main _ =
     let rules = lines |> Seq.map processLine |> Seq.toList
 
     printfn "part 1: %s" <| part1 [] rules ['A'..'Z']
-    printfn "part 2: %i" <| part2 lines
+    printfn "part 2: %i" <| part2 [] [] 5 rules ['A'..'Z']
 
     0

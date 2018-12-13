@@ -13,8 +13,12 @@ let place newMarble (marbles, currentMarbleIndex) =
     | 2 -> marbles.[0]::newMarble::[marbles.[1]], 1
     | n ->
         let nextIndex = currentMarbleIndex + 2
-        let adjusted = if nextIndex >= n then nextIndex - n else nextIndex
-        (List.take (adjusted - 1) marbles) @ [newMarble] @ (List.skip (adjusted + 1) marbles), nextIndex
+        if nextIndex = n then
+            marbles @ [newMarble], nextIndex
+        else if nextIndex = n + 1 then
+            marbles.[0]::newMarble::marbles.[1..], 1
+        else
+            marbles.[0..nextIndex-1] @ [newMarble] @ marbles.[nextIndex..], nextIndex
 
 [<EntryPoint>]
 let main _ =
@@ -25,7 +29,8 @@ let main _ =
         | Success (r, _, _) -> r
         | _ -> failwith "invalid input"
 
-    let board = [0..5] |> List.fold (fun board marble -> place marble board) ([], 0)
+    let board = [0..22] |> List.fold (fun board marble -> place marble board) ([], 0)
+    printfn "%A %i" (fst board) (snd board)
 
     printfn "part 1: %i" <| part1 0
     printfn "part 2: %i" <| part2 0

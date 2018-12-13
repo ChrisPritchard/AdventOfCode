@@ -12,12 +12,20 @@ let rec parseNode input =
         let children, remaining =
             [1..nodes] |> List.fold (fun (nodes, remaining) _ -> 
                 let node, newRemaining = parseNode remaining
-                (node::nodes, newRemaining)) ([], rest)
+                (nodes @ [node], newRemaining)) ([], rest)
         { children = children; metadata = remaining |> List.take metadata }, List.skip metadata remaining
     | _ -> failwith "invalid input"
 
 let rec part1 node =
     List.sum node.metadata + List.sumBy part1 node.children
+
+let rec part2 node =
+    match node.children with
+    | [] -> List.sum node.metadata
+    | _ -> 
+        let max = List.length node.children
+        let sum = node.metadata |> List.sumBy (fun m -> if m > max then 0 else part2 node.children.[m - 1])
+        sum
 
 [<EntryPoint>]
 let main _ =
@@ -28,5 +36,6 @@ let main _ =
     let tree, _ = parseNode input
 
     printfn "part 1: %i" <| part1 tree
+    printfn "part 2: %i" <| part2 tree
 
     0

@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Day 8",
+            "name": "Day 9",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Day8/bin/Debug/netcoreapp2.1/Day8.dll",
+            "program": "${workspaceFolder}/Day9/bin/Debug/netcoreapp2.1/Day9.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Day8",
+            "cwd": "${workspaceFolder}/Day9",
             "console": "internalConsole",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"

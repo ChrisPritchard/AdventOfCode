@@ -20,6 +20,14 @@ let place newMarble (marbles, currentMarbleIndex) =
         else
             marbles.[0..nextIndex-1] @ [newMarble] @ marbles.[nextIndex..], nextIndex
 
+let score (marbles, currentMarbleIndex) =
+    let length = List.length marbles
+    let toRemove = 
+        if length < 7 then length - (7 - length)
+        else currentMarbleIndex - 7
+    marbles.[0..toRemove-1] @ marbles.[toRemove+1..], toRemove, marbles.[toRemove]
+     
+
 [<EntryPoint>]
 let main _ =
 
@@ -31,6 +39,8 @@ let main _ =
 
     let board = [0..22] |> List.fold (fun board marble -> place marble board) ([], 0)
     printfn "%A %i" (fst board) (snd board)
+    let scored = score board
+    printfn "%A" scored
 
     printfn "part 1: %i" <| part1 0
     printfn "part 2: %i" <| part2 0

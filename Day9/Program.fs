@@ -3,10 +3,7 @@ open System.IO
 open FParsec.CharParsers
 open FParsec
 
-let part1 _ = 0
-let part2 _ = 0
-
-let place newMarble (marbles, currentMarbleIndex) =
+let placeMarble newMarble (marbles, currentMarbleIndex) =
     match List.length marbles with
     | 0 -> [newMarble], 0
     | 1 -> marbles @ [newMarble], 1
@@ -20,13 +17,31 @@ let place newMarble (marbles, currentMarbleIndex) =
         else
             marbles.[0..nextIndex-1] @ [newMarble] @ marbles.[nextIndex..], nextIndex
 
-let score (marbles, currentMarbleIndex) =
+let scoreMarble (marbles, currentMarbleIndex) =
     let length = List.length marbles
     let toRemove = 
-        if length < 7 then length - (7 - length)
+        if currentMarbleIndex < 7 then length - (7 - currentMarbleIndex)
         else currentMarbleIndex - 7
-    marbles.[0..toRemove-1] @ marbles.[toRemove+1..], toRemove, marbles.[toRemove]
+    (marbles.[0..toRemove-1] @ marbles.[toRemove+1..], toRemove), marbles.[toRemove]
      
+let addScore player score scores = 
+    let existing = match Map.tryFind player scores with Some n -> n | _ -> 0
+    Map.add player (existing + score) scores
+
+
+let part1 players maxMarble = 
+    let _, finalScores =
+        [1..maxMarble] |> List.fold (fun (board, scores) marble -> 
+            let player = (marble - 1) % players
+            if marble % 23 = 0 then
+                let next, removed = scoreMarble board
+                next, addScore player (removed + marble) scores
+            else
+                placeMarble marble board, scores
+            ) (([0],0), Map.empty)
+    finalScores |> Map.toList |> List.map snd |> List.max
+
+let part2 _ = 0
 
 [<EntryPoint>]
 let main _ =
@@ -37,12 +52,7 @@ let main _ =
         | Success (r, _, _) -> r
         | _ -> failwith "invalid input"
 
-    let board = [0..22] |> List.fold (fun board marble -> place marble board) ([], 0)
-    printfn "%A %i" (fst board) (snd board)
-    let scored = score board
-    printfn "%A" scored
-
-    printfn "part 1: %i" <| part1 0
+    printfn "part 1: %i" <| part1 players maxMarble
     printfn "part 2: %i" <| part2 0
 
     0

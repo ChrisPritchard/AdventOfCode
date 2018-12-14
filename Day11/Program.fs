@@ -22,7 +22,17 @@ let main _ =
             [0..2] |> List.map (fun dy -> grid.[x + dx, y + dy]))
             |> List.sum))
         |> List.maxBy snd
-        
+
+    let part2 = 
+        [1..300] |> List.collect (fun x -> 
+        [1..300] |> List.collect (fun y -> 
+            [0..300-x] |> List.map (fun d -> 
+            (x, y), 
+            [0..d] |> List.collect (fun dx ->
+            [0..d] |> List.map (fun dy -> grid.[x + dx, y + dy]))
+            |> List.sum, d)))
+        |> List.maxBy snd
+
     printfn "part1: %i, %i" <|| fst part1
 
     0

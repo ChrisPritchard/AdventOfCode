@@ -14,12 +14,15 @@ let main _ =
         [1..300] |> List.map (fun y -> 
             (x, y), power input x y))
             |> Map.ofList
-    let max =
+
+    let part1 =
         [1..298] |> List.collect (fun x -> 
         [1..298] |> List.map (fun y -> 
             (x, y), [0..2] |> List.collect (fun dx ->
             [0..2] |> List.map (fun dy -> grid.[x + dx, y + dy]))
             |> List.sum))
         |> List.maxBy snd
-    printfn "%i, %i" <|| fst max
+        
+    printfn "part1: %i, %i" <|| fst part1
+
     0

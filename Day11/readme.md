@@ -37,6 +37,8 @@ Here are some more example power levels:
     Fuel cell at 217,196, grid serial number 39: power level  0.
     Fuel cell at 101,153, grid serial number 71: power level  4.
 
+## Part One
+
 Your goal is to find the 3x3 square which has the largest total power. The square must be entirely within the 300x300 grid. Identify this square using the X,Y coordinate of its top-left fuel cell. For example:
 
 For grid serial number 18, the largest total 3x3 square has a top-left corner of 33,45 (with a total power of 29); these fuel cells appear in the middle of this 5x5 region:
@@ -56,3 +58,16 @@ For grid serial number 42, the largest 3x3 square's top-left is 21,61 (with a to
  3   3   3  -5  -1
 
 What is the X,Y coordinate of the top-left fuel cell of the 3x3 square with the largest total power?
+
+## Part Two
+
+You discover a dial on the side of the device; it seems to let you select a square of any size, not just 3x3. Sizes from 1x1 to 300x300 are supported.
+
+Realizing this, you now must find the square of any size with the largest total power. Identify this square by including its size as a third parameter after the top-left coordinate: a 9x9 square with a top-left corner of 3,5 is identified as 3,5,9.
+
+For example:
+
+    For grid serial number 18, the largest total square (with a total power of 113) is 16x16 and has a top-left corner of 90,269, so its identifier is 90,269,16.
+    For grid serial number 42, the largest total square (with a total power of 119) is 12x12 and has a top-left corner of 232,251, so its identifier is 232,251,12.
+
+What is the X,Y,size identifier of the square with the largest total power?

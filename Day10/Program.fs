@@ -3,9 +3,6 @@ open System.IO
 open FParsec.CharParsers
 open FParsec
 
-let part1 _ = 0
-let part2 _ = 0
-
 [<EntryPoint>]
 let main _ =
 
@@ -28,15 +25,12 @@ let main _ =
                 (if y < oy then y else oy),
                 (if x > omx then x else omx),
                 (if y > omy then y else omy)) 
-                (0, 0, Int32.MaxValue, Int32.MaxValue)
+                (Int32.MaxValue, Int32.MaxValue, 0, 0)
         let map = Map.ofList stars
         [my..maxy] |> List.collect (fun y ->
             "\n"::([mx..maxx] |> List.map (fun x -> match Map.tryFind (x, y) map with Some _ -> "#" | _ -> " ")))
             |> System.String.Concat
 
     lines |> tick |> tick |> tick |> render |> printfn "%s"
-
-    printfn "part 1: %i" <| part1 ()
-    printfn "part 2: %i" <| part2 ()
 
     0

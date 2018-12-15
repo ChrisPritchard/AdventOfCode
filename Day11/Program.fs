@@ -1,4 +1,8 @@
-﻿open System
+﻿open Microsoft.FSharp.Core
+open Microsoft.FSharp.Collections
+
+// Solved this by replicating Tribulu's C++ answer here: https://www.reddit.com/r/adventofcode/comments/a53r6i/2018_day_11_solutions/ebjogd7
+// Barely understand how this works, but flexing F#'s imperative muscles was a bit of a change
 
 let power sn x y =
     let rackId = x + 10
@@ -6,33 +10,42 @@ let power sn x y =
     let hundreds = power / 100 % 10
     hundreds - 5
 
+let sumTable sn = 
+    let sums = Array2D.zeroCreate<int> 301 301
+    for x = 1 to 300 do
+        for y = 1 to 300 do
+            sums.[y,x] <- power sn x y + sums.[y - 1, x] + sums.[y, x - 1] - sums.[y - 1, x - 1]
+    sums
+
+let maxRect (sumTable : int [,]) size =
+    let mutable best, bx, by = 0, 0, 0
+    for x = size to 300 do
+        for y = size to 300 do
+            let total = 
+                sumTable.[y, x] - sumTable.[y - size, x] - 
+                sumTable.[y, x - size] + sumTable.[y - size, x - size]
+            if total > best then
+                best <- total
+                bx <- x
+                by <- y
+    best, bx - size + 1, by - size + 1
+
 [<EntryPoint>]
 let main _ =
-    let input = 18
-    let range = [1..300] |> List.collect (fun y -> [1..300] |> List.map (fun x -> (x, y)))
+    let input = 8772
 
-    let grid = range |> List.map (fun (x, y) -> (x, y), power input x y) |> Map.ofList
-    
-    let squareVal size x y =
-        [0..size-1] |> List.collect (fun dx ->
-        [0..size-1] |> List.map (fun dy -> 
-            Map.tryFind (x + dx, y + dy) grid |> Option.defaultValue 0)) 
-        |> List.sum
+    let sums = sumTable input
+    let part1 = maxRect sums 3
+    let (_, x, y) = part1
 
-    let part1 =
-        [1..298] |> List.collect (fun x -> 
-        [1..298] |> List.map (fun y -> (x, y), squareVal 3 x y))
-        |> List.maxBy snd
-    
-    printfn "part1: %i,%i" <|| fst part1
+    printfn "part 1: %i,%i" x y
 
     let part2 = 
-        [1..300] |> List.collect (fun s ->
-        [1..300] |> List.collect (fun x -> 
-        [1..300] |> List.map (fun y -> (x, y, s, squareVal s x y))))
-        |> List.maxBy (fun (_,_,_,t) -> t)
-        |> fun (x,y,s,_) -> x,y,s
-
-    printfn "part2: %i,%i,%i" <||| part2
+        [1..300] 
+        |> Seq.map (fun s -> s, maxRect sums s) 
+        |> Seq.maxBy (fun (_, (t, _, _)) -> t)
+    let (s, (_, x, y)) = part2
+    
+    printfn "part 2: %i,%i,%i" x y s
 
     0

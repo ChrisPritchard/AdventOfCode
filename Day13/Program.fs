@@ -17,7 +17,8 @@ let move cart =
     | '>' -> { cart with pos = x+1,y }
     | _ -> failwith "invalid cart"
 
-let advance cart tile =
+let advance (rails : Map<int * int, char>) cart =
+    let tile = rails.[cart.pos]
     match cart.dir with
     | '^' ->
         match tile with 
@@ -61,25 +62,25 @@ let advance cart tile =
             | _ -> { cart with dir = 'v'; inter = cart.inter + 1 }
     | _ -> failwith "invalid cart"
 
-let render (rails : Map<int * int, char>) carts =
-    Console.CursorVisible <- false
-    System.Threading.Thread.Sleep 1000
-    Console.CursorLeft <- 0
-    for ((x, y), t) in rails |> Map.toList do
-        Console.CursorLeft <- x
-        Console.CursorTop <- y
-        Console.Write t
-    for c in carts do
-        let x, y = c.pos
-        Console.CursorLeft <- x
-        Console.CursorTop <- y
-        Console.Write c.dir
+// let render (rails : Map<int * int, char>) carts =
+//     Console.CursorVisible <- false
+//     System.Threading.Thread.Sleep 1000
+//     Console.CursorLeft <- 0
+//     for ((x, y), t) in rails |> Map.toList do
+//         Console.CursorLeft <- x
+//         Console.CursorTop <- y
+//         Console.Write t
+//     for c in carts do
+//         let x, y = c.pos
+//         Console.CursorLeft <- x
+//         Console.CursorTop <- y
+//         Console.Write c.dir
 
 let rec part1 (rails : Map<int * int, char>) carts =
     // render rails carts
     let next, crash = 
         carts
-        |> List.sortBy (fun c -> c.pos)
+        |> List.sortBy (fun c -> snd c.pos, fst c.pos)
         |> List.fold (fun (n, crash) cart -> 
             match crash with
             | Some _ -> n, crash
@@ -88,7 +89,7 @@ let rec part1 (rails : Map<int * int, char>) carts =
                 match List.tryFind (fun c -> c.pos = moved.pos) n with
                 | Some _ -> n, Some moved.pos
                 | None -> 
-                    (advance moved rails.[moved.pos])::n, None) ([], None)
+                    (advance rails moved)::n, None) ([], None)
     match crash with
     | Some p -> p
     | None -> part1 rails next
@@ -98,15 +99,18 @@ let rec part2 (rails : Map<int * int, char>) carts =
     match carts with
     | [allAlone] -> allAlone.pos
     | _ ->
-        let next, crashed = 
+        let next, crashed, _ = 
             carts
-            |> List.sortBy (fun c -> c.pos)
-            |> List.fold (fun (n, crashed) cart ->
-                let moved = move cart
-                match List.tryFind (fun c -> c.pos = moved.pos) n with
-                | Some other -> n |> List.filter (fun oc -> oc <> other), other::cart::crashed
-                | None -> 
-                    (advance moved rails.[moved.pos])::n, crashed) ([], [])
+            |> List.sortBy (fun c -> snd c.pos, fst c.pos)
+            |> List.fold (fun (next, crashed, prev) cart ->
+                if List.contains cart crashed then next, crashed, cart::prev
+                else
+                    let moved = move cart |> advance rails
+                    let toCheck = next @ (List.except prev carts)
+                    match List.tryFind (fun c -> c.pos = moved.pos) toCheck with
+                    | Some other -> next |> List.except [other], moved::other::crashed, cart::prev
+                    | None -> moved::next, crashed, cart::prev) 
+                    ([], [], [])
         part2 rails (List.except crashed next)
 
 [<EntryPoint>]

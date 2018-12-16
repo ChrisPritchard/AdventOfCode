@@ -31,6 +31,8 @@ Drawing the first Elf as parentheses and the second Elf as square brackets, they
  3  7 [1] 0  1  0 (1) 2  4  5  1  5  8  9  1  6  7  7  9 
  3  7  1  0 [1] 0  1  2 (4) 5  1  5  8  9  1  6  7  7  9  2 
 
+## Part One
+
 The Elves think their skill will improve after making a few recipes (your puzzle input). However, that could take ages; you can speed this up considerably by identifying the scores of the ten recipes after that. For example:
 
     If the Elves think their skill will improve after making 9 recipes, the scores of the ten recipes after the first nine on the scoreboard would be 5158916779 (highlighted in the last line of the diagram).
@@ -39,3 +41,14 @@ The Elves think their skill will improve after making a few recipes (your puzzle
     After 2018 recipes, the scores of the next ten would be 5941429882.
 
 What are the scores of the ten recipes immediately after the number of recipes in your puzzle input?
+
+## Part Two
+
+As it turns out, you got the Elves' plan backwards. They actually want to know how many recipes appear on the scoreboard to the left of the first recipes whose scores are the digits from your puzzle input.
+
+    51589 first appears after 9 recipes.
+    01245 first appears after 5 recipes.
+    92510 first appears after 18 recipes.
+    59414 first appears after 2018 recipes.
+
+How many recipes appear on the scoreboard to the left of the score sequence in your puzzle input?

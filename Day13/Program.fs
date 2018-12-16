@@ -1,59 +1,68 @@
 ﻿open System
 open System.IO
 
-let isCart = 
-    function 
-    | '^' | 'v'
-    | '<' | '>' -> true
-    | _ -> false
-
-let underrail =
-    function
-    | '^' | 'v' -> '|'
-    | '<' | '>' -> '-'
-    | c -> c
-
-let next ((x,y),c) =
-    match c with
-    | '^' -> x,y-1
-    | 'v' -> x,y+1
-    | '<' -> x-1,y
-    | '>' -> x+1,y
-    | _ -> failwith "invalid cart"
-
-let checkchange t =
-    function
-    | '^' ->
-        match t with 
-        | '/' -> '>'
-        | '\\' -> '<'
-        | '|' -> '^'
-        | _ -> 'X'
-    | 'v' ->
-        match t with 
-        | '/' -> '<'
-        | '\\' -> '>'
-        | '|' -> 'v'
-        | _ -> 'X'
-    | '<' ->
-        match t with 
-        | '/' -> 'v'
-        | '\\' -> '^'
-        | '-' -> '<'
-        | _ -> 'X'
-    | '>' ->
-        match t with 
-        | '/' -> '^'
-        | '\\' -> 'v'
-        | '-' -> '>'
-        | _ -> 'X'
-    | _ -> failwith "invalid cart"
-
 type Cart = {
     pos: int * int
     dir: char
     inter: int
 }
+
+let move cart =
+    let x,y = cart.pos
+    match cart.dir with
+    | '^' -> { cart with pos = x,y-1 }
+    | 'v' -> { cart with pos = x,y+1 }
+    | '<' -> { cart with pos = x-1,y }
+    | '>' -> { cart with pos = x+1,y }
+    | _ -> failwith "invalid cart"
+
+let advance cart tile =
+    match cart.dir with
+    | '^' ->
+        match tile with 
+        | '/' -> { cart with dir = '>' }
+        | '\\' -> { cart with dir = '<' }
+        | '|' -> { cart with dir = '^' }
+        | '+' -> 
+            match cart.inter % 3 with
+            | 0 -> { cart with dir = '<'; inter = cart.inter + 1 }
+            | 1 -> { cart with dir = '^'; inter = cart.inter + 1 }
+            | _ -> { cart with dir = '>'; inter = cart.inter + 1 }
+        | _ -> { cart with dir = 'X' }
+    | 'v' ->
+        match tile with 
+        | '/' -> { cart with dir = '<' }
+        | '\\' -> { cart with dir = '>' }
+        | '|' -> { cart with dir = 'v' }
+        | '+' -> 
+            match cart.inter % 3 with
+            | 0 -> { cart with dir = '>'; inter = cart.inter + 1 }
+            | 1 -> { cart with dir = 'v'; inter = cart.inter + 1 }
+            | _ -> { cart with dir = '<'; inter = cart.inter + 1 }
+        | _ -> { cart with dir = 'X' }
+    | '<' ->
+        match tile with 
+        | '/' -> { cart with dir = 'v' }
+        | '\\' -> { cart with dir = '^' }
+        | '-' -> { cart with dir = '<' }
+        | '+' -> 
+            match cart.inter % 3 with
+            | 0 -> { cart with dir = 'v'; inter = cart.inter + 1 }
+            | 1 -> { cart with dir = '<'; inter = cart.inter + 1 }
+            | _ -> { cart with dir = '^'; inter = cart.inter + 1 }
+        | _ -> { cart with dir = 'X' }
+    | '>' ->
+        match tile with 
+        | '/' -> { cart with dir = '^' }
+        | '\\' -> { cart with dir = 'v' }
+        | '-' -> { cart with dir = '>' }
+        | '+' -> 
+            match cart.inter % 3 with
+            | 0 -> { cart with dir = '^'; inter = cart.inter + 1 }
+            | 1 -> { cart with dir = '>'; inter = cart.inter + 1 }
+            | _ -> { cart with dir = 'v'; inter = cart.inter + 1 }
+        | _ -> { cart with dir = 'X' }
+    | _ -> failwith "invalid cart"
 
 [<EntryPoint>]
 let main _ =
@@ -62,22 +71,18 @@ let main _ =
     let tiles =
         input |> Seq.mapi (fun y line -> 
         line |> Seq.mapi (fun x c -> (x, y), c))
-        |> Seq.collect id |> Set.toList
+        |> Seq.collect id |> Seq.toList
 
-    let rails = tiles |> List.map underrail |> Map.ofList
-    let carts = tiles |> List.filter isCart |> List.map (fun (p,c) -> 
-        { pos = p; dir = c; inter = 0 })
+    let rails = 
+        tiles 
+        |> List.map (function | '^' | 'v' -> '|' | '<' | '>' -> '-' | c -> c) 
+        |> Map.ofList
+    let carts = 
+        tiles 
+        |> List.filter (function | '^' | 'v' | '<' | '>' -> true | _ -> false) 
+        |> List.map (fun (p,c) -> { pos = p; dir = c; inter = 0 })
     
     let height, width = Seq.length input, Seq.length input.[0]
     let orderedPoints = [0..height] |> List.collect (fun y -> [0..width] |> List.map (fun x -> x, y))
-
-    let rec firstCrash tiles = 
-        let next =
-            orderedPoints |> List.fold (fun state p -> 
-                match List.tryFind (fun c -> c.pos = p) carts with
-                | None -> state
-                | Some c -> 
-
-                else state)
 
     0

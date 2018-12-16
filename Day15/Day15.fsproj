@@ -10,4 +10,8 @@
     <None Include="input.txt" CopyToOutputDirectory="always" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="astar-search" Version="1.0.1" />
+  </ItemGroup>
+
 </Project>

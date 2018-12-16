@@ -1,5 +1,6 @@
 ﻿open System
 open System.IO
+open System
 
 type Cart = {
     pos: int * int
@@ -23,45 +24,41 @@ let advance cart tile =
         | '/' -> { cart with dir = '>' }
         | '\\' -> { cart with dir = '<' }
         | '|' -> { cart with dir = '^' }
-        | '+' -> 
+        | _ -> 
             match cart.inter % 3 with
             | 0 -> { cart with dir = '<'; inter = cart.inter + 1 }
             | 1 -> { cart with dir = '^'; inter = cart.inter + 1 }
             | _ -> { cart with dir = '>'; inter = cart.inter + 1 }
-        | _ -> { cart with dir = 'X' }
     | 'v' ->
         match tile with 
         | '/' -> { cart with dir = '<' }
         | '\\' -> { cart with dir = '>' }
         | '|' -> { cart with dir = 'v' }
-        | '+' -> 
+        | _ -> 
             match cart.inter % 3 with
             | 0 -> { cart with dir = '>'; inter = cart.inter + 1 }
             | 1 -> { cart with dir = 'v'; inter = cart.inter + 1 }
             | _ -> { cart with dir = '<'; inter = cart.inter + 1 }
-        | _ -> { cart with dir = 'X' }
     | '<' ->
         match tile with 
         | '/' -> { cart with dir = 'v' }
         | '\\' -> { cart with dir = '^' }
         | '-' -> { cart with dir = '<' }
-        | '+' -> 
+        | _ -> 
             match cart.inter % 3 with
             | 0 -> { cart with dir = 'v'; inter = cart.inter + 1 }
             | 1 -> { cart with dir = '<'; inter = cart.inter + 1 }
             | _ -> { cart with dir = '^'; inter = cart.inter + 1 }
-        | _ -> { cart with dir = 'X' }
     | '>' ->
         match tile with 
         | '/' -> { cart with dir = '^' }
         | '\\' -> { cart with dir = 'v' }
         | '-' -> { cart with dir = '>' }
-        | '+' -> 
+        | _ -> 
             match cart.inter % 3 with
             | 0 -> { cart with dir = '^'; inter = cart.inter + 1 }
             | 1 -> { cart with dir = '>'; inter = cart.inter + 1 }
             | _ -> { cart with dir = 'v'; inter = cart.inter + 1 }
-        | _ -> { cart with dir = 'X' }
     | _ -> failwith "invalid cart"
 
 [<EntryPoint>]
@@ -75,14 +72,45 @@ let main _ =
 
     let rails = 
         tiles 
-        |> List.map (function | '^' | 'v' -> '|' | '<' | '>' -> '-' | c -> c) 
+        |> List.map (fun (p, t) -> p, t |> function | '^' | 'v' -> '|' | '<' | '>' -> '-' | c -> c) 
         |> Map.ofList
     let carts = 
         tiles 
-        |> List.filter (function | '^' | 'v' | '<' | '>' -> true | _ -> false) 
+        |> List.filter (snd >> function | '^' | 'v' | '<' | '>' -> true | _ -> false) 
         |> List.map (fun (p,c) -> { pos = p; dir = c; inter = 0 })
+
+    // let render carts =
+    //     Console.CursorVisible <- false
+    //     System.Threading.Thread.Sleep 1000
+    //     Console.CursorLeft <- 0
+    //     for ((x, y), t) in rails |> Map.toList do
+    //         Console.CursorLeft <- x
+    //         Console.CursorTop <- y
+    //         Console.Write t
+    //     for c in carts do
+    //         let x, y = c.pos
+    //         Console.CursorLeft <- x
+    //         Console.CursorTop <- y
+    //         Console.Write c.dir
     
-    let height, width = Seq.length input, Seq.length input.[0]
-    let orderedPoints = [0..height] |> List.collect (fun y -> [0..width] |> List.map (fun x -> x, y))
+    let rec firstCrash carts =
+        // render carts
+        let next, crash = 
+            carts
+            |> List.sortBy (fun c -> c.pos)
+            |> List.fold (fun (n, crash) cart -> 
+                match crash with
+                | Some _ -> n, crash
+                | None ->
+                    let moved = move cart
+                    match List.tryFind (fun c -> c.pos = moved.pos) n with
+                    | Some _ -> n, Some moved.pos
+                    | None -> 
+                        (advance moved rails.[moved.pos])::n, None) ([], None)
+        match crash with
+        | Some p -> p
+        | None -> firstCrash next
+
+    printfn "part 1: %i,%i" <|| firstCrash carts
 
     0

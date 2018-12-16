@@ -1,26 +1,29 @@
 ﻿open System.IO
 
-type Fighter = {
-    pos: int * int
-    attack: int
-    health: int
-}
+type Fighter = 
+    | Goblin of x: int * y: int * health: int 
+    | Elf of x: int * y: int * health: int 
 
-let create pos = { pos = pos; attack = 3; health = 200 }
+let startHealth = 200
 
 [<EntryPoint>]
 let main _ =
     let input = File.ReadAllLines "input.txt"
 
-    let walls, goblins, elves = 
+    let walls, fighters = 
         input 
-        |> Seq.mapi (fun y -> Seq.mapi (fun x c -> (x, y), c))
+        |> Seq.mapi (fun y -> Seq.mapi (fun x c -> x, y, c))
         |> Seq.collect id
-        |> Seq.fold (fun (w, g, e) (p,c) ->
+        |> Seq.fold (fun (w, f) (x, y, c) ->
             match c with
-            | '#' -> Set.add p w, g, e
-            | 'G' -> w, (create p)::g, e
-            | 'E' -> w, g, (create p)::e
-            | _ -> w, g, e) (Set.empty, [], [])
+            | '#' -> Set.add (x, y) w, f
+            | 'G' -> w, (Goblin (x, y, startHealth))::f
+            | 'E' -> w, (Elf (x, y, startHealth))::f
+            | _ -> w, f) (Set.empty, [])
+
+    let ordered fighters = 
+        fighters |> List.sortBy (function 
+            | Goblin (x, y, _) -> y, x 
+            | Elf (x, y, _) -> y, x)
 
     0

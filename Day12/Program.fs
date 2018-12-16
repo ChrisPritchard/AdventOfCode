@@ -30,11 +30,15 @@ let advance state rules =
         state 
         |> List.windowed 5 
         |> List.map (fun segment ->
-            let key = List.map snd segment 
-            match Map.tryFind key rules with
-            | Some n -> fst segment.[2], n
-            | _ -> fst segment.[2], false)
+            if List.tryFind snd segment = None then fst segment.[2], false
+            else
+                let key = List.map snd segment 
+                match Map.tryFind key rules with
+                | Some n -> fst segment.[2], n
+                | _ -> fst segment.[2], false)
     state.[0..1] @ next @ state.[state.Length - 2..]
+
+let sumLine = List.sumBy (fun (i, b) -> if b then i else 0L)
 
 [<EntryPoint>]
 let main _ =
@@ -45,8 +49,22 @@ let main _ =
     let part1 = 
         let paddedState = padState initialState 20L
         let final = [1..20] |> List.fold (fun state _ -> advance state rules) paddedState
-        List.sumBy (fun (i, b) -> if b then i else 0L) final
+        sumLine final
     
-    printfn "sum: %i " part1
+    printfn "part1 sum: %i " part1
+
+    let rec findStable lastLine iterations lastIncrement =
+        let lastSum = sumLine lastLine
+        let next = advance lastLine rules
+        let sum = sumLine next
+        if sum - lastSum = lastIncrement then lastSum, iterations, lastIncrement
+        else
+            findStable next (iterations + 1L) (sum - lastSum)
+
+    let paddedState = padState initialState 100L
+    let baseSum, iterations, increment = findStable paddedState 0L 0L
+    let part2 = baseSum + (increment * (50000000000L - iterations))
+
+    printfn "part 2 sum: %i" part2
 
     0

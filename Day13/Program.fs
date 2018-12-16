@@ -61,19 +61,19 @@ let advance cart tile =
             | _ -> { cart with dir = 'v'; inter = cart.inter + 1 }
     | _ -> failwith "invalid cart"
 
-// let render (rails : Map<int * int, char>) carts =
-//     Console.CursorVisible <- false
-//     System.Threading.Thread.Sleep 1000
-//     Console.CursorLeft <- 0
-//     for ((x, y), t) in rails |> Map.toList do
-//         Console.CursorLeft <- x
-//         Console.CursorTop <- y
-//         Console.Write t
-//     for c in carts do
-//         let x, y = c.pos
-//         Console.CursorLeft <- x
-//         Console.CursorTop <- y
-//         Console.Write c.dir
+let render (rails : Map<int * int, char>) carts =
+    Console.CursorVisible <- false
+    System.Threading.Thread.Sleep 1000
+    Console.CursorLeft <- 0
+    for ((x, y), t) in rails |> Map.toList do
+        Console.CursorLeft <- x
+        Console.CursorTop <- y
+        Console.Write t
+    for c in carts do
+        let x, y = c.pos
+        Console.CursorLeft <- x
+        Console.CursorTop <- y
+        Console.Write c.dir
 
 let rec part1 (rails : Map<int * int, char>) carts =
     // render rails carts
@@ -94,7 +94,7 @@ let rec part1 (rails : Map<int * int, char>) carts =
     | None -> part1 rails next
 
 let rec part2 (rails : Map<int * int, char>) carts =
-    //render rails carts
+    // render rails carts
     match carts with
     | [allAlone] -> allAlone.pos
     | _ ->
@@ -104,7 +104,7 @@ let rec part2 (rails : Map<int * int, char>) carts =
             |> List.fold (fun (n, crashed) cart ->
                 let moved = move cart
                 match List.tryFind (fun c -> c.pos = moved.pos) n with
-                | Some other -> n, other::cart::crashed
+                | Some other -> n |> List.filter (fun oc -> oc <> other), other::cart::crashed
                 | None -> 
                     (advance moved rails.[moved.pos])::n, crashed) ([], [])
         part2 rails (List.except crashed next)

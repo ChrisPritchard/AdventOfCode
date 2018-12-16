@@ -61,7 +61,7 @@ let advance cart tile =
             | _ -> { cart with dir = 'v'; inter = cart.inter + 1 }
     | _ -> failwith "invalid cart"
 
-// let render carts =
+// let render (rails : Map<int * int, char>) carts =
 //     Console.CursorVisible <- false
 //     System.Threading.Thread.Sleep 1000
 //     Console.CursorLeft <- 0
@@ -76,7 +76,7 @@ let advance cart tile =
 //         Console.Write c.dir
 
 let rec part1 (rails : Map<int * int, char>) carts =
-    // render carts
+    // render rails carts
     let next, crash = 
         carts
         |> List.sortBy (fun c -> c.pos)
@@ -92,6 +92,22 @@ let rec part1 (rails : Map<int * int, char>) carts =
     match crash with
     | Some p -> p
     | None -> part1 rails next
+
+let rec part2 (rails : Map<int * int, char>) carts =
+    //render rails carts
+    match carts with
+    | [allAlone] -> allAlone.pos
+    | _ ->
+        let next, crashed = 
+            carts
+            |> List.sortBy (fun c -> c.pos)
+            |> List.fold (fun (n, crashed) cart ->
+                let moved = move cart
+                match List.tryFind (fun c -> c.pos = moved.pos) n with
+                | Some other -> n, other::cart::crashed
+                | None -> 
+                    (advance moved rails.[moved.pos])::n, crashed) ([], [])
+        part2 rails (List.except crashed next)
 
 [<EntryPoint>]
 let main _ =
@@ -112,5 +128,6 @@ let main _ =
         |> List.map (fun (p,c) -> { pos = p; dir = c; inter = 0 })
 
     printfn "part 1: %i,%i" <|| part1 rails carts
+    printfn "part 2: %i,%i" <|| part2 rails carts
 
     0

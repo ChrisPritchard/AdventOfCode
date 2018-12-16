@@ -61,6 +61,38 @@ let advance cart tile =
             | _ -> { cart with dir = 'v'; inter = cart.inter + 1 }
     | _ -> failwith "invalid cart"
 
+// let render carts =
+//     Console.CursorVisible <- false
+//     System.Threading.Thread.Sleep 1000
+//     Console.CursorLeft <- 0
+//     for ((x, y), t) in rails |> Map.toList do
+//         Console.CursorLeft <- x
+//         Console.CursorTop <- y
+//         Console.Write t
+//     for c in carts do
+//         let x, y = c.pos
+//         Console.CursorLeft <- x
+//         Console.CursorTop <- y
+//         Console.Write c.dir
+
+let rec part1 (rails : Map<int * int, char>) carts =
+    // render carts
+    let next, crash = 
+        carts
+        |> List.sortBy (fun c -> c.pos)
+        |> List.fold (fun (n, crash) cart -> 
+            match crash with
+            | Some _ -> n, crash
+            | None ->
+                let moved = move cart
+                match List.tryFind (fun c -> c.pos = moved.pos) n with
+                | Some _ -> n, Some moved.pos
+                | None -> 
+                    (advance moved rails.[moved.pos])::n, None) ([], None)
+    match crash with
+    | Some p -> p
+    | None -> part1 rails next
+
 [<EntryPoint>]
 let main _ =
     
@@ -79,38 +111,6 @@ let main _ =
         |> List.filter (snd >> function | '^' | 'v' | '<' | '>' -> true | _ -> false) 
         |> List.map (fun (p,c) -> { pos = p; dir = c; inter = 0 })
 
-    // let render carts =
-    //     Console.CursorVisible <- false
-    //     System.Threading.Thread.Sleep 1000
-    //     Console.CursorLeft <- 0
-    //     for ((x, y), t) in rails |> Map.toList do
-    //         Console.CursorLeft <- x
-    //         Console.CursorTop <- y
-    //         Console.Write t
-    //     for c in carts do
-    //         let x, y = c.pos
-    //         Console.CursorLeft <- x
-    //         Console.CursorTop <- y
-    //         Console.Write c.dir
-    
-    let rec firstCrash carts =
-        // render carts
-        let next, crash = 
-            carts
-            |> List.sortBy (fun c -> c.pos)
-            |> List.fold (fun (n, crash) cart -> 
-                match crash with
-                | Some _ -> n, crash
-                | None ->
-                    let moved = move cart
-                    match List.tryFind (fun c -> c.pos = moved.pos) n with
-                    | Some _ -> n, Some moved.pos
-                    | None -> 
-                        (advance moved rails.[moved.pos])::n, None) ([], None)
-        match crash with
-        | Some p -> p
-        | None -> firstCrash next
-
-    printfn "part 1: %i,%i" <|| firstCrash carts
+    printfn "part 1: %i,%i" <|| part1 rails carts
 
     0

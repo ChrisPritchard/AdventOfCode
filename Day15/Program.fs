@@ -32,17 +32,17 @@ let main _ =
             | 'E' -> w, (create x y Elf)::f
             | _ -> w, f) (Set.empty, [])
 
-    let neighbours (x, y) =
+    let neighbours ignored (x, y) =
         [(-1,0);(1,0);(0,-1);(0,1)] |> Seq.filter (fun (dx, dy) ->
             let nx, ny = x + dx, y + dy
             match 
                 Set.contains (nx, ny) walls, 
-                List.tryFind (fun f -> f.x = nx && f.y = ny) fighters with
+                List.tryFind (fun f -> ignored <> f && f.x = nx && f.y = ny) fighters with
             | false, None -> true
             | _ -> false)
 
-    let path start goal = 
-        AStar.search start goal { neighbours = neighbours; gCost = gScore; fCost = fScore; maxIterations = Some 10 }
+    let path fighter goal = 
+        AStar.search (fighter.x, fighter.y) goal { neighbours = neighbours fighter; gCost = gScore; fCost = fScore; maxIterations = Some 10 }
         |> Option.map Seq.toList
 
     let advance others fighter =
@@ -51,8 +51,9 @@ let main _ =
             others 
             |> List.filter (fun f -> f.kind = enemyKind) 
             |> List.map (fun e -> 
-                match path fighter.Pos e.Pos with
-                | Some p -> Some (p, e)
+                match path fighter e.Pos with
+                | Some p -> 
+                    Some (p, e)
                 | None -> None)
             |> List.choose id
             |> List.sortBy (fun (p, _) -> 
@@ -62,10 +63,11 @@ let main _ =
         | Some ([_], e) -> 
             e.health <- e.health - attack
             fighter
-        | Some ((x, y)::_, _) -> { fighter with x = x; y = y }
+        | Some ((x, y)::_, _) -> 
+            { fighter with x = x; y = y }
         | _ -> fighter
 
-    let rec tick walls fighters turn =
+    let rec game walls fighters turn =
         let next =
             fighters 
             |> List.sortBy (fun f -> f.y, f.x)
@@ -73,5 +75,7 @@ let main _ =
             |> List.filter (fun f -> f.health > 0)
         match next with
         | [_] -> turn
-        | _ -> tick walls next (turn + 1)
+        | _ -> game walls next (turn + 1)
+
+    printfn "part 1: %i" <| game walls fighters 0
     0

@@ -1,8 +1,9 @@
-﻿open System.IO
+﻿open System
+open System.IO
 open AStar
 
 type Fighter = {
-    x: int; y: int; 
+    mutable x: int; mutable y: int; 
     mutable health: int
     kind: FighterKind
 } 
@@ -13,9 +14,26 @@ let attack = 3
 
 let create x y kind = { x = x; y = y; health = 200; kind = kind }
 
-let gScore _ _ = 1.
+let gScore (_, y1) (_, y2) = 
+    if y1 = y2 then 0.9
+    else 1.
 let fScore (x, y) (gx, gy) = 
     sqrt ((float gx - float x)**2. + (float gy - float y)**2.)
+
+let render walls fighters = ()
+    // Console.CursorVisible <- false
+    // System.Threading.Thread.Sleep 1000
+    // Console.Clear ()
+    // Console.CursorLeft <- 0
+    // for (x, y) in walls do
+    //     Console.CursorLeft <- x
+    //     Console.CursorTop <- y
+    //     Console.Write '#'
+    // for f in fighters do
+    //     Console.CursorLeft <- f.x
+    //     Console.CursorTop <- f.y
+    //     Console.Write (if f.kind = Goblin then 'G' else 'E')
+
 
 [<EntryPoint>]
 let main _ =
@@ -32,18 +50,18 @@ let main _ =
             | 'E' -> w, (create x y Elf)::f
             | _ -> w, f) (Set.empty, [])
 
-    let neighbours ignored (x, y) =
+    let neighbours goal (x, y) =
         [(-1,0);(1,0);(0,-1);(0,1)] 
         |> Seq.map (fun (dx, dy) -> x + dx, y + dy)
         |> Seq.filter (fun  (nx, ny) ->
             match 
                 Set.contains (nx, ny) walls, 
-                List.tryFind (fun (f : Fighter) -> List.contains f.Pos ignored |> not && f.x = nx && f.y = ny) fighters with
+                List.tryFind (fun (f : Fighter) -> (nx, ny) <> goal && f.x = nx && f.y = ny) fighters with
             | false, None -> true
             | _ -> false)
 
     let path fighter goal = 
-        AStar.search (fighter.x, fighter.y) goal { neighbours = neighbours [fighter.Pos; goal]; gCost = gScore; fCost = fScore; maxIterations = Some 10 }
+        AStar.search (fighter.x, fighter.y) goal { neighbours = neighbours goal; gCost = gScore; fCost = fScore; maxIterations = Some 10 }
 
     let advance others fighter =
         let enemyKind = match fighter.kind with Elf -> Goblin | _ -> Elf
@@ -53,7 +71,7 @@ let main _ =
             |> List.map (fun e -> 
                 match path fighter e.Pos with
                 | Some p -> 
-                    Some (p |> Seq.toList, e)
+                    Some (p |> Seq.rev |> Seq.toList, e)
                 | None -> None)
             |> List.choose id
             |> List.sortBy (fun (p, _) -> 
@@ -62,12 +80,14 @@ let main _ =
         match opponent with
         | Some ([_;_], e) -> 
             e.health <- e.health - attack
-            fighter
         | Some (_::(x, y)::_, _) -> 
-            { fighter with x = x; y = y }
-        | _ -> fighter
+            fighter.x <- x
+            fighter.y <- y
+        | _ -> ()
+        fighter
 
     let rec game walls fighters turn =
+        render walls fighters
         let next =
             fighters 
             |> List.sortBy (fun f -> f.y, f.x)

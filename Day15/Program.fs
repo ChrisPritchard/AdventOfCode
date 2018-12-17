@@ -20,19 +20,23 @@ let gScore (_, y1) (_, y2) =
 let fScore (x, y) (gx, gy) = 
     sqrt ((float gx - float x)**2. + (float gy - float y)**2.)
 
-let render walls fighters = ()
-    // Console.CursorVisible <- false
-    // System.Threading.Thread.Sleep 1000
-    // Console.Clear ()
-    // Console.CursorLeft <- 0
-    // for (x, y) in walls do
-    //     Console.CursorLeft <- x
-    //     Console.CursorTop <- y
-    //     Console.Write '#'
-    // for f in fighters do
-    //     Console.CursorLeft <- f.x
-    //     Console.CursorTop <- f.y
-    //     Console.Write (if f.kind = Goblin then 'G' else 'E')
+let strikingDistance fighter enemy = 
+    (fighter.x = enemy.x || fighter.y = enemy.y) &&
+    abs (fighter.x - enemy.x) <= 1 && abs (fighter.y - enemy.y) <= 1
+
+let render walls fighters = //()
+    Console.CursorVisible <- false
+    System.Threading.Thread.Sleep 500
+    Console.Clear ()
+    Console.CursorLeft <- 0
+    for (x, y) in walls do
+        Console.CursorLeft <- x
+        Console.CursorTop <- y
+        Console.Write '#'
+    for f in fighters do
+        Console.CursorLeft <- f.x
+        Console.CursorTop <- f.y
+        Console.Write (if f.kind = Goblin then 'G' else 'E')
 
 
 [<EntryPoint>]
@@ -61,29 +65,36 @@ let main _ =
             | _ -> false)
 
     let path fighter goal = 
-        AStar.search (fighter.x, fighter.y) goal { neighbours = neighbours goal; gCost = gScore; fCost = fScore; maxIterations = Some 10 }
+        AStar.search (fighter.x, fighter.y) goal { neighbours = neighbours goal; gCost = gScore; fCost = fScore; maxIterations = None }
 
     let advance others fighter =
         let enemyKind = match fighter.kind with Elf -> Goblin | _ -> Elf
-        let opponent = 
-            others 
-            |> List.filter (fun f -> f.kind = enemyKind && f.health > 0) 
-            |> List.map (fun e -> 
-                match path fighter e.Pos with
-                | Some p -> 
-                    Some (p |> Seq.rev |> Seq.toList, e)
-                | None -> None)
-            |> List.choose id
-            |> List.sortBy (fun (p, _) -> 
-                match p with (_::(x, y)::_) -> List.length p, y, x | _ -> 100,100,100)
-            |> List.tryHead
-        match opponent with
-        | Some ([_;_], e) -> 
+        let target = 
+            others |> List.filter 
+                (fun f -> f.kind = enemyKind && f.health > 0 && strikingDistance fighter f)
+                |> List.sortBy (fun f -> f.health, f.y, f.x)
+                |> List.tryHead
+        match target with
+        | Some e ->
             e.health <- e.health - attack
-        | Some (_::(x, y)::_, _) -> 
-            fighter.x <- x
-            fighter.y <- y
-        | _ -> ()
+        | None ->
+            let goal = 
+                others 
+                |> List.filter (fun f -> f.kind = enemyKind && f.health > 0) 
+                |> List.map (fun e -> 
+                    match path fighter e.Pos with
+                    | Some p -> 
+                        Some (p |> Seq.rev |> Seq.toList, e)
+                    | None -> None)
+                |> List.choose id
+                |> List.sortBy (fun (p, _) -> 
+                    match p with (_::(x, y)::_) -> List.length p, y, x | _ -> 100,100,100)
+                |> List.tryHead
+            match goal with
+            | Some (_::(x, y)::_, _) -> 
+                fighter.x <- x
+                fighter.y <- y
+            | _ -> ()
         fighter
 
     let rec game walls fighters turn =
@@ -94,8 +105,8 @@ let main _ =
             |> List.map (fun f -> if f.health > 0 then advance fighters f else f)
             |> List.filter (fun f -> f.health > 0)
         match next |> List.groupBy (fun f -> f.kind) |> List.length with
-        | 1 -> turn
+        | 1 -> turn, next |> List.sumBy (fun f -> f.health)
         | _ -> game walls next (turn + 1)
 
-    printfn "part 1: %i" <| game walls fighters 0
+    printfn "part 1: turn %i health %i" <|| game walls fighters 0
     0

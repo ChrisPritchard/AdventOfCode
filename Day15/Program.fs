@@ -13,28 +13,28 @@ and FighterKind = Goblin | Elf
 
 let create x y kind = { x = x; y = y; health = 200; attack = 3; kind = kind }
 
-let render walls fighters turn = ()
-    // Console.CursorVisible <- false
-    // System.Threading.Thread.Sleep 200
-    // Console.Clear ()
-    // Console.CursorLeft <- 0
-    // for (x, y) in walls do
-    //     Console.CursorLeft <- x
-    //     Console.CursorTop <- y
-    //     Console.Write '#'
-    // for f in fighters do
-    //     Console.CursorLeft <- f.x
-    //     Console.CursorTop <- f.y
-    //     Console.Write (if f.kind = Goblin then 'G' else 'E')
-    // for row in fighters |> List.groupBy (fun f -> f.y) do
-    //     for (i, f) in snd row |> List.sortBy (fun f -> f.x) |> List.mapi (fun i f -> i, f) do
-    //     Console.CursorTop <- f.y
-    //     Console.CursorLeft <- 9 + i * 8
-    //     Console.Write (sprintf "%s (%i)" (if f.kind = Goblin then "G" else "E") f.health)
-    // Console.CursorTop <- 9
-    // Console.CursorLeft <- 2
-    // Console.Write (sprintf "turn %i" turn)
-    // //Console.ReadKey true
+let render walls fighters turn =
+    Console.CursorVisible <- false
+    System.Threading.Thread.Sleep 200
+    Console.Clear ()
+    Console.CursorLeft <- 0
+    for (x, y) in walls do
+        Console.CursorLeft <- x
+        Console.CursorTop <- y
+        Console.Write '#'
+    for f in fighters do
+        Console.CursorLeft <- f.x
+        Console.CursorTop <- f.y
+        Console.Write (if f.kind = Goblin then 'G' else 'E')
+    for row in fighters |> Seq.groupBy (fun f -> f.y) do
+        for (i, f) in snd row |> Seq.sortBy (fun f -> f.x) |> Seq.mapi (fun i f -> i, f) do
+        Console.CursorTop <- f.y
+        Console.CursorLeft <- 9 + i * 8
+        Console.Write (sprintf "%s (%i)" (if f.kind = Goblin then "G" else "E") f.health)
+    Console.CursorTop <- 9
+    Console.CursorLeft <- 2
+    Console.Write (sprintf "turn %i" turn)
+    //Console.ReadKey true
 
 let getAstarConfig ignored fighters walls = {
         neighbours = fun (x, y) -> 
@@ -77,6 +77,7 @@ let main _ =
     let fighters = start |> List.toArray
 
     while not gameOver do
+        render walls fighters turn |> ignore
         let fighter = fighters.[index]
         if fighter.health > 0 then
             let enemyKind = match fighter.kind with Elf -> Goblin | _ -> Elf

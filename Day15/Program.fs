@@ -1,6 +1,5 @@
 ﻿open System
 open System.IO
-open AStar
 
 type Fighter = {
     x: int; y: int; 
@@ -13,34 +12,34 @@ and FighterKind = Goblin | Elf
 
 let create x y kind = { x = x; y = y; health = 200; attack = 3; kind = kind }
 
-let render walls fighters turn (width, height) =
-    System.Threading.Thread.Sleep 100
+// let render walls fighters turn (width, height) =
+//     //System.Threading.Thread.Sleep 50
 
-    for y = 0 to height-1 do
-        Console.CursorTop <- y   
-        for x = 0 to width-1 do
-            Console.CursorLeft <- x         
-            let c =
-                if Set.contains (x, y) walls then '#'
-                else
-                    match Array.tryFind (fun e -> e.health > 0 && e.x = x && e.y = y) fighters with
-                    | Some f when f.kind = Goblin -> 'G'
-                    | Some f when f.kind = Elf -> 'E'
-                    | _ -> '.'
-            Console.Write c
-        Console.CursorLeft <- width + 1
-        Console.Write "                                    "
+//     for y = 0 to height-1 do
+//         Console.CursorTop <- y   
+//         for x = 0 to width-1 do
+//             Console.CursorLeft <- x         
+//             let c =
+//                 if Set.contains (x, y) walls then '#'
+//                 else
+//                     match Array.tryFind (fun e -> e.health > 0 && e.x = x && e.y = y) fighters with
+//                     | Some f when f.kind = Goblin -> 'G'
+//                     | Some f when f.kind = Elf -> 'E'
+//                     | _ -> '.'
+//             Console.Write c
+//         Console.CursorLeft <- width + 1
+//         Console.Write "                                    "
 
-    for row in fighters |> Seq.where (fun f -> f.health > 0) |> Seq.groupBy (fun f -> f.y) do
-        for (i, f) in snd row |> Seq.sortBy (fun f -> f.x) |> Seq.mapi (fun i f -> i, f) do
-        Console.CursorTop <- f.y
-        Console.CursorLeft <- (width + 2) + i * 8
-        Console.Write (sprintf "%s (%i)" (if f.kind = Goblin then "G" else "E") f.health)
+//     for row in fighters |> Seq.where (fun f -> f.health > 0) |> Seq.groupBy (fun f -> f.y) do
+//         for (i, f) in snd row |> Seq.sortBy (fun f -> f.x) |> Seq.mapi (fun i f -> i, f) do
+//         Console.CursorTop <- f.y
+//         Console.CursorLeft <- (width + 2) + i * 8
+//         Console.Write (sprintf "%s (%i)" (if f.kind = Goblin then "G" else "E") f.health)
 
-    Console.CursorTop <- height + 1
-    Console.CursorLeft <- 2
-    Console.Write (sprintf "turn %i" turn)
-    //Console.ReadKey true
+//     Console.CursorTop <- height + 1
+//     Console.CursorLeft <- 2
+//     Console.Write (sprintf "turn %i" turn)
+//     //Console.ReadKey true
 
 let blockers walls (fighters : seq<Fighter>) start goal =
     fighters 
@@ -94,11 +93,11 @@ let main _ =
     let mutable index = 0;
     let mutable fighters = start |> List.sortBy (fun f -> f.y, f.x) |> List.toArray
 
-    Console.Clear ()
-    Console.CursorVisible <- false
+    // Console.Clear ()
+    // Console.CursorVisible <- false
 
     while not gameOver do
-        render walls fighters turn (input.[0].Length, input.Length) |> ignore
+        //render walls fighters turn (input.[0].Length, input.Length) |> ignore
         let fighter = fighters.[index]
         if fighter.health > 0 then
             let enemyKind = match fighter.kind with Elf -> Goblin | _ -> Elf

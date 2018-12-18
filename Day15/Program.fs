@@ -36,6 +36,26 @@ let render walls fighters turn = ()
     // Console.Write (sprintf "turn %i" turn)
     // //Console.ReadKey true
 
+let getAstarConfig ignored fighters walls = {
+        neighbours = fun (x, y) -> 
+            [-1,0;1,0;0,-1;0,1]
+            |> List.map (fun (dx, dy) -> x + dx, y + dy)
+            |> List.filter (fun p -> not <| Set.contains p walls)
+            |> List.filter (fun p -> 
+                Seq.tryFind (fun (e : Fighter) -> e.Pos = p) 
+                    (Array.except ignored fighters) = None)
+            |> Seq.ofList
+        fCost = fun _ _ -> 0.
+        gCost = fun (_, y1) (_, y2) -> if y1 = y2 then 0.5 else 1.
+        maxIterations = None
+    }
+
+let findPath (fighter : Fighter) fighters walls (index, (enemy : Fighter)) =
+    let config = getAstarConfig [fighter;enemy] fighters walls
+    match AStar.search fighter.Pos enemy.Pos config with
+    | Some path -> Some <| (Seq.toList path, enemy, index)
+    | _ -> None
+
 [<EntryPoint>]
 let main _ =
     let input = File.ReadAllLines "input.txt"
@@ -56,9 +76,6 @@ let main _ =
     let mutable index = 0;
     let fighters = start |> List.toArray
 
-    let findPath fighter (index, enemy) =
-        None
-
     while not gameOver do
         let fighter = fighters.[index]
         if fighter.health > 0 then
@@ -72,21 +89,32 @@ let main _ =
             if enemies.Length = 0 then
                 gameOver <- true
             else
-                let enemy = 
+                let targets = 
                     enemies 
-                    |> Array.map (findPath fighter)
+                    |> Array.map (findPath fighter fighters walls)
                     |> Array.choose id
-                    |> Array.sortBy (fun (p, _, _) -> List.length p, snd p.[0], fst p.[0])
+                let adjacent = 
+                    targets 
+                    |> Array.filter (fun (p, _, _) -> List.length p = 1)
+                    |> Array.sortBy (fun (_, e, _) -> e.health)
                     |> Array.tryHead
-                match enemy with
-                | Some ([_], e, i) ->
+                match adjacent with
+                | Some (_, e, i) ->
                     fighters.[i] <- { e with health = e.health - fighter.attack }
-                | Some ([x, y; _], e, i) ->
-                    fighters.[index] <- { fighter with x = x; y = y }
-                    fighters.[i] <- { e with health = e.health - fighter.attack }
-                | Some ((x, y)::_, _, _) ->
-                    fighters.[index] <- { fighter with x = x; y = y }
-                | _ -> ()
+                | None ->
+                    let target = 
+                        targets 
+                        |> Array.sortBy (fun (p, _, _) -> List.length p, snd p.[0], fst p.[0])
+                        |> Array.tryHead
+                    match target with
+                    | Some ([_], e, i) ->
+                        fighters.[i] <- { e with health = e.health - fighter.attack }
+                    | Some ([x, y; _], e, i) ->
+                        fighters.[index] <- { fighter with x = x; y = y }
+                        fighters.[i] <- { e with health = e.health - fighter.attack }
+                    | Some ((x, y)::_, _, _) ->
+                        fighters.[index] <- { fighter with x = x; y = y }
+                    | _ -> ()
 
                 index <- index + 1
                 if index = fighters.Length then

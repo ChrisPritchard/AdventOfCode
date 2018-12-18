@@ -40,7 +40,7 @@ let render walls fighters turn (width, height) =
     Console.CursorTop <- height + 1
     Console.CursorLeft <- 2
     Console.Write (sprintf "turn %i" turn)
-    Console.ReadKey true
+    //Console.ReadKey true
 
 let getAstarConfig ignored fighters walls = {
         neighbours = fun (x, y) -> 

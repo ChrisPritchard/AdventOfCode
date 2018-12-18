@@ -42,27 +42,36 @@ let render walls fighters turn (width, height) =
     Console.Write (sprintf "turn %i" turn)
     //Console.ReadKey true
 
-let getAstarConfig ignored fighters walls = {
-        neighbours = fun (x, y) -> 
-            [-1,0;1,0;0,-1;0,1]
+let blockers walls (fighters : seq<Fighter>) start goal =
+    fighters 
+    |> Seq.filter (fun f -> f.Pos <> goal && f.health > 0)
+    |> Seq.map (fun f -> f.Pos)
+    |> Set.ofSeq
+    |> Set.union walls
+    |> Set.add start
+
+let rec findPaths (x, y) goal blockers soFar =
+    [
+        let neighbours = 
+            [-1,0; 1,0; 0,-1; 0,1]
             |> List.map (fun (dx, dy) -> x + dx, y + dy)
-            |> List.filter (fun p -> not <| Set.contains p walls)
-            |> List.filter (fun p -> 
-                Seq.tryFind (fun (e : Fighter) -> e.health > 0 && e.Pos = p) 
-                    (Array.except ignored fighters) = None)
-            |> Seq.ofList
-        fCost = fun _ _ -> 0.
-        gCost = fun (_, y1) (_, y2) -> if y1 = y2 then 0.5 else 1.
-        maxIterations = None
-    }
+            |> List.filter (fun p -> not <| Set.contains p blockers)
+        let newBlockers = Set.union blockers <| Set.ofList neighbours
+        yield! neighbours |> Seq.collect (fun d -> 
+            if d = goal then [d::soFar |> List.rev]
+            else findPaths d goal newBlockers (d::soFar))
+    ]
+
+let choosePath paths = 
+    paths
+    |> List.sortBy (fun p -> List.length p, snd p.[0], fst p.[0])
+    |> List.tryHead
 
 let findPath (fighter : Fighter) fighters walls (index, (enemy : Fighter)) =
-    let config = getAstarConfig [fighter;enemy] fighters walls
-    match AStar.search fighter.Pos enemy.Pos config with
-    | Some path -> 
-        path 
-        |> Seq.rev |> Seq.toList
-        |> fun p -> Some (p.[1..], enemy, index)
+    let blockers = blockers walls fighters fighter.Pos enemy.Pos
+    let paths = findPaths fighter.Pos enemy.Pos blockers []
+    match choosePath paths with
+    | Some p -> Some (p, enemy, index)
     | _ -> None
 
 [<EntryPoint>]

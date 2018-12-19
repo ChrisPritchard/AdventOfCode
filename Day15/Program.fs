@@ -51,13 +51,13 @@ let blockers walls (fighters : seq<Fighter>) start =
 
 let neighbours = [-1, 0; 1, 0; 0, -1; 0, 1]
 
-let findPaths (fighter : Fighter) (enemies : seq<Fighter * int>) blockers =
-    let enemyMap = enemies |> Seq.map (fun (e, i) -> e.Pos, (e, i)) |> Map.ofSeq
+let findPath (ox, oy) (goals : (int * int) list) blockers =
+    let goalMap = Set.ofList goals
 
     let expander (paths, closed, found) path =
-        let (x, y) = match path with [] -> fighter.Pos | head::_ -> head
+        let (x, y) = match path with [] -> (ox, oy) | head::_ -> head
         let next = neighbours |> List.map (fun (dx, dy) -> x + dx, y + dy)
-        let results = next |> List.filter (fun p -> Map.containsKey p enemyMap)
+        let results = next |> List.filter (fun p -> Set.contains p goalMap)
         if List.isEmpty results then
             let used = List.filter (fun p -> not <| Set.contains p closed) next
             List.map (fun p -> p::path) used @ paths, 
@@ -78,12 +78,19 @@ let findPaths (fighter : Fighter) (enemies : seq<Fighter * int>) blockers =
             None
 
     match expand [[]] blockers with
-    | None -> []
-    | Some results ->
-        results |> List.map (fun p -> 
-            let e, i = enemyMap.[List.head p]
-            List.rev p, e, i)
-        
+    | Some paths ->
+        paths |> List.sortBy (fun p -> snd p.[0], fst p.[0])
+        |> List.tryHead
+        |> Option.map List.rev
+    | None -> None
+
+let strikeTarget (x, y) enemyMap =
+    neighbours 
+    |> List.map (fun (nx, ny) -> Map.tryFind (x + nx, y + ny) enemyMap)
+    |> List.choose id
+    |> List.sortBy (fun (e, _) -> e.health, e.y, e.x)
+    |> List.tryHead
+
 [<EntryPoint>]
 let main _ =
     let input = File.ReadAllLines "input.txt"
@@ -111,47 +118,39 @@ let main _ =
         //render walls fighters turn (input.[0].Length, input.Length) |> ignore
         let fighter = fighters.[index]
         if fighter.health > 0 then
+
             let enemyKind = match fighter.kind with Elf -> Goblin | _ -> Elf
             let enemies = 
                 fighters 
                 |> Array.mapi (fun i f -> f, i) 
                 |> Array.filter (fun (e, _) -> e.kind = enemyKind && e.health > 0)
-                |> Array.sortBy (fun (e, _) -> e.health)
+                |> Array.toList
 
             if enemies.Length = 0 then
                 gameOver <- true
             else
-                let blockers = blockers walls fighters fighter.Pos
-                let squares = 
-                    enemies
-                    |> Array.toList 
-                    |> List.collect (fun (e, _) ->
-                        neighbours 
-                        |> List.map (fun (nx, ny) -> e.x + nx, e.y + ny)
-                        |> List.filter (fun p -> Set.contains p blockers |> not))
-                let targets = findPaths fighter enemies blockers
-                let target = 
-                    targets 
-                    |> Seq.sortBy (fun (p, e, _) -> 
-                        match p.Length with
-                        | 1 -> 
-                            e.health, e.y, e.x, 0, 0, 0
-                        | 2 -> 
-                            let (sx, sy) = p.[0]
-                            0, sy, sx, e.health, e.y, e.x
-                        | _ ->
-                            let (sx, sy) = p.[p.Length - 2]
-                            0, sy, sx, 0, 0, 0)
-                    |> Seq.tryHead
-                match target with
-                | Some ([_], e, i) ->
+                let enemyMap = enemies |> Seq.map (fun (e, i) -> e.Pos, (e, i)) |> Map.ofSeq
+                match strikeTarget fighter.Pos enemyMap with
+                | Some (e, i) ->
                     fighters.[i] <- { e with health = e.health - fighter.attack }
-                | Some ([x, y; _], e, i) ->
-                    fighters.[index] <- { fighter with x = x; y = y }
-                    fighters.[i] <- { e with health = e.health - fighter.attack }
-                | Some ((x, y)::_, _, _) ->
-                    fighters.[index] <- { fighter with x = x; y = y }
-                | _ -> ()
+                | None ->
+                    let blockers = blockers walls fighters fighter.Pos
+                    let squares = 
+                        enemies
+                        |> List.collect (fun (e, _) ->
+                            neighbours 
+                            |> List.map (fun (nx, ny) -> e.x + nx, e.y + ny)
+                            |> List.filter (fun p -> Set.contains p blockers |> not))
+                        |> List.distinct
+                    
+                    match findPath fighter.Pos squares blockers with
+                    | Some ((x, y)::_) ->
+                        fighters.[index] <- { fighter with x = x; y = y }
+                        match strikeTarget (x, y) enemyMap with
+                        | Some (e, i) ->
+                            fighters.[i] <- { e with health = e.health - fighter.attack }
+                        | _ -> ()
+                    | _ -> ()
 
         index <- index + 1
         if index = fighters.Length && not gameOver then

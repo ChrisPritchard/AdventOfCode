@@ -39,7 +39,7 @@ let render walls fighters turn (width, height) =
     Console.Write (sprintf "turn %i" turn)
 
     System.Threading.Thread.Sleep 33
-    //Console.ReadKey true
+    Console.ReadKey true
 
 let blockers walls (fighters : seq<Fighter>) start =
     fighters 
@@ -105,8 +105,8 @@ let main _ =
     let mutable index = 0;
     let mutable fighters = start |> List.sortBy (fun f -> f.y, f.x) |> List.toArray
 
-    // Console.Clear ()
-    // Console.CursorVisible <- false
+    Console.Clear ()
+    Console.CursorVisible <- false
 
     while not gameOver do
         //render walls fighters turn (input.[0].Length, input.Length) |> ignore
@@ -127,10 +127,15 @@ let main _ =
                 let target = 
                     targets 
                     |> Seq.sortBy (fun (p, e, _) -> 
-                        match List.length p with
-                        | 1 -> e.health, e.y, e.x, 0, 0, 0
-                        | 2 -> 0, snd p.[0], fst p.[0], e.health, e.y, e.x
-                        | _ ->  0, snd p.[0], fst p.[0], 0, 0, 0)
+                        match p.Length with
+                        | 1 -> 
+                            e.health, e.y, e.x, 0, 0, 0
+                        | 2 -> 
+                            let (sx, sy) = p.[0]
+                            0, sy, sx, e.health, e.y, e.x
+                        | _ ->
+                            let (sx, sy) = p.[p.Length - 2]
+                            0, sy, sx, 0, 0, 0)
                     |> Seq.tryHead
                 match target with
                 | Some ([_], e, i) ->

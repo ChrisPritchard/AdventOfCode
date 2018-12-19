@@ -135,7 +135,8 @@ let main _ =
                 | None ->
                     let target = 
                         targets 
-                        |> Seq.sortBy (fun (p, _, _) -> snd p.[0], fst p.[0])
+                        |> Seq.sortBy (fun (p, e, _) -> 
+                            (if p.Length = 2 then e.health else 0), snd p.[0], fst p.[0])
                         |> Seq.tryHead
                     match target with
                     | Some ([_], e, i) ->
@@ -148,7 +149,7 @@ let main _ =
                     | _ -> ()
 
         index <- index + 1
-        if index = fighters.Length && not gameOver then
+        if index = fighters.Length then
             index <- 0
             turn <- turn + 1
             fighters <- fighters |> Array.sortBy (fun f -> f.y, f.x)

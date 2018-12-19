@@ -37,9 +37,9 @@ let render walls fighters turn (width, height) =
     Console.CursorTop <- height + 1
     Console.CursorLeft <- 2
     Console.Write (sprintf "turn %i" turn)
-    
+
     System.Threading.Thread.Sleep 33
-    Console.ReadKey true
+    //Console.ReadKey true
 
 let blockers walls (fighters : seq<Fighter>) start =
     fighters 

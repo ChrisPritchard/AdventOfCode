@@ -49,14 +49,14 @@ let blockers walls (fighters : seq<Fighter>) start =
     |> Set.union walls
     |> Set.add start
 
+let neighbours = [-1, 0; 1, 0; 0, -1; 0, 1]
+
 let findPaths (fighter : Fighter) (enemies : seq<Fighter * int>) blockers =
     let enemyMap = enemies |> Seq.map (fun (e, i) -> e.Pos, (e, i)) |> Map.ofSeq
 
     let expander (paths, closed, found) path =
         let (x, y) = match path with [] -> fighter.Pos | head::_ -> head
-        let next = 
-            [-1, 0; 1, 0; 0, -1; 0, 1] 
-            |> List.map (fun (dx, dy) -> x + dx, y + dy)
+        let next = neighbours |> List.map (fun (dx, dy) -> x + dx, y + dy)
         let results = next |> List.filter (fun p -> Map.containsKey p enemyMap)
         if List.isEmpty results then
             let used = List.filter (fun p -> not <| Set.contains p closed) next
@@ -84,7 +84,6 @@ let findPaths (fighter : Fighter) (enemies : seq<Fighter * int>) blockers =
             let e, i = enemyMap.[List.head p]
             List.rev p, e, i)
         
-
 [<EntryPoint>]
 let main _ =
     let input = File.ReadAllLines "input.txt"
@@ -123,6 +122,13 @@ let main _ =
                 gameOver <- true
             else
                 let blockers = blockers walls fighters fighter.Pos
+                let squares = 
+                    enemies
+                    |> Array.toList 
+                    |> List.collect (fun (e, _) ->
+                        neighbours 
+                        |> List.map (fun (nx, ny) -> e.x + nx, e.y + ny)
+                        |> List.filter (fun p -> Set.contains p blockers |> not))
                 let targets = findPaths fighter enemies blockers
                 let target = 
                     targets 

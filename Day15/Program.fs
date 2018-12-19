@@ -105,11 +105,11 @@ let main _ =
     let mutable index = 0;
     let mutable fighters = start |> List.sortBy (fun f -> f.y, f.x) |> List.toArray
 
-    Console.Clear ()
-    Console.CursorVisible <- false
+    // Console.Clear ()
+    // Console.CursorVisible <- false
 
     while not gameOver do
-        render walls fighters turn (input.[0].Length, input.Length) |> ignore
+        //render walls fighters turn (input.[0].Length, input.Length) |> ignore
         let fighter = fighters.[index]
         if fighter.health > 0 then
             let enemyKind = match fighter.kind with Elf -> Goblin | _ -> Elf
@@ -124,32 +124,26 @@ let main _ =
             else
                 let blockers = blockers walls fighters fighter.Pos
                 let targets = findPaths fighter enemies blockers
-                let adjacent = 
+                let target = 
                     targets 
-                    |> Seq.filter (fun (p, _, _) -> List.length p = 1)
-                    |> Seq.sortBy (fun (_, e, _) -> e.health, e.y, e.x)
+                    |> Seq.sortBy (fun (p, e, _) -> 
+                        match List.length p with
+                        | 1 -> e.health, e.y, e.x, 0, 0, 0
+                        | 2 -> 0, snd p.[0], fst p.[0], e.health, e.y, e.x
+                        | _ ->  0, snd p.[0], fst p.[0], 0, 0, 0)
                     |> Seq.tryHead
-                match adjacent with
-                | Some (_, e, i) ->
+                match target with
+                | Some ([_], e, i) ->
                     fighters.[i] <- { e with health = e.health - fighter.attack }
-                | None ->
-                    let target = 
-                        targets 
-                        |> Seq.sortBy (fun (p, e, _) -> 
-                            (if p.Length = 2 then e.health else 0), snd p.[0], fst p.[0])
-                        |> Seq.tryHead
-                    match target with
-                    | Some ([_], e, i) ->
-                        fighters.[i] <- { e with health = e.health - fighter.attack }
-                    | Some ([x, y; _], e, i) ->
-                        fighters.[index] <- { fighter with x = x; y = y }
-                        fighters.[i] <- { e with health = e.health - fighter.attack }
-                    | Some ((x, y)::_, _, _) ->
-                        fighters.[index] <- { fighter with x = x; y = y }
-                    | _ -> ()
+                | Some ([x, y; _], e, i) ->
+                    fighters.[index] <- { fighter with x = x; y = y }
+                    fighters.[i] <- { e with health = e.health - fighter.attack }
+                | Some ((x, y)::_, _, _) ->
+                    fighters.[index] <- { fighter with x = x; y = y }
+                | _ -> ()
 
         index <- index + 1
-        if index = fighters.Length then
+        if index = fighters.Length && not gameOver then
             index <- 0
             turn <- turn + 1
             fighters <- fighters |> Array.sortBy (fun f -> f.y, f.x)

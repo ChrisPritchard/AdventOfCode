@@ -13,7 +13,7 @@ and FighterKind = Goblin | Elf
 let create x y kind = { x = x; y = y; health = 200; attack = 3; kind = kind }
 
 // let render walls fighters turn (width, height) =
-//     //System.Threading.Thread.Sleep 50
+//     System.Threading.Thread.Sleep 100
 
 //     for y = 0 to height-1 do
 //         Console.CursorTop <- y   
@@ -41,37 +41,36 @@ let create x y kind = { x = x; y = y; health = 200; attack = 3; kind = kind }
 //     Console.Write (sprintf "turn %i" turn)
 //     //Console.ReadKey true
 
-let blockers walls (fighters : seq<Fighter>) start goal =
+let blockers walls (fighters : seq<Fighter>) start enemies =
     fighters 
-    |> Seq.filter (fun f -> f.Pos <> goal && f.health > 0)
+    |> Seq.filter (fun f -> not (List.contains f enemies) && f.health > 0)
     |> Seq.map (fun f -> f.Pos)
     |> Set.ofSeq
     |> Set.union walls
     |> Set.add start
 
-let rec findPaths (x, y) goal blockers soFar =
-    [
-        let neighbours = 
-            [-1,0; 1,0; 0,-1; 0,1]
-            |> List.map (fun (dx, dy) -> x + dx, y + dy)
-            |> List.filter (fun p -> not <| Set.contains p blockers)
-        let newBlockers = Set.union blockers <| Set.ofList neighbours
-        yield! neighbours |> Seq.collect (fun d -> 
-            if d = goal then [d::soFar |> List.rev]
-            else findPaths d goal newBlockers (d::soFar))
-    ]
-
-let choosePath paths = 
-    paths
-    |> List.sortBy (fun p -> List.length p, snd p.[0], fst p.[0])
-    |> List.tryHead
-
-let findPath (fighter : Fighter) fighters walls (index, (enemy : Fighter)) =
-    let blockers = blockers walls fighters fighter.Pos enemy.Pos
-    let paths = findPaths fighter.Pos enemy.Pos blockers []
-    match choosePath paths with
-    | Some p -> Some (p, enemy, index)
-    | _ -> None
+let rec findPaths (fighter : Fighter) (enemies : seq<Fighter * int>) blockers =
+    let enemyMap = enemies |> Seq.map (fun (e, i) -> e.Pos, (e, i)) |> Map.ofSeq
+    let mutable maxLen = 0
+    let rec search (x, y) blockers soFar =
+        [
+            if maxLen <> 0 && List.length soFar >= maxLen then ()
+            else
+                let neighbours = 
+                    [-1,0; 1,0; 0,-1; 0,1]
+                    |> List.map (fun (dx, dy) -> x + dx, y + dy)
+                    |> List.filter (fun p -> not <| Set.contains p blockers)
+                let newBlockers = Set.union blockers <| Set.ofList neighbours
+                yield! neighbours |> Seq.collect (fun d -> 
+                    if enemyMap.ContainsKey d then 
+                        maxLen <- List.length soFar + 1
+                        [d::soFar |> List.rev]
+                    else search d newBlockers (d::soFar))
+        ]
+    search fighter.Pos blockers []
+    |> List.map (fun p -> 
+        let e, i = enemyMap.[p.[p.Length-1]]
+        p, e, i)
 
 [<EntryPoint>]
 let main _ =
@@ -103,30 +102,28 @@ let main _ =
             let enemyKind = match fighter.kind with Elf -> Goblin | _ -> Elf
             let enemies = 
                 fighters 
-                |> Array.mapi (fun i f -> i, f) 
-                |> Array.filter (fun (_, e) -> e.kind = enemyKind && e.health > 0)
-                |> Array.sortBy (fun (_, e) -> e.health)
+                |> Array.mapi (fun i f -> f, i) 
+                |> Array.filter (fun (e, _) -> e.kind = enemyKind && e.health > 0)
+                |> Array.sortBy (fun (e, _) -> e.health)
 
             if enemies.Length = 0 then
                 gameOver <- true
             else
-                let targets = 
-                    enemies 
-                    |> Array.map (findPath fighter fighters walls)
-                    |> Array.choose id
+                let blockers = blockers walls fighters fighter.Pos (enemies |> Seq.map fst |> Seq.toList)
+                let targets = findPaths fighter enemies blockers
                 let adjacent = 
                     targets 
-                    |> Array.filter (fun (p, _, _) -> List.length p = 1)
-                    |> Array.sortBy (fun (_, e, _) -> e.health)
-                    |> Array.tryHead
+                    |> Seq.filter (fun (p, _, _) -> List.length p = 1)
+                    |> Seq.sortBy (fun (_, e, _) -> e.health)
+                    |> Seq.tryHead
                 match adjacent with
                 | Some (_, e, i) ->
                     fighters.[i] <- { e with health = e.health - fighter.attack }
                 | None ->
                     let target = 
                         targets 
-                        |> Array.sortBy (fun (p, _, _) -> List.length p, snd p.[0], fst p.[0])
-                        |> Array.tryHead
+                        |> Seq.sortBy (fun (p, _, _) -> List.length p, snd p.[0], fst p.[0])
+                        |> Seq.tryHead
                     match target with
                     | Some ([_], e, i) ->
                         fighters.[i] <- { e with health = e.health - fighter.attack }

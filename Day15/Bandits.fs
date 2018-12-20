@@ -93,10 +93,10 @@ let findStep start enemyMap blockers =
             |> List.tryHead
             |> Option.map snd
 
-    expand [[]] <| Set.add start blockers
+    expand [[]] blockers
 
 let runFighterTurn (walls, fighters) elfAttack shouldFailOnElfDeath (prev, gameOver) fighter =
-    if gameOver then
+    if gameOver || fighter.health < 1 then
         fighter::prev, gameOver
     else
         let enemies = targetMap fighter.kind fighters            

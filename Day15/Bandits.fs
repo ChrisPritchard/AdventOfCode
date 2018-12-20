@@ -53,16 +53,37 @@ let targetMap kind fighters =
     |> Map.ofList
 
 let deltas = [0, -1; -1, 0; 1, 0; 0, 1]
+let neighbours (x, y) = deltas |> List.map (fun (dx, dy) -> x + dx, y + dy)
 
-let strikeAdjacent (x, y) enemyMap =
-    deltas 
-    |> List.map (fun (dx, dy) -> Map.tryFind (x + dx, y + dy) enemyMap)
+let strikeAdjacent p enemyMap =
+    neighbours p
+    |> List.map (fun op -> Map.tryFind op enemyMap)
     |> List.choose id
     |> List.sortBy (fun e -> e.health, e.Y, e.X)
     |> List.tryHead
 
-let findStep (x, y) enemyMap walls =
-    None
+let findStep start enemyMap blockers =
+    let goalMap = enemyMap |> Map.toList |> List.collect (fst >> neighbours) |> Set.ofList
+
+    let expander (prev, closed, found) path =
+        let next = 
+            neighbours (match path with | p::_ -> p | _ -> start)
+            |> List.filter (fun p -> not <| Set.contains p closed)
+        let nextPaths = List.map (fun p -> p, p::path) next
+        (List.map snd nextPaths) @ prev, 
+        next |> Set.ofList |> Set.union closed,
+        (List.filter (fun (p, _) -> Set.contains p goalMap) nextPaths) @ found
+
+    let rec expand soFar closed = 
+        let next, closed, found = soFar |> List.fold expander ([], closed, [])
+        if List.isEmpty found then expand next closed
+        else
+            found 
+            |> List.sortBy (fun ((px, py), path) -> py, px, snd path.[0], fst path.[0])
+            |> List.tryHead
+            |> Option.map (snd >> Seq.last)
+
+    expand [[]] <| Set.add start blockers
 
 let runFighterTurn (walls, fighters) elfAttack shouldFailOnElfDeath (prev, gameOver) fighter =
     if gameOver then
@@ -78,7 +99,8 @@ let runFighterTurn (walls, fighters) elfAttack shouldFailOnElfDeath (prev, gameO
                 let gameOver = e.health < 1 && e.kind = Elf && shouldFailOnElfDeath
                 fighter::prev, gameOver
             | None ->
-                match findStep fighter.pos enemies walls with
+                let blockers = fighters |> List.map (fun f -> f.pos) |> Set.ofList |> Set.union walls
+                match findStep fighter.pos enemies blockers with
                 | None -> fighter::prev, false
                 | Some s ->
                     fighter.pos <- s

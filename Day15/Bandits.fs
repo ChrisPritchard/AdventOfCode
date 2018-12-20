@@ -73,19 +73,19 @@ let strikeAdjacent p enemyMap =
 let findStep start enemyMap blockers =
     let goalMap = enemyMap |> Map.toList |> List.collect (fst >> neighbours) |> Set.ofList
 
-    let expander (prev, closed, found) path =
+    let expander closed (prev, newClosed, found) path =
         let next = 
             neighbours (match path with | p::_ -> p | _ -> start)
             |> List.filter (fun p -> not <| Set.contains p closed)
         let nextPaths = List.map (fun p -> p, p::path) next
         (List.map snd nextPaths) @ prev, 
-        next |> Set.ofList |> Set.union closed,
+        next |> Set.ofList |> Set.union newClosed,
         (List.filter (fun (p, _) -> Set.contains p goalMap) nextPaths) @ found
 
     let rec expand soFar closed = 
-        let next, closed, found = soFar |> List.fold expander ([], closed, [])
+        let next, newClosed, found = soFar |> List.fold (expander closed) ([], Set.empty, [])
         if List.isEmpty found && not <| List.isEmpty next 
-        then expand next closed
+        then expand next (Set.union closed newClosed)
         else
             found 
             |> List.map (fun (p, path) -> p, Seq.last path)
@@ -132,13 +132,13 @@ let runGame startMap elfAttack shouldFailOnElfDeath =
     let walls, startFighters = processMap startMap
 
     let rec runTurns fighters lastTurnCount =
-        System.Console.CursorVisible <- false
-        System.Console.CursorTop <- 0
-        composeMap walls fighters |> Array.iter (printfn "%s")
-        printfn "turn %i" lastTurnCount
-        fighters |> List.iter (fun f -> printfn "%A %i               " f.kind f.health)
-        //System.Threading.Thread.Sleep 500
-        System.Console.ReadKey true |> ignore
+        // System.Console.CursorVisible <- false
+        // System.Console.CursorTop <- 0
+        // composeMap walls fighters |> Array.iter (printfn "%s")
+        // printfn "turn %i" lastTurnCount
+        // fighters |> List.iter (fun f -> printfn "%A %i               " f.kind f.health)
+        // //System.Threading.Thread.Sleep 500
+        // System.Console.ReadKey true |> ignore
         
         let (newFighters, gameOver) = runTurn (walls, fighters) elfAttack shouldFailOnElfDeath
         if gameOver then 

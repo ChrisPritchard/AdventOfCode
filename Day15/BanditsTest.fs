@@ -5,7 +5,7 @@ open FsUnit.Xunit
 open Xunit
 
 [<Fact>]
-let ``First example`` () =
+let ``Part 1 First example`` () =
     let map = [|
         "#######"   
         "#.G...#"
@@ -34,7 +34,7 @@ let ``First example`` () =
     | _ -> failwith "Unexcepted loss"
 
 [<Fact>]
-let ``Second example`` () =
+let ``Part 2 Second example`` () =
     let map = [|
         "#######"
         "#G..#E#"

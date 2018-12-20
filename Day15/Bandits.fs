@@ -52,6 +52,13 @@ let targetMap kind fighters =
     |> List.map (fun f -> f.pos, f) 
     |> Map.ofList
 
+let blockers fighters walls =
+    fighters 
+    |> List.filter (fun f -> f.health > 0) 
+    |> List.map (fun f -> f.pos) 
+    |> Set.ofList 
+    |> Set.union walls
+
 let deltas = [0, -1; -1, 0; 1, 0; 0, 1]
 let neighbours (x, y) = deltas |> List.map (fun (dx, dy) -> x + dx, y + dy)
 
@@ -76,7 +83,8 @@ let findStep start enemyMap blockers =
 
     let rec expand soFar closed = 
         let next, closed, found = soFar |> List.fold expander ([], closed, [])
-        if List.isEmpty found then expand next closed
+        if List.isEmpty found && not <| List.isEmpty next 
+        then expand next closed
         else
             found 
             |> List.sortBy (fun ((px, py), path) -> py, px, snd path.[0], fst path.[0])
@@ -99,7 +107,7 @@ let runFighterTurn (walls, fighters) elfAttack shouldFailOnElfDeath (prev, gameO
                 let gameOver = e.health < 1 && e.kind = Elf && shouldFailOnElfDeath
                 fighter::prev, gameOver
             | None ->
-                let blockers = fighters |> List.map (fun f -> f.pos) |> Set.ofList |> Set.union walls
+                let blockers = blockers fighters walls
                 match findStep fighter.pos enemies blockers with
                 | None -> fighter::prev, false
                 | Some s ->
@@ -113,6 +121,12 @@ let runFighterTurn (walls, fighters) elfAttack shouldFailOnElfDeath (prev, gameO
                         fighter::prev, false
 
 let runTurn (walls, fighters) elfAttack shouldFailOnElfDeath =
+    // System.Console.CursorVisible <- false
+    // System.Console.CursorTop <- 0
+    // composeMap walls fighters |> Array.iter (printfn "%s")
+    // fighters |> List.iter (fun f -> printfn "%A %i               " f.kind f.health)
+    // System.Threading.Thread.Sleep 500
+    
     fighters 
     |> List.filter (fun f -> f.health > 0)
     |> List.sortBy (fun (f: Fighter) -> f.Y, f.X)
@@ -130,4 +144,7 @@ let runGame startMap elfAttack shouldFailOnElfDeath =
 
     let turn, finalFighters = runTurns startFighters 0
     let finalMap = composeMap walls finalFighters
-    Victory (finalMap, turn, finalFighters |> List.sumBy (fun f -> f.health))
+    if shouldFailOnElfDeath && List.tryFind (fun f -> f.kind = Goblin) finalFighters <> None then
+        ElfDeath turn
+    else
+        Victory (finalMap, turn, finalFighters |> List.sumBy (fun f -> f.health))

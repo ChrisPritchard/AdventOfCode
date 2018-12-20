@@ -138,14 +138,16 @@ let main _ =
 
     let elfCount (fighters : seq<Fighter>) = fighters |> Seq.sumBy (fun f -> if f.kind = Elf && f.health > 0 then 1 else 0)
     let startCount = elfCount start
+    printfn "starting with %i elves" startCount
     let mutable elfAttack = 4
     let mutable found = false
     while not found do
         printfn "trying elf attack %i..." elfAttack
         let part2Attack = [Goblin,3;Elf,elfAttack]|> Map.ofList
         let part2Turn, part2Fighters = runGame walls start part2Attack
-        if elfCount part2Fighters = startCount then
-            let finalHealth = part2Fighters |> Seq.filter (fun f -> f.health > 0) |> Seq.sumBy (fun f -> f.health)
+        let elvesAlive = elfCount part2Fighters
+        if elvesAlive = startCount then
+            let finalHealth = part2Fighters |> Seq.sumBy (fun f -> if f.health > 0 && f.kind = Elf then f.health else 0)
             printfn "part 2: turn %i health %i score %i" part2Turn finalHealth (part2Turn * finalHealth)
             found <- true
         else

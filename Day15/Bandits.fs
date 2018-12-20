@@ -31,8 +31,9 @@ let composeMap walls fighters =
     let elves, goblins = 
         fighters
         |> List.fold (fun (elves, goblins) f ->
-            if f.kind = Elf then Map.add f.pos f elves, goblins
-            else elves, Map.add f.pos f goblins) (Map.empty, Map.empty)
+            if f.kind = Elf && f.health > 0 then Map.add f.pos f elves, goblins
+            else if f.health > 0 then elves, Map.add f.pos f goblins
+            else elves, goblins) (Map.empty, Map.empty)
     let width, height = 
         walls 
         |> Set.toList 
@@ -87,9 +88,10 @@ let findStep start enemyMap blockers =
         then expand next closed
         else
             found 
-            |> List.sortBy (fun ((px, py), path) -> py, px, snd path.[0], fst path.[0])
+            |> List.map (fun (p, path) -> p, Seq.last path)
+            |> List.sortBy (fun ((px, py), (sx, sy)) -> py, px, sy, sx)
             |> List.tryHead
-            |> Option.map (snd >> Seq.last)
+            |> Option.map snd
 
     expand [[]] <| Set.add start blockers
 
@@ -121,12 +123,6 @@ let runFighterTurn (walls, fighters) elfAttack shouldFailOnElfDeath (prev, gameO
                         fighter::prev, false
 
 let runTurn (walls, fighters) elfAttack shouldFailOnElfDeath =
-    // System.Console.CursorVisible <- false
-    // System.Console.CursorTop <- 0
-    // composeMap walls fighters |> Array.iter (printfn "%s")
-    // fighters |> List.iter (fun f -> printfn "%A %i               " f.kind f.health)
-    // System.Threading.Thread.Sleep 500
-    
     fighters 
     |> List.filter (fun f -> f.health > 0)
     |> List.sortBy (fun (f: Fighter) -> f.Y, f.X)
@@ -136,6 +132,14 @@ let runGame startMap elfAttack shouldFailOnElfDeath =
     let walls, startFighters = processMap startMap
 
     let rec runTurns fighters lastTurnCount =
+        System.Console.CursorVisible <- false
+        System.Console.CursorTop <- 0
+        composeMap walls fighters |> Array.iter (printfn "%s")
+        printfn "turn %i" lastTurnCount
+        fighters |> List.iter (fun f -> printfn "%A %i               " f.kind f.health)
+        //System.Threading.Thread.Sleep 500
+        System.Console.ReadKey true |> ignore
+        
         let (newFighters, gameOver) = runTurn (walls, fighters) elfAttack shouldFailOnElfDeath
         if gameOver then 
             lastTurnCount, newFighters |> List.filter (fun f -> f.health > 0)

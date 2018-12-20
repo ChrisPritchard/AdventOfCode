@@ -16,7 +16,7 @@ and FighterKind = private | Elf | Goblin
 
 let private create pos kind = { kind = kind; pos = pos; health = 200 }
 
-let private processMap map =
+let processMap map =
     map 
     |> Seq.mapi (fun y line -> line |> Seq.mapi (fun x c -> (x, y, c)))
     |> Seq.collect id
@@ -27,6 +27,25 @@ let private processMap map =
         | 'E' -> walls, (create (x, y) Elf)::fighters
         | _ -> walls, fighters) (Set.empty, [])
 
+let composeMap walls fighters =
+    let elves, goblins = 
+        fighters
+        |> List.fold (fun (elves, goblins) f ->
+            if f.kind = Elf then Map.add f.pos f elves, goblins
+            else elves, Map.add f.pos f goblins) (Map.empty, Map.empty)
+    let width, height = 
+        walls 
+        |> Set.toList 
+        |> List.fold (fun (width, height) (x, y) ->
+            (if x > width then x else width), (if y > height then y else height)) (0, 0)
+    [0..height] |> List.map (fun y -> 
+        [0..width] |> List.map (fun x -> 
+            if Set.contains (x, y) walls then "#"
+            else if Map.containsKey (x, y) elves then "E"
+            else if Map.containsKey (x, y) goblins then "G"
+            else ".") |> String.concat "")
+    |> List.toArray
+
 let runFighterTurn (walls, fighters) (prev, gameOver) fighter =
     if gameOver then
         fighter::prev, gameOver
@@ -35,12 +54,12 @@ let runFighterTurn (walls, fighters) (prev, gameOver) fighter =
         if List.isEmpty enemies then
             fighter::prev, true
         else
-            //fighter::prev, true
+            fighter::prev, true
 
-let runTurn gameState elfAttack shouldFailOnElfDeath =
+let runTurn (walls, fighters) elfAttack shouldFailOnElfDeath =
     fighters 
-    |> List.sortBy (fun f -> f.Y, f.X)
-    |> List.fold (runFighterTurn gameState) ([], false)
+    |> List.sortBy (fun (f: Fighter) -> f.Y, f.X)
+    |> List.fold (runFighterTurn (walls, fighters)) ([], false)
 
 let runGame startMap elfAttack shouldFailOnElfDeath =
     let walls, startFighters = processMap startMap
@@ -54,4 +73,4 @@ let runGame startMap elfAttack shouldFailOnElfDeath =
 
     let turn, finalFighters = runTurns startFighters 0
     let finalMap = composeMap walls finalFighters
-    Victory (startMap, turn, finalFighters)
+    Victory (finalMap, turn, finalFighters |> List.sumBy (fun f -> f.health))

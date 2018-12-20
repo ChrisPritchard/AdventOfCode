@@ -152,3 +152,9 @@ let runGame startMap elfAttack shouldFailOnElfDeath =
         ElfDeath turn
     else
         Victory (finalMap, turn, finalFighters |> List.sumBy (fun f -> f.health))
+
+let findMinElfAttack startMap = 
+    [4..200] |> List.fold (fun prevResult elfAttack ->
+        match prevResult with
+        | _, ElfDeath _ -> elfAttack, runGame startMap elfAttack true
+        | _, _ -> prevResult) (0, ElfDeath 0)

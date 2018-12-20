@@ -46,20 +46,55 @@ let composeMap walls fighters =
             else ".") |> String.concat "")
     |> List.toArray
 
-let runFighterTurn (walls, fighters) (prev, gameOver) fighter =
+let targetMap kind fighters =
+    fighters 
+    |> List.filter (fun f -> f.kind <> kind && f.health > 0) 
+    |> List.map (fun f -> f.pos, f) 
+    |> Map.ofList
+
+let deltas = [0, -1; -1, 0; 1, 0; 0, 1]
+
+let strikeAdjacent (x, y) enemyMap =
+    deltas 
+    |> List.map (fun (dx, dy) -> Map.tryFind (x + dx, y + dy) enemyMap)
+    |> List.choose id
+    |> List.sortBy (fun e -> e.health, e.Y, e.X)
+    |> List.tryHead
+
+let findStep (x, y) enemyMap walls =
+    None
+
+let runFighterTurn (walls, fighters) elfAttack shouldFailOnElfDeath (prev, gameOver) fighter =
     if gameOver then
         fighter::prev, gameOver
     else
-        let enemies = fighters |> List.filter (fun f -> f.kind <> fighter.kind && f.health > 0)
-        if List.isEmpty enemies then
+        let enemies = targetMap fighter.kind fighters            
+        if Map.isEmpty enemies then
             fighter::prev, true
         else
-            fighter::prev, true
+            match strikeAdjacent fighter.pos enemies with
+            | Some e ->
+                e.health <- e.health - (if fighter.kind = Elf then elfAttack else 3)
+                let gameOver = e.health < 1 && e.kind = Elf && shouldFailOnElfDeath
+                fighter::prev, gameOver
+            | None ->
+                match findStep fighter.pos enemies walls with
+                | None -> fighter::prev, false
+                | Some s ->
+                    fighter.pos <- s
+                    match strikeAdjacent fighter.pos enemies with
+                    | Some e ->
+                        e.health <- e.health - (if fighter.kind = Elf then elfAttack else 3)
+                        let gameOver = e.health < 1 && e.kind = Elf && shouldFailOnElfDeath
+                        fighter::prev, gameOver
+                    | None ->
+                        fighter::prev, false
 
 let runTurn (walls, fighters) elfAttack shouldFailOnElfDeath =
     fighters 
+    |> List.filter (fun f -> f.health > 0)
     |> List.sortBy (fun (f: Fighter) -> f.Y, f.X)
-    |> List.fold (runFighterTurn (walls, fighters)) ([], false)
+    |> List.fold (runFighterTurn (walls, fighters) elfAttack shouldFailOnElfDeath) ([], false)
 
 let runGame startMap elfAttack shouldFailOnElfDeath =
     let walls, startFighters = processMap startMap

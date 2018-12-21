@@ -44,6 +44,15 @@ let renderMap (map: Tile [,]) =
             | Spring -> "+")
         |> String.concat "")
 
+let water map = 
+    [0..Array2D.length2 map - 1] |> List.sumBy (fun y ->
+        [0..Array2D.length1 map - 1] 
+        |> List.sumBy (fun x -> 
+            match map.[x, y] with
+            | Sand | Clay -> 0
+            | FallingWater | RestingWater -> 1
+            | Spring -> 0))
+
 [<EntryPoint>]
 let main _ =
 

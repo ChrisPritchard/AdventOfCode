@@ -73,27 +73,44 @@ let strikeAdjacent p enemyMap =
 let findStep start enemyMap blockers =
     let goalMap = enemyMap |> Map.toList |> List.collect (fst >> neighbours) |> Set.ofList
 
-    let expander closed (prev, newClosed, found) path =
+    let spaceExpander (prev, closed, found) path =
         let next = 
-            neighbours (match path with | p::_ -> p | _ -> start)
+            neighbours (match path with [] -> start | head::_ -> head)
             |> List.filter (fun p -> not <| Set.contains p closed)
-        let nextPaths = List.map (fun p -> p, p::path) next
-        (List.map snd nextPaths) @ prev, 
-        next |> Set.ofList |> Set.union newClosed,
-        (List.filter (fun (p, _) -> Set.contains p goalMap) nextPaths) @ found
+        match next |> List.filter (fun p -> Set.contains p goalMap) with
+        | [] -> (List.map (fun p -> p::path) next) @ prev, Set.union closed <| Set.ofList next, found
+        | f -> prev, Set.union closed <| Set.ofList f, f @ found
 
-    let rec expand soFar closed = 
-        let next, newClosed, found = soFar |> List.fold (expander closed) ([], Set.empty, [])
-        if List.isEmpty found && not <| List.isEmpty next 
-        then expand next (Set.union closed newClosed)
+    let rec findSpace soFar closed =
+        let next, closed, found = soFar |> List.fold spaceExpander ([], closed, [])
+        if List.isEmpty found && not <| List.isEmpty next then
+            findSpace next closed
         else
-            found 
-            |> List.map (fun (p, path) -> p, Seq.last path)
-            |> List.sortBy (fun ((px, py), (sx, sy)) -> py, px, sy, sx)
-            |> List.tryHead
-            |> Option.map snd
+            found |> List.sortBy (fun (px, py) -> py, px) |> List.tryHead
 
-    expand [[]] blockers
+    match findSpace [[]] blockers with
+    | None -> None
+    | Some space ->
+    
+        let pathExpander closed (prev, newClosed, found) path =
+            let current = match path with [] -> space | head::_ -> head
+            let next = neighbours current
+            if List.contains start next then prev, newClosed, current::found
+            else 
+                let newPaths = 
+                    next 
+                    |> List.filter (fun p -> not <| Set.contains p closed) 
+                    |> List.map (fun p -> p::path)
+                newPaths @ prev, Set.union newClosed <| Set.ofList next, found
+
+        let rec findPath soFar closed =
+            let next, newClosed, found = soFar |> List.fold (pathExpander closed) ([], Set.empty, [])
+            if List.isEmpty found && not <| List.isEmpty next then
+                findPath next <| Set.union closed newClosed
+            else
+                found |> List.sortBy (fun (px, py) -> py, px) |> List.tryHead
+
+        findPath [[]] blockers
 
 let runFighterTurn (walls, fighters) elfAttack shouldFailOnElfDeath (prev, gameOver) fighter =
     if gameOver || fighter.health < 1 then
@@ -137,7 +154,7 @@ let runGame startMap elfAttack shouldFailOnElfDeath =
         // composeMap walls fighters |> Array.iter (printfn "%s")
         // printfn "turn %i" lastTurnCount
         // fighters |> List.iter (fun f -> printfn "%A %i               " f.kind f.health)
-        // //System.Threading.Thread.Sleep 500
+        // System.Threading.Thread.Sleep 500
         // System.Console.ReadKey true |> ignore
         
         let (newFighters, gameOver) = runTurn (walls, fighters) elfAttack shouldFailOnElfDeath

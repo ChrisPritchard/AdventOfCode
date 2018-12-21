@@ -93,17 +93,50 @@ let applies op (i: int list, before, after) =
 let countApplies example = 
     ops |> List.sumBy (fun o -> if applies o example then 1 else 0)
 
-let opCodeOptions (i: int list, before, after) =
+let opCodeOptions (i, before, after) =
     List.head i,
     ops 
     |> List.mapi (fun i o -> i, o) 
     |> List.filter (fun (_, o) -> applies o (i, before, after))
     |> List.map fst
+    |> Set.ofList
+
+let rec reduceOptions (codeMap : Map<int, Set<int>>) =
+    let contents = codeMap |> Map.toList
+    if contents |> List.forall (fun (_, s) -> Set.count s = 1) then
+        contents 
+        |> List.map (fun (code, s) -> 
+            let index = Set.minElement s
+            code, ops.[index]) |> Map.ofList
+    else
+        let singles = 
+            contents 
+            |> List.filter (fun (_, s) -> s.Count = 1) 
+            |> List.map (fun (_, s) -> s.MinimumElement)
+        let next =
+            contents
+            |> List.map (fun (c, s) -> 
+                if s.Count = 1 then c, s
+                else c, s |> Set.toList |> List.except singles |> Set.ofList)
+            |> Map.ofList
+        reduceOptions next
 
 let part2map examples =
-    let rules = List.map opCodeOptions examples
-    [0..15] |> List.map (fun oi ->
-        rules |> List.fold (fun options rule -> ) [])
+    let options = 
+        [0..15] 
+        |> List.map (fun oi -> oi, [0..15] |> Set.ofList) 
+        |> Map.ofList
+    let filtered =
+        examples |> List.fold (fun options example ->
+            let code, valid = opCodeOptions example
+            let filtered = Map.find code options |> Set.intersect valid
+            Map.add code filtered options) options
+    reduceOptions filtered
+
+let apply codeMap state instruction =
+    let code = List.head instruction
+    let op = Map.find code codeMap
+    op instruction.[1] instruction.[2] instruction.[3] state
 
 [<EntryPoint>]
 let main _ =
@@ -113,5 +146,9 @@ let main _ =
     
     let part1 = examples |> List.sumBy (fun ex -> if (countApplies ex) >= 3 then 1 else 0)
     printfn "part1: %i" part1
+
+    let codeMap = part2map examples
+    let part2 = instructions |> List.fold (apply codeMap) [0;0;0;0]
+    printfn "part2: %i" part2.[0]
 
     0

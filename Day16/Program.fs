@@ -91,14 +91,25 @@ let applies op (i: int list, before, after) =
     op a b c before = after
 
 let countApplies example = 
-    let result = ops |> List.sumBy (fun o -> if applies o example then 1 else 0)
-    result
+    ops |> List.sumBy (fun o -> if applies o example then 1 else 0)
+
+let opCodeOptions (i: int list, before, after) =
+    List.head i,
+    ops 
+    |> List.mapi (fun i o -> i, o) 
+    |> List.filter (fun (_, o) -> applies o (i, before, after))
+    |> List.map fst
+
+let part2map examples =
+    let rules = List.map opCodeOptions examples
+    [0..15] |> List.map (fun oi ->
+        rules |> List.fold (fun options rule -> ) [])
 
 [<EntryPoint>]
 let main _ =
     
     let input = File.ReadAllText "input.txt"
-    let examples, _ = parseInput input
+    let examples, instructions = parseInput input
     
     let part1 = examples |> List.sumBy (fun ex -> if (countApplies ex) >= 3 then 1 else 0)
     printfn "part1: %i" part1

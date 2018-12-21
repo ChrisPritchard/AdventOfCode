@@ -91,7 +91,7 @@ let findStep start enemyMap blockers =
     match findSpace [[]] blockers with
     | None -> None
     | Some space ->
-    
+
         let pathExpander closed (prev, newClosed, found) path =
             let current = match path with [] -> space | head::_ -> head
             let next = neighbours current
@@ -149,14 +149,6 @@ let runGame startMap elfAttack shouldFailOnElfDeath =
     let walls, startFighters = processMap startMap
 
     let rec runTurns fighters lastTurnCount =
-        // System.Console.CursorVisible <- false
-        // System.Console.CursorTop <- 0
-        // composeMap walls fighters |> Array.iter (printfn "%s")
-        // printfn "turn %i" lastTurnCount
-        // fighters |> List.iter (fun f -> printfn "%A %i               " f.kind f.health)
-        // System.Threading.Thread.Sleep 500
-        // System.Console.ReadKey true |> ignore
-        
         let (newFighters, gameOver) = runTurn (walls, fighters) elfAttack shouldFailOnElfDeath
         if gameOver then 
             lastTurnCount, newFighters |> List.filter (fun f -> f.health > 0)

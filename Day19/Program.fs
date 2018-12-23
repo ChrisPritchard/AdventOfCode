@@ -92,7 +92,7 @@ let main _ =
     let part1 = runProgram pc prog [0;0;0;0;0;0]
     printfn "part 1: %i" part1.[0]
 
-    let part2 = runProgram pc prog [1;0;0;0;0;0]
-    printfn "part 2: %i" part2.[0]
+    // let part2 = runProgram pc prog [1;0;0;0;0;0]
+    // printfn "part 2: %i" part2.[0]
 
     0

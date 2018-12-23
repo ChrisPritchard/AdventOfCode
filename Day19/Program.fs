@@ -61,29 +61,38 @@ let opMap =
     ] 
     |> Map.ofList
 
-[<EntryPoint>]
-let main _ =
-    
+let parseInput (lines: string []) =
     let parseInt = System.Int32.Parse
-
-    let input = File.ReadAllLines "input.txt"
-    let pc = parseInt <| input.[0].Split([|' '|]).[1]
+    let pc = parseInt <| lines.[0].Split([|' '|]).[1]
     let prog = 
-        input.[1..input.Length-1] 
+        lines.[1..lines.Length-1] 
         |> Array.mapi (fun i line ->
             let parts = line.Split([|' '|])
             i, (parts.[0], parseInt parts.[1], parseInt parts.[2], parseInt parts.[3]))
         |> Map.ofArray
-    
-    let mutable registers = [0;0;0;0;0;0]
+    pc, prog
+
+let runProgram pc prog (start: int list) =
+    let mutable registers = start
     let mutable halted = false
     while not halted do
-        let opCode, a, b, c = prog.[registers.[pc]]
+        let opCode, a, b, c = Map.find registers.[pc] prog
         let op = opMap.[opCode]
         registers <- op a b c registers
         if registers.[pc] >= prog.Count-1 then halted <- true
         else registers <- setReg pc registers (registers.[pc] + 1)
+    registers
 
-    printfn "part 1: %i" registers.[0]
+[<EntryPoint>]
+let main _ =
+    
+    let input = File.ReadAllLines "input.txt"
+    let pc, prog = parseInput input
+    
+    let part1 = runProgram pc prog [0;0;0;0;0;0]
+    printfn "part 1: %i" part1.[0]
+
+    let part2 = runProgram pc prog [1;0;0;0;0;0]
+    printfn "part 2: %i" part2.[0]
 
     0

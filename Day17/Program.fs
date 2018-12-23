@@ -53,80 +53,51 @@ let water map =
             | FallingWater | RestingWater -> 1
             | Spring -> 0))
 
-let spaceFree map (x, y) =
-    let maxWidth = Array2D.length1 map
-    let check found dx =
-        match found with
-        | Some _ -> found
-        | None ->
-            match map.[x + dx, y] with
-            | Sand -> Some <| Some (x + dx)
-            | Clay | FallingWater -> Some None
-            | _ -> None
-    match [-1..-1..-x] |> List.fold check None with
-    | Some (Some ox) -> Some (ox, y)
-    | _ -> 
-        match [1..(maxWidth-x)] |> List.fold check None with
-        | Some (Some ox) -> Some (ox, y)
-        | _ -> None
+// flowing out rules
+// if map is sand make falling
+// if space beneath is sand then return drop and end
+// if map is clay stop with current
 
-let contained map (x, y) = 
-    let maxWidth = Array2D.length1 map
-    let check soFar dx =
-        match soFar with
-        | Some _ -> soFar
-        | None ->
-            match map.[x + dx, y] with
-            | Clay -> Some true
-            | _ -> 
-                match map.[x + dx, y + 1] with
-                | Clay | RestingWater -> None
-                | _ -> Some false
-    match [-1..-1..-x] |> List.fold check None, [1..(maxWidth-x)] |> List.fold check None with
-    | Some true, Some true -> true
-    | _ -> false
+let flowOut (map: Tile [,]) (x, y) =
+    let rec flow ox dx soFar = 
+        if ox < 0 || ox = Array2D.length1 map || map.[ox, y] = Clay then soFar, None
+        else
+            map.[ox, y] <- FallingWater
+            if map.[ox, y + 1] = Sand then
+                (ox, y)::soFar, Some (ox, y + 1)
+            else
+                flow (ox + dx) dx ((ox, y)::soFar)
+    let tilesLeft, leftDrop = flow x -1 []
+    let tilesRight, rightDrop = flow x 1 []
+    tilesLeft @ [x, y] @ tilesRight, leftDrop, rightDrop
 
-let overflow map (x, y) next =
-    let maxWidth = Array2D.length1 map
-    let check soFar dx =
-        if soFar then 
-            match map.[x + dx, y] with
-            | Sand | FallingWater ->
-                map.[x + dx, y] <- FallingWater
-                match map.[x + dx, y + 1] with
-                | Sand | FallingWater -> 
-                    map.[x + dx, y + 1] <- FallingWater
-                    next (x + dx, y + 1)
-                    false
-                | _ -> true
-            | _ -> false
-        else false
-    [-1..-1..-x] |> List.fold check true |> ignore
-    [1..(maxWidth-x)] |> List.fold check true |> ignore
-
-let rec drop map (x, y) = 
-    if y = (Array2D.length2 map - 1) then ()
-    else
+let rec drop (map: Tile [,]) (x, y) =
+    match Array2D.length2 map - y with
+    | 0 -> ()
+    | 1 ->
+        map.[x, y] <- FallingWater
+    | _ ->
+        map.[x, y] <- FallingWater
         match map.[x, y + 1] with
-        | FallingWater -> drop map (x, y + 1)
-        | Clay -> map.[x, y] <- RestingWater
-        | Sand -> 
-            map.[x, y + 1] <- FallingWater
-            drop map (x, y + 1)
-        | RestingWater ->
-            match spaceFree map (x, y + 1) with
-            | Some (ox, oy) -> map.[ox, oy] <- RestingWater
-            | None ->
-                if contained map (x, y) 
-                then map.[x, y] <- RestingWater
-                else overflow map (x, y) (drop map)
-        | Spring -> ()
+        | Sand -> drop map (x, y + 1)
+        | _ ->
+            let tiles, leftDrop, rightDrop = flowOut map (x, y)
+            match leftDrop, rightDrop with
+            | None, None ->
+                tiles |> List.iter (fun (tx, ty) -> map.[tx, ty] <- RestingWater)
+                if y <> 0 then 
+                    drop map (x, y - 1)
+            | Some single, None | None, Some single -> drop map single
+            | Some left, Some right -> 
+                drop map left
+                drop map right
 
-let rec part1 map spring last1 last2 =
-    drop map spring
-    let count = water map
-    if count = last1 && count = last2 then count
-    else part1 map spring count last1
+// 1. mark as falling
+// 2. check next down
+// 3. if sand start again on next down
+// 4. else expand out
+// 5. if contained, change row to resting and start again one up
+// 6. while expanding, if sound found down stop expanding (in this direction) and start again falling
 
 [<EntryPoint>]
 let main _ =
@@ -136,9 +107,10 @@ let main _ =
     let clay = parseInput input
     let bounds = boundsByClay clay
 
-    let map, spring = mapFromClay clay bounds
-    [1..200] |> List.iter (fun _ -> drop map spring)
+    let map, (sx, sy) = mapFromClay clay bounds
+    System.IO.File.WriteAllLines ("start.txt", renderMap map)
+    drop map (sx, sy + 1)
     System.IO.File.WriteAllLines ("out.txt", renderMap map)
-    //printfn "part 1: %i" <| part1 map spring 0 0 
+    printfn "part 1: %i" <| water map
 
     0

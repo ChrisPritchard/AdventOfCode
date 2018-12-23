@@ -146,8 +146,18 @@ Finally, while there is nowhere left for the water to settle, it can reach a few
 ...|.......|..    (line not counted: below maximum y value)
 ...|.......|..    (line not counted: below maximum y value)
 
+## Part One
+
 How many tiles can be reached by the water? To prevent counting forever, ignore tiles with a y coordinate smaller than the smallest y coordinate in your scan data or larger than the largest one. Any x coordinate is valid. In this example, the lowest y coordinate given is 1, and the highest is 13, causing the water spring (in row 0) and the water falling off the bottom of the render (in rows 14 through infinity) to be ignored.
 
 So, in the example above, counting both water at rest (~) and other sand tiles the water can hypothetically reach (|), the total number of tiles the water can reach is 57.
 
 How many tiles can the water reach within the range of y values in your scan?
+
+## Part Two
+
+After a very long time, the water spring will run dry. How much water will be retained?
+
+In the example above, water that won't eventually drain out is shown as ~, a total of 29 tiles.
+
+How many water tiles are left after the water spring stops producing water and all remaining water not at rest has drained?

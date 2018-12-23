@@ -9,9 +9,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/Day18/bin/Debug/netcoreapp2.2/Day18.dll",
+            "program": "${workspaceFolder}/Day19/bin/Debug/netcoreapp2.2/Day19.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Day18",
+            "cwd": "${workspaceFolder}/Day19",
             "console": "internalConsole",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"

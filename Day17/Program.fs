@@ -53,22 +53,19 @@ let water map =
             | FallingWater | RestingWater -> 1
             | Spring -> 0))
 
-// flowing out rules
-// if map is sand make falling
-// if space beneath is sand then return drop and end
-// if map is clay stop with current
-
 let flowOut (map: Tile [,]) (x, y) =
     let rec flow ox dx soFar = 
-        if ox < 0 || ox = Array2D.length1 map || map.[ox, y] = Clay then soFar, None
+        if ox < 0 || ox = Array2D.length1 map then soFar, Some (ox, y)
+        else if map.[ox, y] = Clay then soFar, None
         else
             map.[ox, y] <- FallingWater
-            if map.[ox, y + 1] = Sand then
+            match map.[ox, y + 1] with
+            | Sand | FallingWater ->
                 (ox, y)::soFar, Some (ox, y + 1)
-            else
+            | _ ->
                 flow (ox + dx) dx ((ox, y)::soFar)
-    let tilesLeft, leftDrop = flow x -1 []
-    let tilesRight, rightDrop = flow x 1 []
+    let tilesLeft, leftDrop = flow (x - 1) -1 []
+    let tilesRight, rightDrop = flow (x + 1) 1 []
     tilesLeft @ [x, y] @ tilesRight, leftDrop, rightDrop
 
 let rec drop (map: Tile [,]) (x, y) =
@@ -76,10 +73,12 @@ let rec drop (map: Tile [,]) (x, y) =
     | 0 -> ()
     | 1 ->
         map.[x, y] <- FallingWater
+    | _ when x < 0 || x = Array2D.length1 map -> ()
     | _ ->
         map.[x, y] <- FallingWater
         match map.[x, y + 1] with
         | Sand -> drop map (x, y + 1)
+        | FallingWater -> ()
         | _ ->
             let tiles, leftDrop, rightDrop = flowOut map (x, y)
             match leftDrop, rightDrop with
@@ -91,13 +90,6 @@ let rec drop (map: Tile [,]) (x, y) =
             | Some left, Some right -> 
                 drop map left
                 drop map right
-
-// 1. mark as falling
-// 2. check next down
-// 3. if sand start again on next down
-// 4. else expand out
-// 5. if contained, change row to resting and start again one up
-// 6. while expanding, if sound found down stop expanding (in this direction) and start again falling
 
 [<EntryPoint>]
 let main _ =

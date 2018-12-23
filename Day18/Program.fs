@@ -49,16 +49,33 @@ let resourceValue map =
         |> List.groupBy id
         |> List.map (fun (key, list) -> key, List.length list)
         |> Map.ofList
-    result.[Lumbermill] * result.[Forest]
+    if not <| result.ContainsKey Lumbermill || not <| result.ContainsKey Forest then 0
+    else result.[Lumbermill] * result.[Forest]
+
+let resourceValueAfter1000 n after10 =
+    let scores = 
+        [11..1000] |> List.mapFold (fun current i -> 
+        let next = advance current
+        let score = resourceValue next
+        (i, score), next) after10
+        |> fst |> Map.ofList
+    let prev = 
+        [999..-1..11] |> List.fold (fun found i ->
+            match found with
+            | 0 -> if scores.[i] = scores.[1000] then i else 0
+            | _ -> found) 0
+    let range = 1000 - prev    
+    let index = 1000 - (range - ((n - prev) % range))
+    scores.[index]
 
 [<EntryPoint>]
 let main _ =
     
     let input = File.ReadAllLines("input.txt")
     let startMap = parseInput input
-    let finalMap = [1..10] |> List.fold (fun current _ -> advance current) startMap
-    //renderOutput finalMap |> List.iter (printfn "%s")
+    let after10 = [1..10] |> List.fold (fun current _ -> advance current) startMap
     
-    printfn "part 1: %i" <| resourceValue finalMap
+    printfn "part 1: %i" <| resourceValue after10
+    printfn "part 2: %i" <| resourceValueAfter1000 1000000000 after10    
 
     0

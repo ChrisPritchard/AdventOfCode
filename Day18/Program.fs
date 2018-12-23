@@ -5,7 +5,7 @@ type Tile = Plains | Forest | Lumbermill
 let newTile x y map =
     let maxX, maxY = Array2D.length1 map, Array2D.length2 map
     let neighbours =
-        [-1..1] |> List.collect (fun dx -> [-1, 1] |> List.map (fun dy -> x + dx, y + dy))
+        [-1..1] |> List.collect (fun dx -> [-1..1] |> List.map (fun dy -> x + dx, y + dy))
         |> List.filter (fun (nx, ny) -> 
             (nx, ny) <> (x, y) && nx >= 0 && ny >= 0 && nx < maxX && ny < maxY)
         |> List.map (fun (nx, ny) -> map.[nx, ny])
@@ -42,11 +42,23 @@ let renderOutput map =
         [0..Array2D.length1 map - 1] |> List.map (fun x -> 
             match map.[x, y] with Plains -> "." | Forest -> "|" | Lumbermill -> "#") |> String.concat "")
 
+let resourceValue map =
+    let result =
+        [0..Array2D.length2 map - 1] |> List.collect (fun y ->
+        [0..Array2D.length1 map - 1] |> List.map (fun x -> map.[x, y]))
+        |> List.groupBy id
+        |> List.map (fun (key, list) -> key, List.length list)
+        |> Map.ofList
+    result.[Lumbermill] * result.[Forest]
+
 [<EntryPoint>]
 let main _ =
     
-    let input = File.ReadAllLines("sample.txt")
-    let map = parseInput input
-    renderOutput map |> List.iter (printfn "%s")
+    let input = File.ReadAllLines("input.txt")
+    let startMap = parseInput input
+    let finalMap = [1..10] |> List.fold (fun current _ -> advance current) startMap
+    //renderOutput finalMap |> List.iter (printfn "%s")
     
+    printfn "part 1: %i" <| resourceValue finalMap
+
     0

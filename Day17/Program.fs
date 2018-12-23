@@ -44,14 +44,14 @@ let renderMap (map: Tile [,]) =
             | Spring -> "+")
         |> String.concat "")
 
-let water map = 
+let water map restOnly = 
     [0..Array2D.length2 map - 1] |> List.sumBy (fun y ->
         [0..Array2D.length1 map - 1] 
         |> List.sumBy (fun x -> 
             match map.[x, y] with
-            | Sand | Clay -> 0
-            | FallingWater | RestingWater -> 1
-            | Spring -> 0))
+            | FallingWater when not restOnly -> 1
+            | RestingWater -> 1
+            | _ -> 0))
 
 let flowOut (map: Tile [,]) (x, y) =
     let rec flow ox dx soFar = 
@@ -103,6 +103,7 @@ let main _ =
     System.IO.File.WriteAllLines ("start.txt", renderMap map)
     drop map (sx, sy + 1)
     System.IO.File.WriteAllLines ("out.txt", renderMap map)
-    printfn "part 1: %i" <| water map
+    printfn "part 1: %i" <| water map false
+    printfn "part 2: %i" <| water map true
 
     0

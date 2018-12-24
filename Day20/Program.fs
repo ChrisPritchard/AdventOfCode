@@ -20,24 +20,27 @@ let main _ =
         >> wall (dx, dy)
         >> wall (sx, sy)
 
-    let rec plotter (map, (x, y)) next =
-        match next with
-        | 'W' -> 
-            let door, space = (x - 1, y), (x - 2, y)
-            burrow door space map, space
-        | 'N' ->
-            let door, space = (x, y - 1), (x, y - 2)
-            burrow door space map, space
-        | 'E' ->
-            let door, space = (x + 1, y), (x + 2, y)
-            burrow door space map, space
-        | 'S' ->
-            let door, space = (x, y + 1), (x, y + 2)
-            burrow door space map, space
-        | _ -> map, (x, y)
+    let rec plot map (x, y) =
+        function
+        | next::remaining ->
+            match next with
+            | 'W' -> 
+                let door, space = (x - 1, y), (x - 2, y)
+                (burrow door space map, space, remaining) |||> plot
+            | 'N' ->
+                let door, space = (x, y - 1), (x, y - 2)
+                (burrow door space map, space, remaining) |||> plot
+            | 'E' ->
+                let door, space = (x + 1, y), (x + 2, y)
+                (burrow door space map, space, remaining) |||> plot
+            | 'S' ->
+                let door, space = (x, y + 1), (x, y + 2)
+                (burrow door space map, space, remaining) |||> plot
+            | _ -> 
+                (map, (x, y), remaining) |||> plot
+        | [] -> map
         
-
-    let finalMap, _ = input |> Seq.fold plotter (start, (0, 0))
+    let finalMap = input |> Seq.toList |> plot start (0, 0)
 
     let x, y, w, h = 
         finalMap |> Map.toList 

@@ -28,6 +28,9 @@ module Compiled
 //     else
 //         proc3 ()
 
+// the specified program ultimately sets reg3 based on reg0 being 0 or 1
+// then runs the proc3 loop above, which sums all factors up to reg 3 
+
 let part1Start = 1025
 let part2Start = 10551425
 

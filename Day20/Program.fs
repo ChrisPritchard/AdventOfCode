@@ -3,7 +3,7 @@
 [<EntryPoint>]
 let main _ =
     
-    let input = "^ENNWSWWSSSEENWNSEEENNN$"
+    let input = "^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$"
 
     let wall (x, y) map =
         [-1..1] |> List.collect (fun dx -> [-1..1] |> List.map (fun dy -> dx, dy))
@@ -36,11 +36,18 @@ let main _ =
             | 'S' ->
                 let door, space = (x, y + 1), (x, y + 2)
                 (burrow door space map, space, remaining) |||> plot
+            | '(' ->
+                let afterMap, newRemaining = plot map (x, y) remaining
+                plot afterMap (x, y) newRemaining
+            | ')' -> 
+                map, remaining
+            | '|' ->
+                map, '('::remaining
             | _ -> 
-                (map, (x, y), remaining) |||> plot
-        | [] -> map
+                plot map (x, y) remaining
+        | [] -> map, []
         
-    let finalMap = input |> Seq.toList |> plot start (0, 0)
+    let finalMap, _ = input |> Seq.toList |> plot start (0, 0)
 
     let x, y, w, h = 
         finalMap |> Map.toList 

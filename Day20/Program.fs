@@ -3,7 +3,7 @@
 [<EntryPoint>]
 let main _ =
     
-    let input = "WNE"
+    let input = "^ENNWSWWSSSEENWNSEEENNN$"
 
     let wall (x, y) map =
         [-1..1] |> List.collect (fun dx -> [-1..1] |> List.map (fun dy -> dx, dy))
@@ -14,19 +14,28 @@ let main _ =
 
     let start = [ (0, 0), "X" ] |> Map.ofList |> wall (0, 0)
 
-    let plotter (map, (x, y)) next =
-        let door, space =
-            match next with
-            | 'W' -> (x - 1, y), (x - 2, y)
-            | 'N' -> (x, y - 1), (x, y - 2)
-            | 'E' -> (x + 1, y), (x + 2, y)
-            | 'S' -> (x, y + 1), (x, y + 2)
-            | _ -> failwith "not implemented"
-        map
-        |> Map.add door (match next with 'W' | 'E' -> "|" | _ -> "-")
-        |> Map.add space "."
-        |> wall door
-        |> wall space, space
+    let burrow (dx, dy) (sx, sy) =
+        Map.add (dx, dy) (if dy = sy then "|" else "-")
+        >> Map.add (sx, sy) "."
+        >> wall (dx, dy)
+        >> wall (sx, sy)
+
+    let rec plotter (map, (x, y)) next =
+        match next with
+        | 'W' -> 
+            let door, space = (x - 1, y), (x - 2, y)
+            burrow door space map, space
+        | 'N' ->
+            let door, space = (x, y - 1), (x, y - 2)
+            burrow door space map, space
+        | 'E' ->
+            let door, space = (x + 1, y), (x + 2, y)
+            burrow door space map, space
+        | 'S' ->
+            let door, space = (x, y + 1), (x, y + 2)
+            burrow door space map, space
+        | _ -> map, (x, y)
+        
 
     let finalMap, _ = input |> Seq.fold plotter (start, (0, 0))
 
@@ -38,7 +47,7 @@ let main _ =
 
     let rendered = 
         [y..h] |> List.map (fun line ->
-        [x..w] |> List.map (fun i -> finalMap.[i, line]) |> String.concat "")
+        [x..w] |> List.map (fun i -> Map.tryFind (i, line) finalMap |> Option.defaultValue " ") |> String.concat "")
 
     rendered |> List.iter (printfn "%s")
 

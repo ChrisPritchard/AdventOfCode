@@ -46,20 +46,6 @@ let compose input =
         
     input |> Seq.toList |> plot start (0, 0) |> fst
 
-let render finalMap =
-    let x, y, w, h = 
-        finalMap |> Map.toList 
-        |> List.fold (fun (x, y, w, h) ((ox, oy), _) -> 
-            min x ox, min y oy, max w ox, max h oy) 
-                (Int32.MaxValue, Int32.MaxValue, 0, 0)
-
-    let rendered = 
-        [y..h] |> List.map (fun line ->
-        [x..w] |> List.map (fun i -> Map.tryFind (i, line) finalMap |> Option.defaultValue " ") |> String.concat "")
-
-    File.WriteAllLines ("rendered.txt", rendered)
-    //rendered |> List.iter (printfn "%s")
-
 let breadthSearch map =
 
     let neighbours closed (x, y) =
@@ -84,10 +70,6 @@ let breadthSearch map =
         else expandPaths next closed
 
     expandPaths [[]] <| Set.empty.Add (0, 0)
-
-    
-    //  for each path find neighbours that are not closed, and generate new paths
-    // trim all paths that cannot
 
 [<EntryPoint>]
 let main _ =

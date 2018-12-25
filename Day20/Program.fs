@@ -59,17 +59,19 @@ let breadthSearch map =
             | _ -> false)
         |> List.map snd
 
-    let expandPath (soFar, closed) path =
+    let expandPath (soFar, closed, club1000) path =
         let head = match path with | [] -> (0,0) | head::_ -> head
         let next = neighbours closed head
-        List.fold (fun (s, c) n -> (n::path)::s, Set.add n c) (soFar, closed) next
+        let newPaths, newClosed = List.fold (fun (s, c) n -> (n::path)::s, Set.add n c) (soFar, closed) next
+        let nextClub1000 = club1000 + (if List.length path >= 999 then List.length next else 0)
+        newPaths, newClosed, nextClub1000
 
-    let rec expandPaths soFar closed = 
-        let next, closed = soFar |> List.fold expandPath ([], closed)
-        if next = [] then List.head soFar |> List.length 
-        else expandPaths next closed
+    let rec expandPaths club1000 soFar closed = 
+        let next, closed, club1000 = soFar |> List.fold expandPath ([], closed, club1000)
+        if next = [] then List.head soFar |> List.length, club1000
+        else expandPaths club1000 next closed
 
-    expandPaths [[]] <| Set.empty.Add (0, 0)
+    expandPaths 0 [[]] <| Set.empty.Add (0, 0)
 
 [<EntryPoint>]
 let main _ =
@@ -78,7 +80,8 @@ let main _ =
     let input = File.ReadAllText "input.txt"
 
     let map = compose input
-    let result = breadthSearch map
+    let result, club1000 = breadthSearch map
     printfn "part 1: %i" result
+    printfn "part 2: %i" club1000
 
     0

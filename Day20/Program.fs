@@ -1,10 +1,7 @@
 ﻿open System
+open System.IO
 
-[<EntryPoint>]
-let main _ =
-    
-    let input = "^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$"
-
+let compose input =
     let wall (x, y) map =
         [-1..1] |> List.collect (fun dx -> [-1..1] |> List.map (fun dy -> dx, dy))
         |> List.fold (fun map (dx, dy) -> 
@@ -47,8 +44,9 @@ let main _ =
                 plot map (x, y) remaining
         | [] -> map, []
         
-    let finalMap, _ = input |> Seq.toList |> plot start (0, 0)
+    input |> Seq.toList |> plot start (0, 0) |> fst
 
+let render finalMap =
     let x, y, w, h = 
         finalMap |> Map.toList 
         |> List.fold (fun (x, y, w, h) ((ox, oy), _) -> 
@@ -59,6 +57,46 @@ let main _ =
         [y..h] |> List.map (fun line ->
         [x..w] |> List.map (fun i -> Map.tryFind (i, line) finalMap |> Option.defaultValue " ") |> String.concat "")
 
-    rendered |> List.iter (printfn "%s")
+    File.WriteAllLines ("rendered.txt", rendered)
+    //rendered |> List.iter (printfn "%s")
+
+let breadthSearch map =
+
+    let neighbours closed (x, y) =
+        [-1,0;1,0;0,-1;0,1] 
+        |> List.map (fun (dx, dy) -> 
+            (x + dx, y + dy), (x + dx*2, y + dy*2))
+        |> List.filter (fun (door, space) -> 
+            not (Set.contains space closed) && 
+            match Map.tryFind door map with
+            | Some "|" | Some "-" -> true
+            | _ -> false)
+        |> List.map snd
+
+    let expandPath (soFar, closed) path =
+        let head = match path with | [] -> (0,0) | head::_ -> head
+        let next = neighbours closed head
+        List.fold (fun (s, c) n -> (n::path)::s, Set.add n c) (soFar, closed) next
+
+    let rec expandPaths soFar closed = 
+        let next, closed = soFar |> List.fold expandPath ([], closed)
+        if next = [] then List.head soFar |> List.length 
+        else expandPaths next closed
+
+    expandPaths [[]] <| Set.empty.Add (0, 0)
+
+    
+    //  for each path find neighbours that are not closed, and generate new paths
+    // trim all paths that cannot
+
+[<EntryPoint>]
+let main _ =
+    
+    //let input = "^ENNWSWW(NEWS|)SSSEEN(WNSE|)EE(SWEN|)NNN$"
+    let input = File.ReadAllText "input.txt"
+
+    let map = compose input
+    let result = breadthSearch map
+    printfn "part 1: %i" result
 
     0

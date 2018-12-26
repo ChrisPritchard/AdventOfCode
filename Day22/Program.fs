@@ -10,19 +10,23 @@ let geologicIndex p target erosionLevels =
         Map.find (x-1, y) erosionLevels 
         * Map.find (x, y-1) erosionLevels
 
+let map (tx, ty) depth =
+    [0..tx] |> List.collect (fun x ->
+    [0..ty] |> List.map (fun y -> x, y))
+    |> List.fold (fun erosionLevels p -> 
+        let g = geologicIndex p (tx, ty) erosionLevels
+        let e = (g + depth) % 20183
+        Map.add p e erosionLevels) Map.empty
+
 [<EntryPoint>]
 let main argv =
     let depth = 10914
-    let tx, ty = 9,739
+    let target = 9,739
 
-    let riskLevel =
-        [0..tx] |> List.collect (fun x ->
-        [0..ty] |> List.map (fun y -> x, y))
-        |> List.fold (fun erosionLevels p -> 
-            let g = geologicIndex p (tx, ty) erosionLevels
-            let e = (g + depth) % 20183
-            Map.add p e erosionLevels) Map.empty
-        |> Map.toList |> List.sumBy (snd >> fun e -> e % 3)
+    let riskLevel = 
+        map target depth        
+        |> Map.toList 
+        |> List.sumBy (snd >> fun e -> e % 3)
 
     printfn "part 1: %i" riskLevel
 

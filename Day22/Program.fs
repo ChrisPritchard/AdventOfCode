@@ -18,8 +18,18 @@ let map (tx, ty) depth =
         let e = (g + depth) % 20183
         Map.add p e erosionLevels) Map.empty
 
+type Tool = Torch | ClimbingGear | Neither
+
+let astarConfig: AStar.Config = {
+    maxIterations = None
+    neighbours = fun (x, y, _) ->
+        [-1,0;1,0;0,-1;0,1]
+        |> List.map (fun (dx, dy) -> x + dx, y + dy)
+        |> List.filter (fun (ox, oy) -> ox >= 0 && oy >= 0)
+}
+
 [<EntryPoint>]
-let main argv =
+let main _ =
     let depth = 10914
     let target = 9,739
 

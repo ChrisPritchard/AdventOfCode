@@ -76,10 +76,10 @@ let runProgram pc prog (start: int list) =
     let mutable registers = start
     let mutable halted = false
     let mutable part1 = 0
-    let mutable count = 0
-    let mutable val2count = Map.empty<int, int>
+    let mutable count = 0L
+    let mutable val2count = Map.empty<int, int64>
     while not halted do
-        count <- count + 1
+        count <- count + 1L
         if registers.[pc] = 28 then
             if part1 = 0 then part1 <- registers.[5]
             let val0 = registers.[5]
@@ -90,7 +90,7 @@ let runProgram pc prog (start: int list) =
         registers <- op a b c registers
         if registers.[pc] >= prog.Count-1 then halted <- true
         else registers <- setReg pc registers (registers.[pc] + 1)
-    part1, Map.toList val2count |> List.maxBy snd |> fst
+    part1, Map.toList val2count
 
 [<EntryPoint>]
 let main _ =
@@ -98,8 +98,9 @@ let main _ =
     let input = File.ReadAllLines "input.txt"
     let pc, prog = parseInput input
 
-    let reg5, max0 = runProgram pc prog [0;0;0;0;0;0]
+    let reg5, all0s = runProgram pc prog [0;0;0;0;0;0]
     printfn "part 1: %i" reg5
-    printfn "part 2: %i" max0
+    //File.WriteAllLines ("part2out.csv", List.map (fun (k, v) -> sprintf "%i,%i" k v) all0s)
+    printfn "part 2: %i" <| (all0s |> List.maxBy snd |> fst)
 
     0

@@ -1,32 +1,40 @@
 #ip 4
-0:  seti 123 0 5        // set reg5 to  123
+0:  seti 123 0 5        // set reg5 to 123
 1:  bani 5 456 5        // set reg5 to 72
 2:  eqri 5 72 5         // set reg5 to 1
-3:  addr 5 4 4          // add 1 to reg 4 (jump to 5)
-4:  seti 0 0 4          // goto 0
+
+3:  addr 5 4 4          // if reg5 is 1 then goto 5
+4:  seti 0 0 4          // goto 0 (else loop)
+
 5:  seti 0 6 5          // set reg5 to 0
-6:  bori 5 65536 1      // set reg1 t0 65536
+6:  bori 5 65536 1      // set reg1 to 65536
 7:  seti 4591209 6 5    // set reg5 to 4591209
-8:  bani 1 255 3        // set reg3 to 0
-9:  addr 5 3 5          // do nothing (set reg5 back to itself as reg3 is 0)
-10: bani 5 16777215 5   // do nothing (set reg5 bask to itself)
-11: muli 5 65899 5      // set reg5 to 1908371171
-12: bani 5 16777215 5   // set reg5 to 12545763
-13: gtir 256 1 3        // set reg3 to 0
-14: addr 3 4 4          // add 0 to reg 4 (do nothing)
-15: addi 4 1 4          // add 1 to reg 4 (jump 2, goto 17)
+8:  bani 1 255 3        // set reg3 to 0 (65536 &&& 255 = 0)
+
+9:  addr 5 3 5          // set reg5 to reg5 + reg3 (4591209 + 0)) // do nothing
+10: bani 5 16777215 5   // set reg5 to reg5 &&& 16777215 (4591209 &&& 16777215 = 4591209)) // do nothing
+11: muli 5 65899 5      // set reg5 to 1908371171 (4591209 * 65899 = 302556081891, but if int32 then 1908371171)
+12: bani 5 16777215 5   // set reg5 to 12545763 (1908371171 &&& 16777215 = 12545763. same is 5 is 302556081891)
+
+13: gtir 256 1 3        // set reg3 to 0 (256 is not bigger than reg1 (which at this point is still 65536))
+14: addr 3 4 4          // if reg3 is 1 (or reg1 is less than 256) then goto 16 (goto 28)
+15: addi 4 1 4          // else goto 17
 16: seti 27 7 4         // goto 28
+
 17: seti 0 0 3          // set reg3 to 0
-18: addi 3 1 2          // set reg2 to 65536
-19: muli 2 256 2        
-20: gtrr 2 1 2
-21: addr 2 4 4
-22: addi 4 1 4
-23: seti 25 4 4
-24: addi 3 1 3
-25: seti 17 0 4
-26: setr 3 4 1
-27: seti 7 2 4
-28: eqrr 5 0 3
-29: addr 3 4 4
-30: seti 5 1 4
+18: addi 3 1 2          // set reg2 to reg3 + 1 (1)
+19: muli 2 256 2        // set reg2 to reg2 * 256               // reg3 is incremented by 1 each loop
+20: gtrr 2 1 2          // if reg2 > reg1 then 2 is 1 else 0    // reg1 is 65536 at this point
+21: addr 2 4 4          // if 2 is 1 then goto 23 (goto 26)     // after 256 loops, reg2 will be 65792 and greater than reg1
+22: addi 4 1 4          // else goto 24
+23: seti 25 4 4         // goto 26
+
+24: addi 3 1 3          // add 1 to reg3
+25: seti 17 0 4         // goto 18
+
+26: setr 3 4 1          // reg1 = reg3 (256?)
+27: seti 7 2 4          // goto 8
+
+28: eqrr 5 0 3          // if reg5 = reg0 then reg3 = 1 else 0
+29: addr 3 4 4          // if reg3 = 1 (reg5 = reg3) then jump 2 and halt
+30: seti 5 1 4          // goto 6

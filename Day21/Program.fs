@@ -99,22 +99,12 @@ type Async with
         }
 
 [<EntryPoint>]
-let main argv =
+let main _ =
     
     let input = File.ReadAllLines "input.txt"
     let pc, prog = parseInput input
 
-    let mutable halted = false
-    let mutable n = -1
-    while not halted do
-        n <- n + 1
-        printfn "trying %i..." n
-        let op = fun () -> runProgram pc prog [n;0;0;0;0;0]
-        let op = System.Threading.Tasks.Task.Run (op)
-        match Async.RunSynchronously <| Async.AwaitTask (op, 5000) with
-        | Some _ -> halted <- true
-        | _ -> ()        
-
-    printfn "part 1: %i" n
+    runProgram pc prog [12545763;0;0;0;0;0] |> ignore
+    printfn "part 1: %i" 12545763
 
     0

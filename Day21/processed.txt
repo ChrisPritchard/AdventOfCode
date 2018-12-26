@@ -14,7 +14,7 @@
 9:  addr 5 3 5          // set reg5 to reg5 + reg3 (4591209 + 0)) // do nothing
 10: bani 5 16777215 5   // set reg5 to reg5 &&& 16777215 (4591209 &&& 16777215 = 4591209)) // do nothing
 11: muli 5 65899 5      // set reg5 to 1908371171 (4591209 * 65899 = 302556081891, but if int32 then 1908371171)
-12: bani 5 16777215 5   // set reg5 to 12545763 (1908371171 &&& 16777215 = 12545763. same is 5 is 302556081891)
+12: bani 5 16777215 5   // set reg5 to 12545763 (1908371171 &&& 16777215 = 12545763. same if 5 is 302556081891)
 
 13: gtir 256 1 3        // set reg3 to 0 (256 is not bigger than reg1 (which at this point is still 65536))
 14: addr 3 4 4          // if reg3 is 1 (or reg1 is less than 256) then goto 16 (goto 28)

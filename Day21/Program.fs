@@ -1,6 +1,4 @@
 ﻿open System.IO
-open System.Threading.Tasks
-open System.Threading
 
 let setReg index registers rval = 
     registers |> List.mapi (fun i v -> if i = index then rval else v)
@@ -77,16 +75,22 @@ let parseInput (lines: string []) =
 let runProgram pc prog (start: int list) =
     let mutable registers = start
     let mutable halted = false
+    let mutable part1 = 0
+    let mutable count = 0
+    let mutable val2count = Map.empty<int, int>
     while not halted do
+        count <- count + 1
         if registers.[pc] = 28 then
-            halted <- true
-        else
-            let opCode, a, b, c = Map.find registers.[pc] prog
-            let op = opMap.[opCode]
-            registers <- op a b c registers
-            if registers.[pc] >= prog.Count-1 then halted <- true
-            else registers <- setReg pc registers (registers.[pc] + 1)
-    registers.[5]
+            if part1 = 0 then part1 <- registers.[5]
+            let val0 = registers.[5]
+            if Map.containsKey val0 val2count then halted <- true
+            else val2count <- Map.add val0 count val2count       
+        let opCode, a, b, c = Map.find registers.[pc] prog
+        let op = opMap.[opCode]
+        registers <- op a b c registers
+        if registers.[pc] >= prog.Count-1 then halted <- true
+        else registers <- setReg pc registers (registers.[pc] + 1)
+    part1, Map.toList val2count |> List.maxBy snd |> fst
 
 [<EntryPoint>]
 let main _ =
@@ -94,7 +98,8 @@ let main _ =
     let input = File.ReadAllLines "input.txt"
     let pc, prog = parseInput input
 
-    let reg5 = runProgram pc prog [0;0;0;0;0;0]
+    let reg5, max0 = runProgram pc prog [0;0;0;0;0;0]
     printfn "part 1: %i" reg5
+    printfn "part 2: %i" max0
 
     0

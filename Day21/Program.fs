@@ -78,25 +78,15 @@ let runProgram pc prog (start: int list) =
     let mutable registers = start
     let mutable halted = false
     while not halted do
-        let opCode, a, b, c = Map.find registers.[pc] prog
-        let op = opMap.[opCode]
-        registers <- op a b c registers
-        if registers.[pc] >= prog.Count-1 then halted <- true
-        else registers <- setReg pc registers (registers.[pc] + 1)
-    registers
-
-type Async with
-    static member AwaitTask (t : Task<'T>, timeout : int) =
-        async {
-            use cts = new CancellationTokenSource()
-            use timer = Task.Delay (timeout, cts.Token)
-            let! completed = Async.AwaitTask <| Task.WhenAny(t, timer)
-            if completed = (t :> Task) then
-                cts.Cancel ()
-                let! result = Async.AwaitTask t
-                return Some result
-            else return None
-        }
+        if registers.[pc] = 28 then
+            halted <- true
+        else
+            let opCode, a, b, c = Map.find registers.[pc] prog
+            let op = opMap.[opCode]
+            registers <- op a b c registers
+            if registers.[pc] >= prog.Count-1 then halted <- true
+            else registers <- setReg pc registers (registers.[pc] + 1)
+    registers.[5]
 
 [<EntryPoint>]
 let main _ =
@@ -104,7 +94,7 @@ let main _ =
     let input = File.ReadAllLines "input.txt"
     let pc, prog = parseInput input
 
-    runProgram pc prog [12545763;0;0;0;0;0] |> ignore
-    printfn "part 1: %i" 12545763
+    let reg5 = runProgram pc prog [0;0;0;0;0;0]
+    printfn "part 1: %i" reg5
 
     0

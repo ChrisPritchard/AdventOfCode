@@ -28,7 +28,7 @@ let astarConfig map: AStar.Config<int * int * Tool> = {
             Map.tryFind (x + dx, y + dy) map
             |> Option.map (fun e ->
                 let ox, oy = x + dx, y + dy
-                match e, tool with
+                match e % 3, tool with
                 | 0, Neither -> 
                     [ox, oy, ClimbingGear; ox, oy, Torch]
                 | 1, Torch -> 
@@ -58,12 +58,12 @@ let main _ =
     printfn "part 1: %i" riskLevel
 
     let riskLevel2 =
-        map (tx+5, ty+5) depth
+        map (tx*2, ty*2) depth
     let path = 
         AStar.search 
             (0, 0, Torch) (tx, ty, Torch) 
             (astarConfig riskLevel2)
 
-    
+
 
     0

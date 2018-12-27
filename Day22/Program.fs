@@ -20,12 +20,16 @@ let map (tx, ty) depth =
 
 type Tool = Torch | ClimbingGear | Neither
 
-let astarConfig: AStar.Config = {
+let astarConfig map: AStar.Config<int * int * int> = {
     maxIterations = None
     neighbours = fun (x, y, _) ->
         [-1,0;1,0;0,-1;0,1]
-        |> List.map (fun (dx, dy) -> x + dx, y + dy)
-        |> List.filter (fun (ox, oy) -> ox >= 0 && oy >= 0)
+        |> List.map (fun (dx, dy) -> x + dx, y + dy, Map.tryFind (x + dx, y + dy) map)
+        |> List.choose (fun (_, _, tile) -> tile)
+        |> List.toSeq
+    fCost = fun (x, y, _) (gx, gy, _) ->
+        sqrt ((float gx - float x)**2. + (float gy - float y)**2.)
+    gCost = fun (x, y, _) (gx, gy, _) -> 1.
 }
 
 [<EntryPoint>]

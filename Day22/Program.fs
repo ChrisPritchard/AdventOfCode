@@ -20,28 +20,50 @@ let map (tx, ty) depth =
 
 type Tool = Torch | ClimbingGear | Neither
 
-let astarConfig map: AStar.Config<int * int * int> = {
+let astarConfig map: AStar.Config<int * int * Tool> = {
     maxIterations = None
-    neighbours = fun (x, y, _) ->
+    neighbours = fun (x, y, tool) ->
         [-1,0;1,0;0,-1;0,1]
-        |> List.map (fun (dx, dy) -> x + dx, y + dy, Map.tryFind (x + dx, y + dy) map)
-        |> List.choose (fun (_, _, tile) -> tile)
+        |> List.map (fun (dx, dy) ->  
+            Map.tryFind (x + dx, y + dy) map
+            |> Option.map (fun e ->
+                let ox, oy = x + dx, y + dy
+                match e, tool with
+                | 0, Neither -> 
+                    [ox, oy, ClimbingGear; ox, oy, Torch]
+                | 1, Torch -> 
+                    [ox, oy, ClimbingGear; ox, oy, Neither]
+                | 2, ClimbingGear -> 
+                    [ox, oy, Torch; ox, oy, Neither]
+                | _ -> 
+                    [ox, oy, tool]))
+        |> List.choose id 
+        |> List.collect id
         |> List.toSeq
     fCost = fun (x, y, _) (gx, gy, _) ->
         sqrt ((float gx - float x)**2. + (float gy - float y)**2.)
-    gCost = fun (x, y, _) (gx, gy, _) -> 1.
+    gCost = fun (_, _, t1) (_, _, t2) -> if t1 = t2 then 1. else 7.
 }
 
 [<EntryPoint>]
 let main _ =
     let depth = 10914
-    let target = 9,739
+    let (tx, ty) = 9,739
 
     let riskLevel = 
-        map target depth        
+        map (tx, ty) depth        
         |> Map.toList 
         |> List.sumBy (snd >> fun e -> e % 3)
 
     printfn "part 1: %i" riskLevel
+
+    let riskLevel2 =
+        map (tx+5, ty+5) depth
+    let path = 
+        AStar.search 
+            (0, 0, Torch) (tx, ty, Torch) 
+            (astarConfig riskLevel2)
+
+    
 
     0

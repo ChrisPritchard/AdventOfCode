@@ -63,7 +63,21 @@ let main _ =
         AStar.search 
             (0, 0, Torch) (tx, ty, Torch) 
             (astarConfig riskLevel2)
+        |> Option.map Seq.toList
 
+    let part2 =
+        match path with
+        | None -> failwith "no path found for part 2"
+        | Some p ->
+            p 
+            |> List.rev 
+            |> List.fold (fun (last, total) (_, _, next) ->
+                match last with
+                | None -> Some next, 0
+                | Some t when t = next -> Some next, total + 1
+                | _ -> Some next, total + 7) (None, 0)
+            |> snd
 
+    printfn "part 2: %i" part2
 
     0

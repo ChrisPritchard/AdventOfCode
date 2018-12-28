@@ -6,11 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="AStar.fs" />
     <Compile Include="Program.fs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="astar-search" Version="1.0.1" />
   </ItemGroup>
 
 </Project>

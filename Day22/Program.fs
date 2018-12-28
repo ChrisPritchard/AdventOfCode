@@ -22,21 +22,19 @@ type Tool = Torch | ClimbingGear | Neither
 
 let astarConfig map: AStar.Config<int * int * Tool> = {
     maxIterations = None
-    neighbours = fun (x, y, tool) ->
+    neighbours = fun (x, y, _) ->
         [-1,0;1,0;0,-1;0,1]
         |> List.map (fun (dx, dy) ->  
             Map.tryFind (x + dx, y + dy) map
             |> Option.map (fun e ->
                 let ox, oy = x + dx, y + dy
-                match e % 3, tool with
-                | 0, Neither -> 
+                match e % 3 with
+                | 0 -> 
                     [ox, oy, ClimbingGear; ox, oy, Torch]
-                | 1, Torch -> 
+                | 1 -> 
                     [ox, oy, ClimbingGear; ox, oy, Neither]
-                | 2, ClimbingGear -> 
-                    [ox, oy, Torch; ox, oy, Neither]
                 | _ -> 
-                    [ox, oy, tool]))
+                    [ox, oy, Torch; ox, oy, Neither]))
         |> List.choose id 
         |> List.collect id
         |> List.toSeq

@@ -31,7 +31,7 @@ let bfs (sx, sy, st) goal erosionLevels =
         | _ -> []
 
     let neighbours x y tool erosionLevels closed = 
-        [1,0;-1,0;0,1;0,-1]
+        [1, 0;0, 1;-1, 0;0, -1]
         |> List.map (fun (dx, dy) -> x + dx, y + dy, tool)
         |> List.filter (fun (nx, ny, _) -> 
             allowedTools nx ny erosionLevels |> List.contains tool
@@ -57,7 +57,7 @@ let bfs (sx, sy, st) goal erosionLevels =
                 let neighbours = neighbours x y tool erosionLevels closed
                 let adjacent = 
                     neighbours
-                    |> List.map (fun (x, y, t) -> (x, y, t, 0, minutes + 1))
+                    |> List.map (fun (x, y, t) -> x, y, t, 0, minutes + 1)
                 let newClosed = 
                     neighbours |> Set.ofList |> Set.union closed
                 let switch = 
@@ -67,17 +67,15 @@ let bfs (sx, sy, st) goal erosionLevels =
                     |> List.head
                 processNext rest (switch::(adjacent @ toprocess)) newClosed
 
-    processNext [sx, sy, st, 0, 0] [] (Set.empty.Add (0, 0, Torch))
+    processNext [sx, sy, st, 0, 0] [] (Set.empty.Add (sx, sy, st))
 
 [<EntryPoint>]
 let main _ =
     // let depth = 510
     // let (tx, ty) = 10,10
-    // let mapSize = 15,15
 
     let depth = 10914
     let (tx, ty) = 9,739
-    let mapSize = 18,1500
 
     let riskLevel = 
         map (tx, ty) (tx, ty) depth        
@@ -87,7 +85,7 @@ let main _ =
     printfn "part 1: %i" riskLevel
 
     let riskLevel2 =
-        map (tx, ty) mapSize depth
+        map (tx, ty) (tx * 10, ty * 10) depth
     let part2 = bfs (0, 0, Torch) (tx, ty, Torch) riskLevel2
 
     printfn "part 2: %i" part2

@@ -20,31 +20,61 @@ let map target (w, h) depth =
 
 type Tool = Torch | ClimbingGear | Neither
 
-let astarConfig map: AStar.Config<int * int * Tool> = {
-    maxIterations = None
-    neighbours = fun (x, y, _) ->
-        [-1,0;1,0;0,-1;0,1]
-        |> List.map (fun (dx, dy) ->  
-            Map.tryFind (x + dx, y + dy) map
-            |> Option.map (fun e ->
-                let ox, oy = x + dx, y + dy
-                match e % 3 with
-                | 0 -> 
-                    [ox, oy, ClimbingGear; ox, oy, Torch]
-                | 1 -> 
-                    [ox, oy, ClimbingGear; ox, oy, Neither]
-                | _ -> 
-                    [ox, oy, Torch; ox, oy, Neither]))
-        |> List.choose id 
-        |> List.collect id
-        |> List.toSeq
-    fCost = fun (x, y, _) (gx, gy, _) ->
-        sqrt ((float gx - float x)**2. + (float gy - float y)**2.)
-    gCost = fun (_, _, t1) (_, _, t2) -> if t1 = t2 then 1. else 8.
-}
+let bfs (sx, sy, st) goal erosionLevels = 
+
+    let allowedTools x y erosionLevels =
+        let tileType = Map.tryFind (x, y) erosionLevels |> Option.map (fun e -> e % 3)
+        match tileType with
+        | Some 0 -> [Torch;ClimbingGear]
+        | Some 1 -> [ClimbingGear;Neither]
+        | Some 2 -> [Neither;Torch]
+        | _ -> []
+
+    let neighbours x y tool erosionLevels closed = 
+        [1,0;-1,0;0,1;0,-1]
+        |> List.map (fun (dx, dy) -> x + dx, y + dy, tool)
+        |> List.filter (fun (nx, ny, _) -> 
+            allowedTools nx ny erosionLevels |> List.contains tool
+            && Set.contains (nx, ny, tool) closed |> not)
+
+    let rec processNext unprocessed toprocess closed =
+        match unprocessed, toprocess with
+        | [], [] -> failwith "no solution found"
+        | [], tp -> processNext (List.rev tp) [] closed
+        | (x, y, tool, switching, minutes)::rest, _ ->
+            if switching > 0 then
+                if switching <> 1 then
+                    let newToProcess = (x, y, tool, switching - 1, minutes + 1)::toprocess
+                    processNext rest newToProcess closed
+                else if Set.contains (x, y, tool) closed then
+                    processNext rest toprocess closed
+                else
+                    let newToProcess = (x, y, tool, switching - 1, minutes + 1)::toprocess
+                    let newClosed = Set.add (x, y, tool) closed
+                    processNext rest newToProcess newClosed
+            else if (x, y, tool) = goal then minutes
+            else
+                let neighbours = neighbours x y tool erosionLevels closed
+                let adjacent = 
+                    neighbours
+                    |> List.map (fun (x, y, t) -> (x, y, t, 0, minutes + 1))
+                let newClosed = 
+                    neighbours |> Set.ofList |> Set.union closed
+                let switch = 
+                    allowedTools x y erosionLevels
+                    |> List.except [tool]
+                    |> List.map (fun t -> x, y, t, 6, minutes + 1)
+                    |> List.head
+                processNext rest (switch::(adjacent @ toprocess)) newClosed
+
+    processNext [sx, sy, st, 0, 0] [] (Set.empty.Add (0, 0, Torch))
 
 [<EntryPoint>]
 let main _ =
+    // let depth = 510
+    // let (tx, ty) = 10,10
+    // let mapSize = 15,15
+
     let depth = 10914
     let (tx, ty) = 9,739
     let mapSize = 18,1500
@@ -58,37 +88,7 @@ let main _ =
 
     let riskLevel2 =
         map (tx, ty) mapSize depth
-    let path = 
-        AStar.search 
-            (0, 0, Torch) (tx, ty, Torch) 
-            (astarConfig riskLevel2)
-        |> Option.map Seq.toList
-
-    let part2 =
-        match path with
-        | None -> failwith "no path found for part 2"
-        | Some p ->
-
-            // [0..ty+5] |> List.map (fun y ->
-            // [0..tx+5] |> List.map (fun x -> 
-            //     if x = 0 && y = 0 then "M"
-            //     else if x = tx && y = ty then "T"
-            //     else if List.tryFind (fun (px, py, _) -> px = x && py = y) p <> None then "X"
-            //     else
-            //     match riskLevel2.[x, y] % 3 with
-            //     | 0 -> "."
-            //     | 1 -> "="
-            //     | _ -> "|") |> String.concat "")
-            // |> List.iter (printfn "%s")
-
-            p 
-            |> List.rev 
-            |> List.fold (fun (last, total) (_, _, next) ->
-                match last with
-                | None -> Some next, 0
-                | Some t when t = next -> Some next, total + 1
-                | _ -> Some next, total + 8) (None, 0)
-            |> snd
+    let part2 = bfs (0, 0, Torch) (tx, ty, Torch) riskLevel2
 
     printfn "part 2: %i" part2
 

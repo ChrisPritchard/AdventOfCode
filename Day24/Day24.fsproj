@@ -6,6 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Model.fs" />
+    <Compile Include="Parsing.fs" />
     <Compile Include="Program.fs" />
     <None Include="input.txt" CopyToOutputDirectory="always" />
   </ItemGroup>

@@ -32,10 +32,17 @@ let runTurn groups =
 let rec runGame groups = 
     let afterTurn = runTurn groups |> List.filter (fun g -> g.units > 0)
     let ofKind kind = List.tryFind (fun g -> g.kind = kind) afterTurn
-    if ofKind ImmuneSystem = None || ofKind Infection = None then
-        List.sumBy (fun g -> g.units) afterTurn
+    if ofKind ImmuneSystem = None then
+        Infection, List.sumBy (fun g -> g.units) afterTurn
+    else if ofKind Infection = None then
+        ImmuneSystem, List.sumBy (fun g -> g.units) afterTurn
     else
         runGame afterTurn
+
+let boost amount groups =
+    groups |> List.map (fun g -> 
+        if g.kind = Infection then g 
+        else { g with hitpoints = g.hitpoints + amount })
 
 [<EntryPoint>]
 let main _ =
@@ -43,7 +50,7 @@ let main _ =
     let input = File.ReadAllText "input.txt"
     let groups = parseInput input
 
-    let part1 = runGame groups
+    let _, part1 = runGame groups
     printfn "part 1: %i" part1
 
     0

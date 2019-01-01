@@ -12,6 +12,7 @@ with
         else __.effectivePower
     member __.findTarget targets =
         targets 
+        |> List.filter (fun group -> group.kind <> __.kind)
         |> List.sortByDescending (fun o -> __.effectiveDamageTo o, o.effectivePower, o.initiative)
         |> List.tryHead
         |> Option.bind (fun other -> if __.effectiveDamageTo other = 0 then None else Some other)
@@ -20,6 +21,6 @@ with
 let main _ =
     
     let input = File.ReadAllText "input.txt"
-    let immuneGroups, infectionGroups = parseInput input
+    let groups = parseInput input
 
     0

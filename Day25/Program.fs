@@ -14,10 +14,17 @@ let main _ =
     let distance (x1,y1,z1,w1) (x2,y2,z2,w2) =
         abs (x2 - x1) + abs (y2 - y1) + abs (z2 - z1) + abs (w2 - w1)
 
-    let folder coords soFar coord = 
-        if List.tryFind (fun set -> Set.contains coord set) soFar <> None then soFar
+    let rec findLinked set coords =
+        let newLinks = coords |> List.except set |> List.filter (fun f -> List.exists (fun c -> distance c f <= 3) set)
+        if newLinks = [] then
+            set
         else
-            let newSet = coords |> List.filter (fun c -> distance c coord <= 3) |> Set.ofList
+            findLinked (set @ newLinks) coords
+
+    let folder coords soFar coord = 
+        if List.exists (fun set -> Set.contains coord set) soFar then soFar
+        else
+            let newSet = findLinked [coord] coords |> Set.ofList
             newSet::soFar
 
     let constellations = coords |> List.fold (folder coords) []

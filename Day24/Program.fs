@@ -53,12 +53,12 @@ let boost amount groups =
         if g.kind = Infection then g 
         else { g with attackStrength = g.attackStrength + amount })
 
-let rec findMinBoost min max groups =
+let rec findMinBoostUnits min max groups =
     let mid = ((max - min) / 2) + min
     match runGame <| boost mid groups with
-    | Some (ImmuneSystem, _) when max - min <= 2 -> mid
-    | Some (ImmuneSystem, _) -> findMinBoost min mid groups
-    | Some (Infection, _) | None -> findMinBoost mid max groups
+    | Some (ImmuneSystem, units) when max - min <= 2 -> units
+    | Some (ImmuneSystem, _) -> findMinBoostUnits min mid groups
+    | Some (Infection, _) | None -> findMinBoostUnits mid max groups
 
 [<EntryPoint>]
 let main _ =
@@ -70,7 +70,7 @@ let main _ =
     | Some (_, part1) -> printfn "part 1: %i" part1
     | _ -> failwith "stalemate for part 1"
 
-    let part2 = findMinBoost 0 10000 groups
+    let part2 = findMinBoostUnits 0 10000 groups
     printfn "part 2: %i" part2
 
     0

@@ -16,6 +16,7 @@ let main _ =
             let andTime = Map.add (line.[2], line.[0]) (Int32.Parse line.[4]) newTime
             andCity, andTime)
             (Set.empty, Map.empty)
+    let cities = Set.toList cities
 
     let rec findShortestTime =
         function
@@ -24,8 +25,17 @@ let main _ =
         | city::rest ->
             rest |> List.map (fun other -> travelTimes.[city, other] + findShortestTime (other::(List.except [other] rest))) |> List.min
 
-    let cities = Set.toList cities
     let part1 = cities |> List.map (fun city -> findShortestTime (city::(List.except [city] cities))) |> List.min
     printfn "part 1: %i" part1
+
+    let rec findLongestTime =
+        function
+        | [] | [_] -> 0
+        | [city;other] -> travelTimes.[city, other]
+        | city::rest ->
+            rest |> List.map (fun other -> travelTimes.[city, other] + findLongestTime (other::(List.except [other] rest))) |> List.max
+
+    let part2 = cities |> List.map (fun city -> findLongestTime (city::(List.except [city] cities))) |> List.max
+    printfn "part 2: %i" part2
 
     0

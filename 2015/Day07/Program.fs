@@ -6,12 +6,19 @@ let main _ =
 
     let input = File.ReadAllLines "input.txt"
 
-    let mutable map = Map.empty<string, unit -> uint16>
+    let mutable program = Map.empty<string, unit -> uint16>
+    let mutable cache = Map.empty<string, uint16>
 
     let parseToken (token: string) = 
         match UInt16.TryParse token with
         | (true, i) -> fun () -> i
-        | (false, _) -> fun () -> Map.find token map ()
+        | (false, _) -> fun () -> 
+            match Map.tryFind token cache with
+            | Some v -> v
+            | None ->
+                let v = Map.find token program ()
+                cache <- Map.add token v cache
+                v
 
     let parseInstruction (s: string) =
         let bits = s.Split [|' '|]
@@ -43,11 +50,11 @@ let main _ =
                     >>>
                     Int32.Parse inst.[2]
                     
-        map <- Map.add (Array.last bits) func map
+        program <- Map.add (Array.last bits) func program
 
     input |> Array.iter parseInstruction
     
-    let part1 = map.["a"] ()
+    let part1 = program.["a"] ()
     printfn "part 1: %i" part1
 
     0

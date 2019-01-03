@@ -57,4 +57,8 @@ let main _ =
     let part1 = program.["a"] ()
     printfn "part 1: %i" part1
 
+    cache <- ["b", part1] |> Map.ofList
+    let part2 = program.["a"] ()
+    printfn "part 2: %i" part2
+
     0

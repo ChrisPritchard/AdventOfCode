@@ -37,6 +37,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day16", "Day16\Day16.fsproj
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day17", "Day17\Day17.fsproj", "{6FED783D-8803-41DF-894C-4DA6978627CD}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day18", "Day18\Day18.fsproj", "{EDFF64A9-6FB3-4814-85C7-0A89019818C3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -254,5 +256,17 @@ Global
 		{6FED783D-8803-41DF-894C-4DA6978627CD}.Release|x64.Build.0 = Release|Any CPU
 		{6FED783D-8803-41DF-894C-4DA6978627CD}.Release|x86.ActiveCfg = Release|Any CPU
 		{6FED783D-8803-41DF-894C-4DA6978627CD}.Release|x86.Build.0 = Release|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Debug|x64.Build.0 = Debug|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Debug|x86.Build.0 = Debug|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Release|x64.ActiveCfg = Release|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Release|x64.Build.0 = Release|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Release|x86.ActiveCfg = Release|Any CPU
+		{EDFF64A9-6FB3-4814-85C7-0A89019818C3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -26,4 +26,11 @@ let main _ =
         |> List.max
     printfn "part 1: %i" part1
 
+    let part2 = 
+        combinations 
+        |> List.filter (fun list -> list.[4] = 500)
+        |> List.map (List.take 4 >> List.fold (*) 1) 
+        |> List.max
+    printfn "part 2: %i" part2
+
     0

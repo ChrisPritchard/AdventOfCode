@@ -2,9 +2,7 @@
 open System.IO
 open FParsec.Primitives
 open FParsec.CharParsers
-open Newtonsoft.Json
 open Newtonsoft.Json.Linq
-open System
 
 [<EntryPoint>]
 let main _ =

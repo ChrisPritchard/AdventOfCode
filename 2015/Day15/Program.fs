@@ -12,8 +12,8 @@ let main _ =
     let combinations = 
         [0..100] |> List.collect (fun frosting ->
         [0..100-frosting] |> List.collect (fun candy ->
-        [0..100-candy] |> List.collect (fun butterscotch ->
-        [0..100-butterscotch] |> List.map (fun sugar ->
+        [0..100-candy-frosting] |> List.collect (fun butterscotch ->
+        [0..100-butterscotch-candy-frosting] |> List.map (fun sugar ->
             [0..4] |> List.map (fun i -> 
                max 0 ((frosting * input.[0].[i])
                + (candy * input.[1].[i])

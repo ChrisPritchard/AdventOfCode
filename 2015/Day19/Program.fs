@@ -26,22 +26,12 @@ let main _ =
     let part1 = List.length allChanges
     printfn "part 1: %i" part1
 
-    let rec reducer molecules =
-        molecules 
-        |> Seq.collect (fun molecule ->
-            mappings 
-            |> Seq.collect (fun (o, r) -> moleculesFrom (r, o) molecule)
-            |> Seq.distinct
-            |> Seq.filter (fun s -> s.Length < molecule.Length))
-        |> Seq.toList
+    // part 2 is based on the clever solution in the text file linked.
+    // my brute force solution didnt work :)
 
-    let rec findStart molecules n = 
-        let next = reducer molecules |> List.distinct
-        let maxLen = next |> List.map (fun s -> s.Length) |> List.max
-        if next |> List.contains "e" then n + 1
-        else findStart next (n + 1)
-
-    let part2 = findStart [molecule] 0
+    let elementCount = molecule |> Seq.filter Char.IsUpper |> Seq.length
+    let count elem = indexes molecule elem |> List.length
+    let part2 = elementCount - (count "Rn" + count "Ar") - (count "Y" * 2) - 1
     printfn "part 2: %i" part2
 
     0

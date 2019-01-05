@@ -27,7 +27,21 @@ let main _ =
     printfn "part 1: %i" part1
 
     let rec reducer molecules =
-        molecules |> List.collect (fun molecule ->
-            mappings)
+        molecules 
+        |> Seq.collect (fun molecule ->
+            mappings 
+            |> Seq.collect (fun (o, r) -> moleculesFrom (r, o) molecule)
+            |> Seq.distinct
+            |> Seq.filter (fun s -> s.Length < molecule.Length))
+        |> Seq.toList
+
+    let rec findStart molecules n = 
+        let next = reducer molecules |> List.distinct
+        let maxLen = next |> List.map (fun s -> s.Length) |> List.max
+        if next |> List.contains "e" then n + 1
+        else findStart next (n + 1)
+
+    let part2 = findStart [molecule] 0
+    printfn "part 2: %i" part2
 
     0

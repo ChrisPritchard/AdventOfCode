@@ -26,4 +26,8 @@ let main _ =
     let part1 = List.length allChanges
     printfn "part 1: %i" part1
 
+    let rec reducer molecules =
+        molecules |> List.collect (fun molecule ->
+            mappings)
+
     0

@@ -1,5 +1,7 @@
 ﻿
-type Spell = Recharge | Shield | Poison | MagicMissile | Drain
+open System
+
+type Spell = Recharge | Shield | MagicMissile | Drain | Poison
 type Player = { hitPoints: int; armour: int; mana: int; effects: (Spell * int) list }
 type Boss = { hitPoints: int; damage: int }
 
@@ -70,37 +72,61 @@ let main _ =
                 match spell with
                 | Shield -> { p with armour = 7 }, b
                 | Poison -> p, { b with hitPoints = b.hitPoints - 3 }
-                | Recharge -> { p with mana = p.mana + 101 }, b
+                | Recharge -> { p with mana = min 500 (p.mana + 101) }, b
                 | _ -> p, b) (player, boss)
         { player with effects = nextEffects }, boss
 
-    let rec fullTurn player boss spell = 
+    let fullTurn player boss spell = 
         let player = { player with armour = 0 }
         let player, boss = applyEffects player boss
-        if boss.hitPoints <= 0 then Some 0
+        if boss.hitPoints <= 0 then 
+            player, boss, 0
         else
             let player, boss, cost = castSpell player boss spell
             if boss.hitPoints <= 0 then 
-                Some cost
+               player, boss, cost
             else
                 let player, boss = applyEffects player boss
                 if boss.hitPoints <= 0 then 
-                    Some cost
+                    player, boss, cost
                 else
                     let player = 
                         { player with 
                             hitPoints = player.hitPoints - (boss.damage - player.armour) }
-                    if player.hitPoints <= 0 then 
-                        None
-                    else
-                        let nextSpells = turnSpells player
-                        if List.isEmpty nextSpells then 
-                            None
-                        else
-                            let spell = nextSpells |> List.sort |> List.head
+                    player, boss, cost
+                        
+    let rec runGame soFar max = 
+        let testMax = match max with Some m -> m | _ -> Int32.MaxValue
+        let next = 
+            soFar
+            |> List.collect (fun (player, boss, cost) ->
+                let nextSpells = turnSpells player
+                if List.isEmpty nextSpells then []
+                else
+                    nextSpells 
+                    |> List.map (fun spell ->
+                        let player, boss, turnCost = 
                             fullTurn player boss spell
+                        player, boss, cost + turnCost))
+            |> List.filter (fun (player, _, cost) -> 
+                player.hitPoints > 0 && cost < testMax)
+        if List.isEmpty next then 
+            max
+        else
+            let victoryScore = 
+                next 
+                |> List.filter (fun (_, b, _) -> b.hitPoints <= 0)
+                |> List.map (fun (_, _, c) -> c)
+                |> List.sort
+                |> List.tryHead
+                |> Option.orElse max
+            let next = next |> List.filter (fun (_, b, _) -> b.hitPoints > 0)
+            if List.isEmpty next then 
+                victoryScore
+            else
+                runGame next victoryScore
 
-    let part1 = fullTurn player boss Shield
+    let part1 = runGame [player, boss, 0] None
     printfn "part 1: %A" part1
 
     0

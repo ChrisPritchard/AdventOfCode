@@ -2,7 +2,7 @@
 open System
 
 type Spell = Recharge | Shield | MagicMissile | Drain | Poison
-type Player = { hitPoints: int; armour: int; mana: int; effects: (Spell * int) list }
+type Player = { hitPoints: int; armour: int; mana: int; effects: (Spell * int) list; isCursed: bool }
 type Boss = { hitPoints: int; damage: int }
 
 let allSpells = 
@@ -18,7 +18,7 @@ let allSpells =
 let main _ =
     
     let boss = { hitPoints = 51; damage = 9 }
-    let player = { hitPoints = 50; armour = 0; mana = 500; effects = [] }
+    let player = { hitPoints = 50; armour = 0; mana = 500; effects = []; isCursed = false }
 
     let spellActive spell player = 
         player.effects |> List.exists (fun (s, t) -> s = spell && t > 1)
@@ -77,23 +77,30 @@ let main _ =
         { player with effects = nextEffects }, boss
 
     let fullTurn player boss spell = 
-        let player = { player with armour = 0 }
-        let player, boss = applyEffects player boss
-        if boss.hitPoints <= 0 then 
+        let player = 
+            if player.isCursed 
+            then { player with hitPoints = player.hitPoints - 1 } 
+            else player
+        if player.hitPoints <= 0 then 
             player, boss, 0
         else
-            let player, boss, cost = castSpell player boss spell
+            let player, boss = applyEffects player boss
             if boss.hitPoints <= 0 then 
-               player, boss, cost
+                player, boss, 0
             else
-                let player, boss = applyEffects player boss
+                let player, boss, cost = castSpell player boss spell
                 if boss.hitPoints <= 0 then 
-                    player, boss, cost
+                   player, boss, cost
                 else
-                    let player = 
-                        { player with 
-                            hitPoints = player.hitPoints - (boss.damage - player.armour) }
-                    player, boss, cost
+                    // BOSS TURN
+                    let player, boss = applyEffects { player with armour = 0 } boss
+                    if boss.hitPoints <= 0 then 
+                        player, boss, cost
+                    else
+                        let player = 
+                            { player with 
+                                hitPoints = player.hitPoints - (boss.damage - player.armour) }
+                        player, boss, cost
                         
     let rec runGame soFar max = 
         let testMax = match max with Some m -> m | _ -> Int32.MaxValue
@@ -127,5 +134,8 @@ let main _ =
 
     let part1 = runGame [player, boss, 0] None
     printfn "part 1: %A" part1
+
+    let part2 = runGame [{ player with isCursed = true }, boss, 0] None
+    printfn "part 2: %A" part2
 
     0

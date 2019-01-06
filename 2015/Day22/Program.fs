@@ -7,11 +7,11 @@ type Boss = { hitPoints: int; damage: int }
 
 let allSpells = 
     [
+        MagicMissile,(53,0)
+        Drain,(73,0)
         Shield,(113,6)
         Poison,(173,6)
         Recharge,(229,5)
-        MagicMissile,(53,0)
-        Drain,(73,0)
     ] |> Map.ofList
 
 [<EntryPoint>]
@@ -39,7 +39,7 @@ let main _ =
         | Drain, (cost, _) -> 
             { player with 
                 mana = player.mana - cost
-                hitPoints = max 50 (player.hitPoints + 2) },
+                hitPoints = min 50 (player.hitPoints + 2) },
             { boss with hitPoints = boss.hitPoints - 2 },
             cost
         | Shield, (cost, t) -> 
@@ -113,18 +113,17 @@ let main _ =
         if List.isEmpty next then 
             max
         else
+            let ongoing, victories = next |> List.partition (fun (_, b, _) -> b.hitPoints > 0)
             let victoryScore = 
-                next 
-                |> List.filter (fun (_, b, _) -> b.hitPoints <= 0)
+                victories
                 |> List.map (fun (_, _, c) -> c)
                 |> List.sort
                 |> List.tryHead
                 |> Option.orElse max
-            let next = next |> List.filter (fun (_, b, _) -> b.hitPoints > 0)
             if List.isEmpty next then 
                 victoryScore
             else
-                runGame next victoryScore
+                runGame ongoing victoryScore
 
     let part1 = runGame [player, boss, 0] None
     printfn "part 1: %A" part1

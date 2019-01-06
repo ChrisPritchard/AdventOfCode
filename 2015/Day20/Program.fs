@@ -5,20 +5,13 @@ let main _ =
     let input = 33100000
 
     let presents house =
-        [1..house] |> List.sumBy (fun n -> 
-            if house % n = 0 then n * 10 else 0)
+        [1..(house |> float |> sqrt |> int)] 
+        |> Seq.filter (fun n -> house % n = 0)
+        |> Seq.collect (fun n -> [n; house / n])
+        |> Seq.distinct
+        |> Seq.sumBy (fun n -> n * 10)
 
-    let rec find min max =
-        let mid = (max - min) / 2 + min
-        let presents = presents mid
-        if presents = input then mid
-        else if max - mid = 2 then max - 1
-        else if presents < input then find mid max
-        else find min mid
-
-    let part1 = find 1000000 10000000
+    let part1 = [2..3000000] |> List.find (presents >> (<=) input)
     printfn "part 1: %i" part1
-
-    printfn "%i" <| presents 1561793
 
     0

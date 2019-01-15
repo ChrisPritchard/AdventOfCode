@@ -1,7 +1,7 @@
 # AdventOfCode2018
 My solutions to the Advent of Code comp, 2018
 
-https://adventofcode.com/
+https://adventofcode.com/2018
 
 I started five days behind, and worked on it sporadically, so never got anywhere near the leadboards. Still, it was a great deal of fun :) A good opportunity to brush up on computer science topics and techniques that I hadn't touched since University decades previously (enterprise development doesnt have much call for breadth-first-searches or A*).
 

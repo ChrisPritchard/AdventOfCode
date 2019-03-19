@@ -8,6 +8,10 @@
 
   <ItemGroup>
     <None Include="readme.md" />
+    <Content Include="Day4-input.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Day4.fs" />
     <Content Include="Day3-input.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -16,7 +20,5 @@
     <Compile Include="Day1.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-
-  <ItemGroup />
 
 </Project>

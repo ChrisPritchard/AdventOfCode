@@ -4,12 +4,13 @@ open System.Diagnostics
 [<EntryPoint>]
 let main _ =
     
-    let timer = Stopwatch.StartNew();
+    let time day part func =
+        let timer = Stopwatch.StartNew();    
+        let result = func ()
+        timer.Stop()
+        printfn "day%i part%i: %A (elapsed: %i ms)" day part result timer.ElapsedMilliseconds
 
-    printfn "day1 part1: %A" <| Day1.part1 ()
-    printfn "day1 part2: %A" <| Day1.part2 ()
-
-    timer.Stop ()
-    printfn "elapsed: %i ms" timer.ElapsedMilliseconds
+    time 1 1 Day1.part1
+    time 1 1 Day1.part2
 
     0

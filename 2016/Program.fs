@@ -20,7 +20,8 @@ let main _ =
     //time 4 2 Day4.part2
     //time 5 1 Day5.part1
     //time 5 2 Day5.part2
-    time 6 1 Day6.part1
-    time 6 2 Day6.part2
+    //time 6 1 Day6.part1
+    //time 6 2 Day6.part2
+    time 7 1 Day7.part1
 
     0

@@ -46,25 +46,24 @@ open System
 
 let input = "ugkcyxxp"
 
-let hash (hasher: MD5) (s: string) =
-    let inBytes = Encoding.ASCII.GetBytes s
-    let res = hasher.ComputeHash inBytes
-    res |> Array.map (fun b -> Convert.ToString(b, 16).PadLeft(2, '0')) |> String.concat ""
+let asHex (bytes: byte[]) = 
+    bytes |> Array.map (fun b -> Convert.ToString(b, 16).PadLeft(2, '0')) |> String.concat ""
 
-let find hasher zeroCount start =
-    let tokenToFind = String('0', zeroCount)
+let find (hasher: MD5) start =
+    let baseBytes = Encoding.ASCII.GetBytes input
     Seq.initInfinite (fun i ->
         let num = i + start
-        let toHash = input + string num
-        num, hash hasher toHash)
-    |> Seq.find (fun (_, (h: string)) -> h.StartsWith tokenToFind)
+        let inBytes = Array.append baseBytes (Encoding.ASCII.GetBytes (string num))
+        num, hasher.ComputeHash inBytes)
+    |> Seq.find (fun (_, (h: byte[])) -> h.[0] = 0uy && h.[1] = 0uy && h.[2] < 16uy)
+    |> fun (i, b) -> i, asHex b
 
 let part1 () =
     use hasher = MD5.Create ()
     
     (0, [0..7]) 
     ||> List.mapFold (fun start _ ->
-        let (i, hash) = find hasher 5 start
+        let (i, hash) = find hasher start
         hash.[5], i + 1)
     |> fst |> fun chars -> new String(Seq.toArray chars)
 
@@ -81,7 +80,7 @@ let part2 () =
     let rec decoder start n =
         if n = 0 then String(result)
         else
-            let (i, hash) = find hasher 5 start
+            let (i, hash) = find hasher start
             if not (Char.IsNumber (hash.[5])) then
                 decoder (i + 1) n
             else

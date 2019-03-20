@@ -46,7 +46,7 @@ let ABBA (s: string) =
         && s.[i+1] = s.[i+2]
         && s.[i] <> s.[i+1])
 
-let valid line = 
+let valid1 line = 
     let segments = split "[]" line
     let mutable supernet, hypernet = false, false
     for i = 0 to segments.Length - 1 do
@@ -57,4 +57,23 @@ let valid line =
     supernet && not hypernet
 
 let part1 () = 
-    input |> Array.filter valid |> Array.length
+    input |> Array.filter valid1 |> Array.length
+
+let ABA (s: string) = 
+    s 
+    |> Seq.windowed 3 
+    |> Seq.filter (fun chars -> chars.[0] = chars.[2] && chars.[0] <> chars.[1])
+    |> Seq.map asString
+
+let BAB abaList (s: string) =
+    let babList = abaList |> List.map (fun (aba: string) -> asString [aba.[1];aba.[0];aba.[1]])
+    babList |> List.exists (fun bab -> s.Contains bab)
+
+let valid2 line = 
+    let segments = split "[]" line
+    let supernets, hypernets = segments |> Array.indexed |> Array.partition (fun (i, _) -> i % 2 = 0)
+    let abas = supernets |> Seq.collect (snd >> ABA) |> Seq.toList
+    hypernets |> Seq.exists (snd >> BAB abas)
+
+let part2 () =
+    input |> Array.filter valid2 |> Array.length

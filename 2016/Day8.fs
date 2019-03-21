@@ -44,25 +44,51 @@ As you can see, this display technology is extremely powerful, and will soon dom
 There seems to be an intermediate check of the voltage used by the display: after you swipe your card, if the screen did work, how many pixels should be lit?
 *)
 
+(*
+--- Part Two ---
+
+You notice that the screen is only capable of displaying capital letters; in the font it uses, each letter is 5 pixels wide and 6 tall.
+
+After you swipe your card, what code is the screen trying to display?
+*)
+
 module Day8
 
 open System.IO
 open Common
 
-//let input = File.ReadAllLines "Day8-input.txt"
-let input = [|
-    "rect 3x2"
-    "rotate column x=1 by 1"
-    "rotate row y=0 by 4"
-    "rotate column x=1 by 1"
-    |]
+let input = File.ReadAllLines "Day8-input.txt"
 
-let part1 () =
+let lcd = Array2D.create 50 6 false
+
+for instruction in input do
+    if instruction.StartsWith "rect" then
+        let dim = split "x" (instruction.Substring(5))
+        for x = 0 to int dim.[0] - 1 do
+            for y = 0 to int dim.[1] - 1 do
+                lcd.[x, y] <- true
+    elif instruction.StartsWith "rotate row" then
+        let rowamt = split " by " (instruction.Substring(13))
+        let y, amt = int rowamt.[0], int rowamt.[1]
+        let result = Array.create 50 false
+        for x = 0 to 49 do
+            result.[(x + amt) % 50] <- lcd.[x, y]
+        for x = 0 to 49 do
+            lcd.[x, y] <- result.[x]
+    elif instruction.StartsWith "rotate column" then
+        let colamt = split " by " (instruction.Substring(16))
+        let x, amt = int colamt.[0], int colamt.[1]
+        let result = Array.create 6 false
+        for y = 0 to 5 do
+            result.[(y + amt) % 6] <- lcd.[x, y]
+        for y = 0 to 5 do
+            lcd.[x, y] <- result.[y] 
+
+let part1 () =     
+    lcd |> Seq.cast<bool> |> Seq.filter id |> Seq.length
+
+let part2 () =
+    [0..5] |> List.map (fun y ->
+        sprintf "\r\n   %s" <| asString ([0..49] |> List.map (fun x -> if lcd.[x, y] then '#' else ' ')))
+    |> String.concat "" |> fun s -> s + "\r\n"
     
-    let lcd = Array2D.create 50 6 false
-
-    for instruction in input do
-        if instruction.StartsWith "rect" then
-            let dim = split "x" instruction.Substring(5)
-
-    0

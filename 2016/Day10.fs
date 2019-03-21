@@ -30,6 +30,8 @@ Based on your instructions, what is the number of the bot that is responsible fo
 
 module Day10
 
+open Common
+
 //let input = System.IO.File.ReadAllLines "Day10-input.txt"
 let input = 
     [|
@@ -41,74 +43,31 @@ let input =
         "value 2 goes to bot 2"
     |]
 
-type Bot = {
-    chips: int list
-    low: Dest option
-    high: Dest option
-} and Dest = Bot of int | Out of int
+type Instruction =
+    | Start of value:int * bot:int
+    | Give of bot:int * low:Destination * high:Destination
+and Destination = 
+    | Bot of int | Output of int
 
-let defaultBot = { chips = []; low = None; high = None }
+let instruction (line: string) =
+    if line.StartsWith "value" then
+        let parts = splits ["value ";" goes to bot "] line
+        Start (int parts.[0], int parts.[1])
+    else
+        let parts = splits [" gives low to ";" and high to "] line
+        let bot = int (split " " parts.[0]).[1]
+        let low = 
+            match split " " parts.[1] with
+            | [|"bot";n|] -> Bot (int n)
+            | [|_;n|] -> Output (int n)
+            | _ -> failwith "bad parse"
+        let high = 
+            match split " " parts.[2] with
+            | [|"bot";n|] -> Bot (int n)
+            | [|_;n|] -> Output (int n)
+            | _ -> failwith "bad parse"
+        Give (bot, low, high)
 
 let part1 () =
-    
-    let mutable bots, outs = Map.empty, Map.empty
-
-    let botWithNewChip b c = 
-        Map.tryFind b bots 
-        |> Option.defaultValue defaultBot
-        |> fun bot -> { bot with chips = (c::bot.chips) }
-
-    let rec applyUpdate b bot =
-        if bot.chips.Length < 2 then ()
-        else
-            let chips = List.sort bot.chips
-            let low, high = chips.[0], chips.[1]
-            let newLow = 
-                match bot.low with
-                | Some (Out i) ->
-                    let out = Map.tryFind i outs |> Option.defaultValue []
-                    outs <- Map.add i (low::out) outs
-                    None
-                | Some (Bot i) ->
-                    let lowBot = botWithNewChip i low
-                    bots <- Map.add i lowBot bots
-                    applyUpdate i lowBot
-                    None
-                | None -> Some low
-            let newHigh = 
-                match bot.high with
-                | Some (Out i) ->
-                    let out = Map.tryFind i outs |> Option.defaultValue []
-                    outs <- Map.add i (high::out) outs
-                    None
-                | Some (Bot i) ->
-                    let highBot = botWithNewChip i high
-                    bots <- Map.add i highBot bots
-                    applyUpdate i highBot
-                    None
-                | None -> Some high
-            bots <- Map.add b { bot with chips = List.choose id [newLow;newHigh] } bots
-
-    let rec processor i = 
-        if i = input.Length then 
-            processor 0
-        else
-            let ins = input.[i]
-            if ins.StartsWith "value " then
-                let n = int ins.[7..ins.IndexOf " goes" - 1]
-                let b = int ins.[ins.IndexOf "bot " + 5]
-                
-                let bot = botWithNewChip b n
-                bots <- Map.add b bot bots
-                applyUpdate b bot
-            elif ins.StartsWith "bot gives " then
-                let b = int ins.[ins.IndexOf "bot " + 5..ins.IndexOf " gives" - 1]
-                let low = int ins.[ins.IndexOf "low to output " + ("low to output ".Length + 1)..ins.IndexOf " and" - 1]
-                let high = int ins.[ins.IndexOf "high to bot " + ("high to bot ".Length + 1)..]
-
-                let bot = Map.tryFind b bots |> Option.defaultValue defaultBot
-                bots <- Map.add b bot { bot with low = Some (Bot low)
-
-            processor (i + 1)
-    
-    processor 0
+    let instructions = input |> Array.map instruction
+    0

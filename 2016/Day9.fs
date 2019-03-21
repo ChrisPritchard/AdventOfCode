@@ -19,6 +19,25 @@ For example:
 What is the decompressed length of the file (your puzzle input)? Don't count whitespace.
 *)
 
+(*
+--- Part Two ---
+
+Apparently, the file actually uses version two of the format.
+
+In version two, the only difference is that markers within decompressed data are decompressed. This, the documentation explains, provides much more substantial compression capabilities, allowing many-gigabyte files to be stored in only a few kilobytes.
+
+For example:
+
+    (3x3)XYZ still becomes XYZXYZXYZ, as the decompressed section contains no markers.
+    X(8x2)(3x3)ABCY becomes XABCABCABCABCABCABCY, because the decompressed data from the (8x2) marker is then further decompressed, thus triggering the (3x3) marker twice for a total of six ABC sequences.
+    (27x12)(20x12)(13x14)(7x10)(1x12)A decompresses into a string of A repeated 241920 times.
+    (25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN becomes 445 characters long.
+
+Unfortunately, the computer you brought probably doesn't have enough memory to actually decompress the file; you'll have to come up with another way to get its decompressed length.
+
+What is the decompressed length of the file using this improved format?
+*)
+
 module Day9
 
 open System.IO
@@ -26,23 +45,31 @@ open Common
 
 let input = File.ReadAllText "Day9-input.txt"
 
-let multiply list =
-    let s = asString list
-    let len = int s.[0..s.IndexOf 'x' - 1]
-    let cnt = int s.[s.IndexOf 'x' + 1..s.IndexOf ')' - 1]
-    let tkn = s.Substring(s.IndexOf ')' + 1, len)
-    let result = List.replicate cnt tkn |> String.concat ""
-    let rest = s.[s.IndexOf ')' + len + 1..]
-    result, Seq.toList rest
+let rec processor processTokens acc list =
+    let multiply list =
+        let s = asString list
+        let len = int s.[0..s.IndexOf 'x' - 1]
+        let cnt = int64 s.[s.IndexOf 'x' + 1..s.IndexOf ')' - 1]
+        let tkn = s.Substring(s.IndexOf ')' + 1, len)
+        let tknLen = 
+            if processTokens then 
+                processor processTokens 0L (Seq.toList tkn) 
+            else 
+                int64 tkn.Length
+        let result = cnt * tknLen
+        let rest = s.[s.IndexOf ')' + len + 1..]
+        result, Seq.toList rest
 
-let rec processor acc list =
     match list with
     | [] -> acc
     | '('::rest -> 
         let result, left = multiply rest
-        processor (acc + result) left
-    | c::rest ->
-        processor (acc + string c) rest
+        processor processTokens (acc + result) left
+    | _::rest ->
+        processor processTokens (acc + 1L) rest
 
 let part1 () =
-    processor "" (Seq.toList input) |> Seq.length
+    processor false 0L (Seq.toList input)
+
+let part2 () =
+    processor true 0L (Seq.toList input)

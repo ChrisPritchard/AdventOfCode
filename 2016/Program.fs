@@ -18,9 +18,11 @@ let main _ =
     //time 3 2 Day3.part2
     //time 4 1 Day4.part1
     //time 4 2 Day4.part2
-    //time 5 1 Day5.part1
-    //time 5 2 Day5.part2
-    time 6 1 Day6.part1
-    time 6 2 Day6.part2
+    //time 5 1 Day5.part1 // 5-15 second approx run time
+    //time 5 2 Day5.part2 // 8-30 second approx run time
+    //time 6 1 Day6.part1
+    //time 6 2 Day6.part2
+    time 7 1 Day7.part1
+    time 7 2 Day7.part2
 
     0

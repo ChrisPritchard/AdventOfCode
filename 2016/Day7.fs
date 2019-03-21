@@ -15,25 +15,65 @@ For example:
 How many IPs in your puzzle input support TLS?
 *)
 
+(*
+--- Part Two ---
+
+You would also like to know which IPs support SSL (super-secret listening).
+
+An IP supports SSL if it has an Area-Broadcast Accessor, or ABA, anywhere in the supernet sequences (outside any square bracketed sections), and a corresponding Byte Allocation Block, or BAB, anywhere in the hypernet sequences. An ABA is any three-character sequence which consists of the same character twice with a different character between them, such as xyx or aba. A corresponding BAB is the same characters but in reversed positions: yxy and bab, respectively.
+
+For example:
+
+    aba[bab]xyz supports SSL (aba outside square brackets with corresponding bab within square brackets).
+    xyx[xyx]xyx does not support SSL (xyx, but no corresponding yxy).
+    aaa[kek]eke supports SSL (eke in supernet with corresponding kek in hypernet; the aaa sequence is not related, because the interior character must be different).
+    zazbz[bzb]cdb supports SSL (zaz has no corresponding aza, but zbz has a corresponding bzb, even though zaz and zbz overlap).
+
+How many IPs in your puzzle input support SSL?
+*)
+
 module Day7
 
-open System
+open Common
 open System.IO
 
 let input = File.ReadAllLines "Day7-input.txt"
 
-let ABBA s = 
-    true
+let ABBA (s: string) = 
+    [0..Seq.length s - 4] 
+    |> List.exists (fun i -> 
+        s.[i] = s.[i + 3]
+        && s.[i+1] = s.[i+2]
+        && s.[i] <> s.[i+1])
 
-let valid (line: string) = 
-    let segments = line.Split([|'[';']'|], StringSplitOptions.RemoveEmptyEntries)
-    let mutable normal, hypernet = false, false
+let valid1 line = 
+    let segments = split "[]" line
+    let mutable supernet, hypernet = false, false
     for i = 0 to segments.Length - 1 do
         if i % 2 = 0 then
-            if not normal && ABBA segments.[i] then normal <- true
+            if not supernet && ABBA segments.[i] then supernet <- true
         else
             if not hypernet && ABBA segments.[i] then hypernet <- true
-    normal && not hypernet
+    supernet && not hypernet
 
 let part1 () = 
-    input |> Array.filter valid |> Array.length
+    input |> Array.filter valid1 |> Array.length
+
+let ABA (s: string) = 
+    s 
+    |> Seq.windowed 3 
+    |> Seq.filter (fun chars -> chars.[0] = chars.[2] && chars.[0] <> chars.[1])
+    |> Seq.map asString
+
+let BAB abaList (s: string) =
+    let babList = abaList |> List.map (fun (aba: string) -> asString [aba.[1];aba.[0];aba.[1]])
+    babList |> List.exists (fun bab -> s.Contains bab)
+
+let valid2 line = 
+    let segments = split "[]" line
+    let supernets, hypernets = segments |> Array.indexed |> Array.partition (fun (i, _) -> i % 2 = 0)
+    let abas = supernets |> Seq.collect (snd >> ABA) |> Seq.toList
+    hypernets |> Seq.exists (snd >> BAB abas)
+
+let part2 () =
+    input |> Array.filter valid2 |> Array.length

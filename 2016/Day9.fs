@@ -21,17 +21,10 @@ What is the decompressed length of the file (your puzzle input)? Don't count whi
 
 module Day9
 
+open System.IO
 open Common
 
-let input = 
-    [|
-        "ADVENT"
-        "A(1x5)BC"
-        "(3x3)XYZ"
-        "A(2x2)BCD(2x2)EFG"
-        "(6x1)(1x3)A"
-        "X(8x2)(3x3)ABCY"
-    |]
+let input = File.ReadAllText "Day9-input.txt"
 
 let multiply list =
     let s = asString list
@@ -52,6 +45,4 @@ let rec processor acc list =
         processor (acc + string c) rest
 
 let part1 () =
-    
-    let test = Array.map (fun s -> processor "" (Seq.toList s)) input
-    0
+    processor "" (Seq.toList input) |> Seq.length

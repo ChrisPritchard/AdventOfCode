@@ -70,37 +70,47 @@ let instruction (line: string) =
 
 let part1 () =
     let instructions = input |> Array.map instruction |> Array.toList
-    
-    let rec processor bots outs target list =
-        match list with
-        | [] -> processor bots outs target (instructions |> List.filter (function | Give _ -> true | _ -> false))
-        | (Start (v, b))::rest -> 
-            let bot = Map.tryFind b bots |> Option.defaultValue []
-            let bots = Map.add b (v::bot) bots
-            processor bots outs target rest
-        | (Give (b, low, high))::rest ->
-            let chips = Map.tryFind b bots |> Option.defaultValue [] |> List.sort
-            if chips.Length <> 2 then
-                processor bots outs target rest
-            elif chips = target then b
-            else
-                let bots, outs = 
-                    match low with 
-                    | Bot b -> 
-                        let bot = Map.tryFind b bots |> Option.defaultValue []
-                        Map.add b (chips.[0]::bot) bots, outs
-                    | Output o -> 
-                        let output = Map.tryFind o outs |> Option.defaultValue []
-                        bots, Map.add o (chips.[0]::output) outs
-                let bots, outs = 
-                    match high with 
-                    | Bot b -> 
-                        let bot = Map.tryFind b bots |> Option.defaultValue []
-                        Map.add b (chips.[1]::bot) bots, outs
-                    | Output o -> 
-                        let output = Map.tryFind o outs |> Option.defaultValue []
-                        bots, Map.add o (chips.[1]::output) outs
-                let finalBots = Map.add b [] bots
-                processor finalBots outs target rest
 
-    processor Map.empty Map.empty [2;5] instructions
+    let bots = 
+        instructions 
+        |> List.choose (function Start (v,b) -> Some (b, v) | _ -> None)
+        |> List.groupBy fst
+        |> List.map (fun (k, v) -> k, v |> List.map snd |> List.sort)
+        |> Map.ofList
+    
+    let rules =
+        instructions 
+        |> List.choose (function Give (b,low,high) -> Some (b, (low, high)) | _ -> None)
+        |> Map.ofList
+        
+    let target = [17; 61]
+
+    let pair dest n =
+        match dest with
+        | Bot b -> Some (b, n), None
+        | Output o -> None, Some (o, n)
+    
+    let changes low high (destLow, destHigh) =
+        let grouped = [destLow,low;destHigh,high] |> List.map (fun (d, n) -> pair d n)
+        grouped |> List.choose fst, grouped |> List.choose snd
+
+    let rec processor bots outs = 
+        let bot = bots |> Map.findKey (fun _ c -> List.length c = 2) |> fun k -> k, Map.find k bots
+        if snd bot = target then fst bot
+        else
+            let botChanges, outchanges = changes (snd bot).[0] (snd bot).[1] rules.[fst bot]
+            let newBots = 
+                (bots, botChanges) 
+                ||> List.fold (fun map (b, c) -> 
+                    match Map.tryFind b map with
+                    | None -> Map.add b [c] map
+                    | Some ce -> Map.add b (List.sort (c::ce)) map)
+            let newOuts = 
+                (outs, outchanges) 
+                ||> List.fold (fun map (o, c) -> 
+                    match Map.tryFind o map with
+                    | None -> Map.add o [c] map
+                    | Some ce -> Map.add o (List.sort (c::ce)) map)
+            processor newBots newOuts
+
+    processor bots Map.empty

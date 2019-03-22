@@ -158,5 +158,13 @@ let parseFloor text =
 
 let floors = input |> Array.map parseFloor
 
+let options floor = 
+    let chips = floors.[floor] |> Array.choose (function Microchip t -> Some t | _ -> None)
+    let generators = floors.[floor] |> Array.choose (function Generator t -> Some t | _ -> None)
+    let pairs = chips |> Array.filter (fun chip -> Array.contains chip generators)
+    // for each pair, add each other floor as a possible
+    // for each chip, add each other floor that has the same generator as a possible
+    0
+
 let part1 () =
     0

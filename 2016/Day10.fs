@@ -32,16 +32,16 @@ module Day10
 
 open Common
 
-//let input = System.IO.File.ReadAllLines "Day10-input.txt"
-let input = 
-    [|
-        "value 5 goes to bot 2"
-        "bot 2 gives low to bot 1 and high to bot 0"
-        "value 3 goes to bot 1"
-        "bot 1 gives low to output 1 and high to bot 0"
-        "bot 0 gives low to output 2 and high to output 0"
-        "value 2 goes to bot 2"
-    |]
+let input = System.IO.File.ReadAllLines "Day10-input.txt"
+//let input = 
+//    [|
+//        "value 5 goes to bot 2"
+//        "bot 2 gives low to bot 1 and high to bot 0"
+//        "value 3 goes to bot 1"
+//        "bot 1 gives low to output 1 and high to bot 0"
+//        "bot 0 gives low to output 2 and high to output 0"
+//        "value 2 goes to bot 2"
+//    |]
 
 type Instruction =
     | Start of value:int * bot:int
@@ -69,5 +69,38 @@ let instruction (line: string) =
         Give (bot, low, high)
 
 let part1 () =
-    let instructions = input |> Array.map instruction
-    0
+    let instructions = input |> Array.map instruction |> Array.toList
+    
+    let rec processor bots outs target list =
+        match list with
+        | [] -> processor bots outs target (instructions |> List.filter (function | Give _ -> true | _ -> false))
+        | (Start (v, b))::rest -> 
+            let bot = Map.tryFind b bots |> Option.defaultValue []
+            let bots = Map.add b (v::bot) bots
+            processor bots outs target rest
+        | (Give (b, low, high))::rest ->
+            let chips = Map.tryFind b bots |> Option.defaultValue [] |> List.sort
+            if chips.Length <> 2 then
+                processor bots outs target rest
+            elif chips = target then b
+            else
+                let bots, outs = 
+                    match low with 
+                    | Bot b -> 
+                        let bot = Map.tryFind b bots |> Option.defaultValue []
+                        Map.add b (chips.[0]::bot) bots, outs
+                    | Output o -> 
+                        let output = Map.tryFind o outs |> Option.defaultValue []
+                        bots, Map.add o (chips.[0]::output) outs
+                let bots, outs = 
+                    match high with 
+                    | Bot b -> 
+                        let bot = Map.tryFind b bots |> Option.defaultValue []
+                        Map.add b (chips.[1]::bot) bots, outs
+                    | Output o -> 
+                        let output = Map.tryFind o outs |> Option.defaultValue []
+                        bots, Map.add o (chips.[1]::output) outs
+                let finalBots = Map.add b [] bots
+                processor finalBots outs target rest
+
+    processor Map.empty Map.empty [2;5] instructions

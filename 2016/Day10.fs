@@ -28,6 +28,12 @@ In the end, output bin 0 contains a value-5 microchip, output bin 1 contains a v
 Based on your instructions, what is the number of the bot that is responsible for comparing value-61 microchips with value-17 microchips?
 *)
 
+(*
+--- Part Two ---
+
+What do you get if you multiply together the values of one chip in each of outputs 0, 1, and 2?
+*)
+
 module Day10
 
 open Common
@@ -68,22 +74,28 @@ let instruction (line: string) =
             | _ -> failwith "bad parse"
         Give (bot, low, high)
 
-let part1 () =
-    let instructions = input |> Array.map instruction |> Array.toList
-    
-    let rec processor bots outs target list =
-        match list with
-        | [] -> processor bots outs target (instructions |> List.filter (function | Give _ -> true | _ -> false))
-        | (Start (v, b))::rest -> 
-            let bot = Map.tryFind b bots |> Option.defaultValue []
-            let bots = Map.add b (v::bot) bots
+let instructions = input |> Array.map instruction |> Array.toList
+
+let rec processor bots outs target list =
+    match list with
+    | [] -> 
+        let next = instructions |> List.filter (function | Give _ -> true | _ -> false)
+        if bots |> Map.toList |> List.exists (fun (_, c) -> List.length c > 1) then
+            processor bots outs target next
+        else
+            -1, outs
+    | (Start (v, b))::rest -> 
+        let bot = Map.tryFind b bots |> Option.defaultValue []
+        let bots = Map.add b (v::bot) bots
+        processor bots outs target rest
+    | (Give (b, low, high))::rest ->
+        let chips = Map.tryFind b bots |> Option.defaultValue [] |> List.sort
+        if chips.Length <> 2 then
             processor bots outs target rest
-        | (Give (b, low, high))::rest ->
-            let chips = Map.tryFind b bots |> Option.defaultValue [] |> List.sort
-            if chips.Length <> 2 then
-                processor bots outs target rest
-            elif chips = target then b
-            else
+        else
+            match target with
+            | Some t when t = chips -> b, outs
+            | _ ->
                 let bots, outs = 
                     match low with 
                     | Bot b -> 
@@ -103,4 +115,9 @@ let part1 () =
                 let finalBots = Map.add b [] bots
                 processor finalBots outs target rest
 
-    processor Map.empty Map.empty [17;61] instructions
+let part1 () =
+    processor Map.empty Map.empty (Some [17;61]) instructions |> fst
+
+let part2 () =
+    let outs = processor Map.empty Map.empty None instructions |> snd
+    outs |> Map.toSeq |> Seq.truncate 3 |> Seq.map (snd >> Seq.head) |> Seq.reduce (*)

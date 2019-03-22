@@ -9,6 +9,7 @@
   <ItemGroup>
     <Compile Include="Common.fs" />
     <None Include="readme.md" />
+    <Compile Include="Day11.fs" />
     <Content Include="Day10-input.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

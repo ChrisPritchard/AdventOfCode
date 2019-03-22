@@ -10,3 +10,9 @@ let splits (strings: seq<string>) (s: string) =
 
 let asString (chars: seq<char>) =
     String(Seq.toArray chars)
+
+let contains (t: string) (s: string) =
+    s.Contains t
+
+let index (t:string) (s:string) =
+    s.IndexOf t

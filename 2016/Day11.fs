@@ -136,8 +136,8 @@ let input =
 
 type Kind = Generator of string | Microchip of string
 
-let parseFloor text = 
-    if contains "nothing relevant" text then [||]
+let parseFloor floors (floor, text) = 
+    if contains "nothing relevant" text then floors
     else
         let toExclude = [
             "The first floor contains a "
@@ -149,22 +149,39 @@ let parseFloor text =
             "."
         ]
         let parts = splits toExclude text
-        parts |> Array.map (fun p ->
+        (floors, parts) ||> Array.fold (fun floors p ->
             let segments = split "- " p
             if segments.Length = 3 then
-                Microchip segments.[0]
+                Map.add (Microchip segments.[0]) (floor + 1) floors
             else
-                Generator segments.[0])
+                Map.add (Generator segments.[0]) (floor + 1) floors)
 
-let floors = input |> Array.map parseFloor
-
-let options floor = 
-    let chips = floors.[floor] |> Array.choose (function Microchip t -> Some t | _ -> None)
-    let generators = floors.[floor] |> Array.choose (function Generator t -> Some t | _ -> None)
-    let pairs = chips |> Array.filter (fun chip -> Array.contains chip generators)
-    // for each pair, add each other floor as a possible
-    // for each chip, add each other floor that has the same generator as a possible
-    0
+let start = 1, (Map.empty, Array.indexed input) ||> Array.fold parseFloor
 
 let part1 () =
+    
+    let found = Set.empty.Add start
+
+    let hasFinished (elevator, floors) = 
+        elevator = 4 && Map.tryFindKey (fun _ floor -> floor <> 4) floors = None
+
+    // have a collection of states
+    // for each state:
+        // if hasFinished state then return steps
+        // else derive all possible next states
+            // exclude states in found
+                // fold through: if in found ignore, else add to found
+    // run again with new state set
+
+    // possible next states for a state are:
+        // all pairs on current floor, moved to other floors
+        // any chip on current floor, to other floors with matching generators
+
+    // to get pairs and chips for a floor:
+        // all on floor, grouped by kind: pairs are any with a length of two, chips are length one and of kind chip
+
+    // to get next state:
+        // for pair and floornum, state.add gen and state.add chip
+        // for chip and floornum, just state.add chip
+
     0

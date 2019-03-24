@@ -165,6 +165,36 @@ let part1 () =
     let hasFinished (elevator, floors) = 
         elevator = 4 && Map.tryFindKey (fun _ floor -> floor <> 4) floors = None
 
+    let onFloor floor floors =
+        floors |> Map.filter (fun _ f -> f = floor) |> Map.toList |> List.map fst 
+
+    let pairs = 
+        List.groupBy (function Generator s -> s | Microchip s -> s) 
+        >> List.map snd
+        >> List.filter (fun l -> l.Length = 2)
+    
+    let chips = List.filter (function Microchip _ -> true | _ -> false)
+    let gens = List.filter (function Generator _ -> true | _ -> false)
+
+    let options (elevator, floors) =
+        let currentContents = onFloor elevator floors
+        let pairs = pairs currentContents
+
+        let adjacent = 
+            if elevator = 1 then [2] 
+            elif elevator = 4 then [3] 
+            else [elevator + 1; elevator - 1]
+        let cargo = adjacent |> List.collect (fun dest -> 
+            [
+                yield! pairs |> List.map (fun pair -> dest, pair)
+                let destContents = onFloor dest floors |> Set.ofList
+                let chips = chips currentContents |> List.filter (fun (Microchip s) -> destContents.Contains (Generator s))
+                ()
+            ])
+        0
+
+    let res = options start
+
     // have a collection of states
     // for each state:
         // if hasFinished state then return steps
@@ -174,11 +204,15 @@ let part1 () =
     // run again with new state set
 
     // possible next states for a state are:
-        // all pairs on current floor, moved to other floors
-        // any chip on current floor, to other floors with matching generators
+        // up to two things of any kind that are valid for the adjacent floors
+            // things are valid if there is a pair on that floor, or
+            // if a chip and generator of the same kind are brought together, or
+            // two chips are brought and the destination does not contain rtgs
 
     // to get pairs and chips for a floor:
-        // all on floor, grouped by kind: pairs are any with a length of two, chips are length one and of kind chip
+        // all pairs on floor (group by type) can go to another floor
+        // then any chip can go to dest floor if gen is present or no other unpaired gens are present
+        // any gen can go to dest floor if chip is present
 
     // to get next state:
         // for pair and floornum, state.add gen and state.add chip

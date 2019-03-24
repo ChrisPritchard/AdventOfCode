@@ -119,20 +119,20 @@ module Day11
 
 open Common
 
-let input = 
-    [|
-        "The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip."
-        "The second floor contains a hydrogen generator."
-        "The third floor contains a lithium generator."
-        "The fourth floor contains nothing relevant."
-    |]
 //let input = 
 //    [|
-//        "The first floor contains a polonium generator, a thulium generator, a thulium-compatible microchip, a promethium generator, a ruthenium generator, a ruthenium-compatible microchip, a cobalt generator, and a cobalt-compatible microchip."
-//        "The second floor contains a polonium-compatible microchip and a promethium-compatible microchip."
-//        "The third floor contains nothing relevant."
+//        "The first floor contains a hydrogen-compatible microchip and a lithium-compatible microchip."
+//        "The second floor contains a hydrogen generator."
+//        "The third floor contains a lithium generator."
 //        "The fourth floor contains nothing relevant."
 //    |]
+let input = 
+    [|
+        "The first floor contains a polonium generator, a thulium generator, a thulium-compatible microchip, a promethium generator, a ruthenium generator, a ruthenium-compatible microchip, a cobalt generator, and a cobalt-compatible microchip."
+        "The second floor contains a polonium-compatible microchip and a promethium-compatible microchip."
+        "The third floor contains nothing relevant."
+        "The fourth floor contains nothing relevant."
+    |]
 
 type Kind = Generator of string | Microchip of string
 
@@ -158,72 +158,74 @@ let parseFloor floors (floor, text) =
 
 let start = 1, (Map.empty, Array.indexed input) ||> Array.fold parseFloor
 
+let hasFinished (elevator, floors) = 
+    elevator = 4 && Map.tryFindKey (fun _ floor -> floor <> 4) floors = None
+
+let onFloor floor floors =
+    floors |> Map.filter (fun _ f -> f = floor) |> Map.toList |> List.map fst 
+    
+let rec combinations list =
+    match list with
+    | [] -> []
+    | head::tail ->
+        [
+            yield [head]
+            yield! tail |> List.map (fun k -> [head;k])
+            yield! combinations tail
+        ]
+
+let hasGenerator floor floors = 
+    Map.tryFindKey (fun k v -> v = floor && match k with Generator _ -> true | _ -> false) floors <> None
+
+let valid dest floors combination =
+    match List.sort combination with
+    | [Generator k1;Microchip k2] when k1 = k2 -> true
+    | [Microchip k1;Microchip k2] ->
+        (Map.find (Generator k1) floors = dest 
+        && Map.find (Generator k2) floors = dest)
+        || not (hasGenerator dest floors)
+    | [Generator k1;Generator k2] ->
+        Map.find (Microchip k1) floors = dest || Map.find (Microchip k2) floors = dest
+    | [Microchip k] ->
+        Map.find (Generator k) floors = dest
+        || not (hasGenerator dest floors)
+    | [Generator k] ->
+        Map.find (Microchip k) floors = dest
+    | _ -> false
+
+let options (elevator, floors) visited =
+    let currentContents = onFloor elevator floors
+    let combinations = combinations currentContents
+
+    let adjacent = 
+        if elevator = 1 then [2] 
+        elif elevator = 4 then [3] 
+        else [elevator + 1; elevator - 1]
+
+    let newStates = 
+        adjacent 
+        |> List.collect (fun dest -> 
+            combinations 
+            |> List.filter (valid dest floors) 
+            |> List.map (fun combination -> dest, combination))
+        |> List.map (fun (floor, combination) -> 
+            floor, ((floors, combination) ||> List.fold (fun map kind -> Map.add kind floor map)))
+    ((visited, []), newStates)
+    ||> List.fold (fun (visited, acc) state -> 
+        if Set.contains state visited then
+            (visited, acc)
+        else
+            Set.add state visited, state::acc)
+
+let rec searcher states visited steps =
+    if List.exists hasFinished states then steps
+    else
+        let nextVisited, nextStates = 
+            ((visited, []), states) 
+            ||> List.fold (fun (visited, acc) state -> 
+                let newVisited, newStates = options state visited
+                newVisited, acc @ newStates)
+        searcher nextStates nextVisited (steps + 1)
+
 let part1 () =
-    
-    let found = Set.empty.Add start
-
-    let hasFinished (elevator, floors) = 
-        elevator = 4 && Map.tryFindKey (fun _ floor -> floor <> 4) floors = None
-
-    let onFloor floor floors =
-        floors |> Map.filter (fun _ f -> f = floor) |> Map.toList |> List.map fst 
-    
-    let rec combinations list =
-        match list with
-        | [] -> []
-        | head::tail ->
-            [
-                yield [head]
-                yield! tail |> List.map (fun k -> [head;k])
-                yield! combinations tail
-            ]
-
-    let valid cargo dest floors =
-        match List.sort cargo with
-        | [Generator k1;Microchip k2] when k1 = k2 -> true
-        | _ ->
-            for
-
-    let options (elevator, floors) =
-        let currentContents = onFloor elevator floors
-        let pairs = combinations currentContents
-
-        //let adjacent = 
-        //    if elevator = 1 then [2] 
-        //    elif elevator = 4 then [3] 
-        //    else [elevator + 1; elevator - 1]
-        //let cargo = adjacent |> List.collect (fun dest -> 
-        //    [
-        //        yield! pairs |> List.map (fun pair -> dest, pair)
-        //        let destContents = onFloor dest floors |> Set.ofList
-        //        let chips = chips currentContents |> List.filter (fun (Microchip s) -> destContents.Contains (Generator s))
-        //        ()
-        //    ])
-        0
-
-    let res = options start
-
-    // have a collection of states
-    // for each state:
-        // if hasFinished state then return steps
-        // else derive all possible next states
-            // exclude states in found
-                // fold through: if in found ignore, else add to found
-    // run again with new state set
-
-    // possible next states for a state are:
-        // up to two things of any kind that are valid for the adjacent floors
-            // things are valid if there is a pair on that floor, or
-            // if a chip and generator of the same kind are brought together, or
-            // two chips are brought and the destination does not contain rtgs
-
-    // to get pairs and chips for a floor:
-        // all pairs on floor (group by type) can go to another floor
-        // then any chip can go to dest floor if gen is present or no other unpaired gens are present
-        // any gen can go to dest floor if chip is present
-
-    // to get next state:
-        // for pair and floornum, state.add gen and state.add chip
-        // for chip and floornum, just state.add chip
-
-    0
+    searcher [start] (Set.empty.Add start) 0

@@ -151,6 +151,22 @@ let input =
         "The fourth floor contains nothing relevant."
     |]
 
+let inputA =
+    [|
+        "The first floor contains a polonium generator, a promethium generator, a cobalt generator, and a cobalt-compatible microchip."
+        "The second floor contains a polonium-compatible microchip and a promethium-compatible microchip."
+        "The third floor contains nothing relevant."
+        "The fourth floor contains nothing relevant."
+    |]
+
+let inputB = 
+    [|
+        "The first floor contains a polonium generator, a thulium generator, a thulium-compatible microchip, a promethium generator, a ruthenium generator, a ruthenium-compatible microchip."
+        "The second floor contains a polonium-compatible microchip and a promethium-compatible microchip."
+        "The third floor contains nothing relevant."
+        "The fourth floor contains nothing relevant."
+    |]
+
 type Kind = Generator of string | Microchip of string
 
 let parseFloor floors (floor, text) = 
@@ -172,8 +188,6 @@ let parseFloor floors (floor, text) =
                 Map.add (Microchip segments.[0]) (floor + 1) floors
             else
                 Map.add (Generator segments.[0]) (floor + 1) floors)
-
-let start = 1, (Map.empty, Array.indexed input) ||> Array.fold parseFloor
 
 let hasFinished (elevator, floors) = 
     elevator = 4 && Map.tryFindKey (fun _ floor -> floor <> 4) floors = None
@@ -242,14 +256,24 @@ let rec searcher states visited steps =
         searcher nextStates nextVisited (steps + 1)
 
 let part1 () =
+    let start = 1, (Map.empty, Array.indexed input) ||> Array.fold parseFloor
     searcher [start] (Set.empty.Add start) 0
 
 let part2 () =
-    let newFloors = 
-        snd start
-        |> Map.add (Generator "elerium") 1
-        |> Map.add (Microchip "elerium") 1
-        |> Map.add (Generator "dilithium") 1
-        |> Map.add (Microchip "dilithium") 1
-    let start = 1, newFloors
-    searcher [start] (Set.empty.Add start) 0
+    let start1 = 1, (Map.empty, Array.indexed inputA) ||> Array.fold parseFloor
+    let time1 = searcher [start1] (Set.empty.Add start1) 0
+    let start2 = 1, (Map.empty, Array.indexed inputB) ||> Array.fold parseFloor
+    let time2 = searcher [start2] (Set.empty.Add start2) 0
+    let start3 = 1, (Map.empty, Array.indexed input) ||> Array.fold parseFloor
+    let time3 = searcher [start3] (Set.empty.Add start3) 0
+    
+    if time3 - time2 = time2 - time1 then time3 + ((time3 - time2) * 2)
+    else
+        let newFloors = 
+            snd start3
+            |> Map.add (Generator "elerium") 1
+            |> Map.add (Microchip "elerium") 1
+            |> Map.add (Generator "dilithium") 1
+            |> Map.add (Microchip "dilithium") 1
+        let start = 1, newFloors
+        searcher [start] (Set.empty.Add start) 0

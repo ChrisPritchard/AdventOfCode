@@ -167,30 +167,38 @@ let part1 () =
 
     let onFloor floor floors =
         floors |> Map.filter (fun _ f -> f = floor) |> Map.toList |> List.map fst 
-
-    let pairs = 
-        List.groupBy (function Generator s -> s | Microchip s -> s) 
-        >> List.map snd
-        >> List.filter (fun l -> l.Length = 2)
     
-    let chips = List.filter (function Microchip _ -> true | _ -> false)
-    let gens = List.filter (function Generator _ -> true | _ -> false)
+    let rec combinations list =
+        match list with
+        | [] -> []
+        | head::tail ->
+            [
+                yield [head]
+                yield! tail |> List.map (fun k -> [head;k])
+                yield! combinations tail
+            ]
+
+    let valid cargo dest floors =
+        match List.sort cargo with
+        | [Generator k1;Microchip k2] when k1 = k2 -> true
+        | _ ->
+            for
 
     let options (elevator, floors) =
         let currentContents = onFloor elevator floors
-        let pairs = pairs currentContents
+        let pairs = combinations currentContents
 
-        let adjacent = 
-            if elevator = 1 then [2] 
-            elif elevator = 4 then [3] 
-            else [elevator + 1; elevator - 1]
-        let cargo = adjacent |> List.collect (fun dest -> 
-            [
-                yield! pairs |> List.map (fun pair -> dest, pair)
-                let destContents = onFloor dest floors |> Set.ofList
-                let chips = chips currentContents |> List.filter (fun (Microchip s) -> destContents.Contains (Generator s))
-                ()
-            ])
+        //let adjacent = 
+        //    if elevator = 1 then [2] 
+        //    elif elevator = 4 then [3] 
+        //    else [elevator + 1; elevator - 1]
+        //let cargo = adjacent |> List.collect (fun dest -> 
+        //    [
+        //        yield! pairs |> List.map (fun pair -> dest, pair)
+        //        let destContents = onFloor dest floors |> Set.ofList
+        //        let chips = chips currentContents |> List.filter (fun (Microchip s) -> destContents.Contains (Generator s))
+        //        ()
+        //    ])
         0
 
     let res = options start

@@ -115,6 +115,23 @@ In this arrangement, it takes 11 steps to collect all of the objects at the four
 In your situation, what is the minimum number of steps required to bring all of the objects to the fourth floor?
 *)
 
+(*
+--- Part Two ---
+
+You step into the cleanroom separating the lobby from the isolated area and put on the hazmat suit.
+
+Upon entering the isolated containment area, however, you notice some extra parts on the first floor that weren't listed on the record outside:
+
+    An elerium generator.
+    An elerium-compatible microchip.
+    A dilithium generator.
+    A dilithium-compatible microchip.
+
+These work just like the other generators and microchips. You'll have to get them up to assembly as well.
+
+What is the minimum number of steps required to bring all of the objects, including these four new ones, to the fourth floor?
+*)
+
 module Day11
 
 open Common
@@ -180,17 +197,14 @@ let hasGenerator floor floors =
 let valid dest floors combination =
     match List.sort combination with
     | [Generator k1;Microchip k2] when k1 = k2 -> true
-    | [Microchip k1;Microchip k2] ->
-        (Map.find (Generator k1) floors = dest 
-        && Map.find (Generator k2) floors = dest)
-        || not (hasGenerator dest floors)
-    | [Generator k1;Generator k2] ->
-        Map.find (Microchip k1) floors = dest || Map.find (Microchip k2) floors = dest
+    | [Microchip _;Microchip _] -> not (hasGenerator dest floors)
+    | [Generator k1;Generator k2] -> 
+        Map.find (Microchip k1) floors = dest 
+        && Map.find (Microchip k2) floors = dest
     | [Microchip k] ->
         Map.find (Generator k) floors = dest
         || not (hasGenerator dest floors)
-    | [Generator k] ->
-        Map.find (Microchip k) floors = dest
+    | [Generator k] -> Map.find (Microchip k) floors = dest
     | _ -> false
 
 let options (elevator, floors) visited =
@@ -228,4 +242,14 @@ let rec searcher states visited steps =
         searcher nextStates nextVisited (steps + 1)
 
 let part1 () =
+    searcher [start] (Set.empty.Add start) 0
+
+let part2 () =
+    let newFloors = 
+        snd start
+        |> Map.add (Generator "elerium") 1
+        |> Map.add (Microchip "elerium") 1
+        |> Map.add (Generator "dilithium") 1
+        |> Map.add (Microchip "dilithium") 1
+    let start = 1, newFloors
     searcher [start] (Set.empty.Add start) 0

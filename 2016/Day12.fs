@@ -30,7 +30,15 @@ dec a
 The above code would set register a to 41, increase its value by 2, decrease its value by 1, and then skip the last dec a (because a is not zero, so the jnz a 2 skips it), leaving register a at 42. When you move past the last instruction, the program halts.
 
 After executing the assembunny code in your puzzle input, what value is left in register a?
-*)    
+*)   
+
+(*
+--- Part Two ---
+
+As you head down the fire escape to the monorail, you notice it didn't start; register c needs to be initialized to the position of the ignition key.
+
+If you instead initialize register c to be 1, what value is now left in register a?
+*)
 
 module Day12
 
@@ -100,33 +108,35 @@ let parseInstruction text =
 let getRegister r registers = 
     Map.tryFind r registers |> Option.defaultValue 0L
 
-let part1 () =
+let instructions = input |> Array.map parseInstruction
 
-    let instructions = input |> Array.map parseInstruction
-
-    let rec runInstruction registers i =
-        if i >= instructions.Length || i < 0 then
-            getRegister 'a' registers
-        else
-            match instructions.[i] with
-            | Increment r -> 
-                let next = registers |> getRegister r |> fun e -> Map.add r (e + 1L) registers
-                runInstruction next (i + 1)
-            | Decrement r ->
-                let next = registers |> getRegister r |> fun e -> Map.add r (e - 1L) registers
-                runInstruction next (i + 1)
-            | CopyValue (v, r) ->
-                let next = Map.add r v registers
-                runInstruction next (i + 1)
-            | CopyRegister (ra, r) ->
-                let next = Map.add r (getRegister ra registers) registers
-                runInstruction next (i + 1)
-            | Jump v ->
+let rec runInstruction registers i =
+    if i >= instructions.Length || i < 0 then
+        getRegister 'a' registers
+    else
+        match instructions.[i] with
+        | Increment r -> 
+            let next = registers |> getRegister r |> fun e -> Map.add r (e + 1L) registers
+            runInstruction next (i + 1)
+        | Decrement r ->
+            let next = registers |> getRegister r |> fun e -> Map.add r (e - 1L) registers
+            runInstruction next (i + 1)
+        | CopyValue (v, r) ->
+            let next = Map.add r v registers
+            runInstruction next (i + 1)
+        | CopyRegister (ra, r) ->
+            let next = Map.add r (getRegister ra registers) registers
+            runInstruction next (i + 1)
+        | Jump v ->
+            runInstruction registers (i + v)
+        | JumpNotZero (r, v) ->
+            if  getRegister r registers = 0L then
+                runInstruction registers (i + 1)    
+            else
                 runInstruction registers (i + v)
-            | JumpNotZero (r, v) ->
-                if  getRegister r registers = 0L then
-                    runInstruction registers (i + 1)    
-                else
-                    runInstruction registers (i + v)
-    
+
+let part1 () =
     runInstruction Map.empty 0
+
+let part2 () =
+    runInstruction (Map.empty.Add ('c', 1L)) 0

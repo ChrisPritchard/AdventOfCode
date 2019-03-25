@@ -68,7 +68,7 @@ With the number of Elves given in your puzzle input, which Elf now gets all the 
 
 module Day19
 
-let input = 5//3004953
+let input = 3004953
 
 let part1 () =
     
@@ -90,18 +90,35 @@ let part1 () =
     
     whiteElephants start
 
+type Elf = {
+    index: int
+    mutable left: Elf
+    mutable right: Elf
+}
+
 let part2 () =
     
-    let start = [|1..input|]
+    let mutable length = input
+    let mutable current = { index = 1; left = Unchecked.defaultof<Elf>; right = Unchecked.defaultof<Elf> }
+    let start = current
 
-    let rec whiteElephants (ring: int []) = 
-        let mutable len = ring.Length
-        let next = ring |> Array.map Some
-        for i = 0 to (ring.Length / 2) - 1 do
-            next.[(i + (len / 2)) % next.Length] <- None
-            len <- len - 1
-        let next = Array.choose id next
-        if next.Length = 1 then next.[0]
-        else whiteElephants next
+    for i = 2 to length do
+        let newElf = { index = i; left = current; right = Unchecked.defaultof<Elf> }
+        current.right <- newElf
+        current <- newElf
+
+    current.right <- start
+    start.left <- current
+    current <- start
+
+    while length > 1 do
+        let across = length / 2
+        let mutable target = current
+        for n = 1 to across do 
+            target <- target.right
+        target.left.right <- target.right
+        target.right.left <- target.left
+        current <- current.right
+        length <- length - 1
     
-    whiteElephants start
+    current.index

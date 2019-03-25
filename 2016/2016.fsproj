@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <Compile Include="Common.fs" />
-    <None Include="readme.md" />
     <Compile Include="Day12.fs" />
     <Compile Include="Day11.fs" />
     <Content Include="Day10-input.txt">
@@ -43,6 +42,7 @@
     <Compile Include="Day2.fs" />
     <Compile Include="Day1.fs" />
     <Compile Include="Program.fs" />
+    <None Include="readme.md" />
   </ItemGroup>
 
 </Project>

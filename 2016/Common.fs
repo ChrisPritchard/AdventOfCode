@@ -16,3 +16,6 @@ let contains (t: string) (s: string) =
 
 let index (t:string) (s:string) =
     s.IndexOf t
+
+let lines s =
+    split "\r\n" s

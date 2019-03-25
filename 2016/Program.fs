@@ -40,5 +40,7 @@ let main _ =
     //time 14 2 Day14.part2 // 1 min+ approx run time
     time 15 1 Day15.part1
     time 15 2 Day15.part2
+    time 16 1 Day16.part1
+    time 16 2 Day16.part2
 
     0

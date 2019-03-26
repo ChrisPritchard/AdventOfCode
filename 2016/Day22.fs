@@ -142,28 +142,61 @@ let part1 () =
         |> Array.map (fun o -> n, o))
     |> Array.length
 
+let runPath start (path: (int * int) list) (array: Node [,]) =
+    (Ok start, path)
+    ||> List.fold (fun current (nx, ny) -> 
+        match current with
+        | Ok (x, y) ->
+            let node = array.[x, y]
+            let target = array.[nx, ny]
+            if node.used > target.size - target.used || node.size < target.used then Error ()
+            else
+                array.[x, y] <- { node with used = node.used + target.used }
+                array.[nx, ny] <- { target with used = 0 }
+                Ok (nx, ny)
+        | Error () ->
+            current) |> ignore
+    array
+    
 let part2 () =
-    let width = let o = (nodes |> Array.maxBy (fun o -> o.x)) in o.x
-    let height = let o = (nodes |> Array.maxBy (fun o -> o.y)) in o.y
+    let width = let o = (nodes |> Array.maxBy (fun o -> o.x)) in o.x + 1
+    let height = let o = (nodes |> Array.maxBy (fun o -> o.y)) in o.y + 1
     let nodeForPos x y = nodes |> Array.find (fun o -> o.x = x && o.y = y)
-    let array = Array2D.init (width + 1) (height + 1) nodeForPos
+    let array = Array2D.init width height nodeForPos
 
-    let candidates array =
+    for y = 0 to height - 1 do
+        for x = 0 to width - 1 do
+            if array.[x, y].used > 100 then printf "|"
+            elif array.[x, y].used > 0 then printf "X"
+            else printf " "
+        printfn ""
+
+    let start = nodes |> Array.find (fun n -> n.used = 0)
+    let walls = nodes |> Array.filter (fun n -> n.used > 80 || n.size < 80) |> Array.sortBy (fun o -> o.x)
+
+    let path = 
         [
-            for x = 0 to width - 1 do
-                for y = 0 to height - 1 do
-                    let node = Array2D.get array x y
-                    if node.used > 0 then
-                        yield! 
-                            [-1,0;1,0;0,-1;0,1] 
-                            |> List.choose (fun (dx, dy) ->
-                                if x + dx >= 0 && x + dx < width && y + dy >= 0 && y + dy < height then
-                                    Array2D.get array (x + dx) (y + dy) |> Some
-                                else None)
-                            |> List.filter (fun n -> n.size - n.used >= node.used)
-                            |> List.map (fun n -> node, n)
+            for y in [start.y - 1..-1..walls.[0].y + 1] do // up to wall
+                yield (start.x, y)
+            for x in [start.x - 1..-1..walls.[0].x - 1] do // left past wall edge
+                yield (x, walls.[0].y + 1)
+            for y in [walls.[0].y + 1..-1..0] do // up to top
+                yield (walls.[0].x - 1, y)
+            for x = walls.[0].x + 1 to width - 2 do // right to stop just left of target
+                yield (x, 0)
+
+            for x in [width - 1..-1..1] do // swap left to 0
+                yield (x, 0) // swap with data
+                if x <> 1 then
+                    yield (x, 1)
+                    yield (x-1, 1)
+                    yield (x-2, 1)
+                    yield (x-2, 0)
         ]
 
-    let test = candidates array
+    array.[width - 1, 0] <- { array.[width - 1, 0] with used = 77 }
+    let targetAmount = 77
+    let arrayFollowingPath = runPath (start.x, start.y) path (Array2D.copy array)
+    assert (arrayFollowingPath.[0,0].used = targetAmount)
 
-    0
+    List.length path

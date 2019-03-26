@@ -164,13 +164,6 @@ let part2 () =
     let nodeForPos x y = nodes |> Array.find (fun o -> o.x = x && o.y = y)
     let array = Array2D.init width height nodeForPos
 
-    for y = 0 to height - 1 do
-        for x = 0 to width - 1 do
-            if array.[x, y].used > 100 then printf "|"
-            elif array.[x, y].used > 0 then printf "X"
-            else printf " "
-        printfn ""
-
     let start = nodes |> Array.find (fun n -> n.used = 0)
     let walls = nodes |> Array.filter (fun n -> n.used > 80 || n.size < 80) |> Array.sortBy (fun o -> o.x)
 
@@ -194,8 +187,7 @@ let part2 () =
                     yield (x-2, 0)
         ]
 
-    array.[width - 1, 0] <- { array.[width - 1, 0] with used = 77 }
-    let targetAmount = 77
+    let targetAmount = array.[width - 1, 0].used
     let arrayFollowingPath = runPath (start.x, start.y) path (Array2D.copy array)
     assert (arrayFollowingPath.[0,0].used = targetAmount)
 

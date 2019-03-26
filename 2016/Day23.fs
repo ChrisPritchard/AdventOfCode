@@ -45,5 +45,79 @@ What value should be sent to the safe?
 
 module Day23
 
+open Common
+
+let input = System.IO.File.ReadAllLines "Day23-input.txt"
+
+type Instruction =
+    | CopyValue of int64 * char
+    | CopyRegister of char * char
+    | Increment of char
+    | Decrement of char
+    | Jump of int
+    | JumpNotZero of char * int
+    | Toggle of char
+
+let parseInstruction text = 
+    let segments = split " " text
+    match segments.[0] with
+    | "tgl" -> Toggle segments.[1].[0]
+    | "inc" -> Increment segments.[1].[0]
+    | "dec" -> Decrement segments.[1].[0]
+    | "jnz" -> 
+        if System.Char.IsLetter segments.[1].[0] then
+            JumpNotZero (segments.[1].[0], int segments.[2])
+        else
+            Jump (if int segments.[1] = 0 then 1 else int segments.[2])
+    | "cpy" | _ -> 
+        if System.Char.IsLetter segments.[1].[0] then
+            CopyRegister (segments.[1].[0], segments.[2].[0])
+        else
+            CopyValue (int64 segments.[1], segments.[2].[0])
+
+let getRegister r registers = 
+    Map.tryFind r registers |> Option.defaultValue 0L
+
+let toggle instruction =
+    match instruction with
+    | Toggle r | Decrement r -> Increment r
+    | Increment r -> Decrement r
+    | JumpNotZero _ -> Jump 1 // this becomes copy, by spec, but can't work because no copy takes an int as second param
+    | CopyValue _ -> Jump 1 // this becomes jnz, but jnz does not accept a reg as its second param 
+    | CopyRegister _ -> Jump 1 // this becomes jnz, but jnz does not accept a reg as its second param
+    | Jump _ -> // NOTE: a instruciton could be toggled to invalid, then toggled back to valid!
+
+let instructions = input |> Array.map parseInstruction
+
+let rec runInstruction registers i =
+    if i >= instructions.Length || i < 0 then
+        getRegister 'a' registers
+    else
+        match instructions.[i] with
+        | Toggle r ->
+            let ir = i + int (getRegister r registers)
+            if ir >= 0 && ir < instructions.Length then 
+                instructions.[ir] <- toggle instructions.[ir]
+            runInstruction registers (i + 1)
+        | Increment r -> 
+            let next = registers |> getRegister r |> fun e -> Map.add r (e + 1L) registers
+            runInstruction next (i + 1)
+        | Decrement r ->
+            let next = registers |> getRegister r |> fun e -> Map.add r (e - 1L) registers
+            runInstruction next (i + 1)
+        | CopyValue (v, r) ->
+            let next = Map.add r v registers
+            runInstruction next (i + 1)
+        | CopyRegister (ra, r) ->
+            let next = Map.add r (getRegister ra registers) registers
+            runInstruction next (i + 1)
+        | Jump v ->
+            runInstruction registers (i + v)
+        | JumpNotZero (r, v) ->
+            if  getRegister r registers = 0L then
+                runInstruction registers (i + 1)    
+            else
+                runInstruction registers (i + v)
+
 let part1 () =
     0

@@ -28,6 +28,14 @@ After these steps, the resulting scrambled password is decab.
 Now, you just need to generate a new scrambled password and you can access the system. Given the list of scrambling operations in your puzzle input, what is the result of scrambling abcdefgh?
 *)
 
+(*
+--- Part Two ---
+
+You scrambled the password correctly, but you discover that you can't actually modify the password file on the system. You'll need to un-scramble one of the existing passwords by reversing the scrambling process.
+
+What is the un-scrambled version of the scrambled password fbgdceah?
+*)
+
 module Day21
 
 open Common
@@ -98,9 +106,24 @@ let rec apply (current: char []) action =
         |]
 
 let part1 () =
-    
-    let start = 
-        "abcde"//"abcdefgh"
-        |> Seq.toArray 
-    
+    let start = "abcdefgh" |> Seq.toArray 
     Array.fold apply start actions |> asString
+
+let part2 () =
+    let target = "fbgdceah"
+    
+    seq {
+        for c0 = 0 to 7 do
+            for c1 = 0 to 7 do
+                for c2 = 0 to 7 do
+                    for c3 = 0 to 7 do
+                        for c4 = 0 to 7 do
+                            for c5 = 0 to 7 do
+                                for c6 = 0 to 7 do
+                                    for c7 = 0 to 7 do
+                                        let a = [|c0;c1;c2;c3;c4;c5;c6;c7|] |> Array.map (fun i -> target.[i])
+                                        if Array.distinct a |> Array.length = 8 then
+                                            yield a
+        }
+    |> Seq.find (fun a -> Array.fold apply a actions |> asString = target)
+    |> fun a -> asString a

@@ -50,5 +50,6 @@ let main _ =
     time 19 2 Day19.part2
     time 20 1 Day20.part1
     time 20 2 Day20.part2
+    time 21 1 Day21.part1
 
     0

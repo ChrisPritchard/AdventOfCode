@@ -16,6 +16,12 @@ The blacklist specifies ranges of IPs (inclusive of both the start and end value
 Given the list of blocked IPs you retrieved from the firewall (your puzzle input), what is the lowest-valued IP that is not blocked?
 *)
 
+(*
+--- Part Two ---
+
+How many IPs are allowed by the blacklist?
+*)
+
 module Day20
 
 open Common
@@ -28,13 +34,14 @@ let ranges =
     |> Array.sortBy fst
 
 let part1 () = 
-    ((0L, None), ranges)
-    ||> Array.fold (fun (lastMax, result) (min, max) -> 
-        match result with
-        | Some _ -> lastMax, result
-        | None ->
-            if min > lastMax then
-                lastMax, Some (lastMax + 1L)
-            else
-                max, None)
-    |> snd |> Option.defaultValue 0L
+    (0L, ranges)
+    ||> Array.fold (fun result (min, max) -> 
+        if min <= result && max >= result 
+        then max + 1L else result)
+
+let part2 () = 
+    ((0L, 0L), ranges)
+    ||> Array.fold (fun (count, lastMax) (min, rmax) ->
+        if min > lastMax then count + (min - lastMax), max rmax lastMax
+        else count, max rmax lastMax)
+    |> fst

@@ -68,7 +68,7 @@ With the number of Elves given in your puzzle input, which Elf now gets all the 
 
 module Day19
 
-let input = 3004953
+let input = 5//3004953
 
 let part1 () =
     
@@ -98,27 +98,43 @@ type Elf = {
 
 let part2 () =
     
-    let mutable length = input
-    let mutable current = { index = 1; left = Unchecked.defaultof<Elf>; right = Unchecked.defaultof<Elf> }
-    let start = current
+    let counter total =
+        let mutable length = total
+        let mutable current = { index = 1; left = Unchecked.defaultof<Elf>; right = Unchecked.defaultof<Elf> }
+        let start = current
 
-    for i = 2 to length do
-        let newElf = { index = i; left = current; right = Unchecked.defaultof<Elf> }
-        current.right <- newElf
-        current <- newElf
+        for i = 2 to length do
+            let newElf = { index = i; left = current; right = Unchecked.defaultof<Elf> }
+            current.right <- newElf
+            current <- newElf
 
-    current.right <- start
-    start.left <- current
-    current <- start
+        current.right <- start
+        start.left <- current
+        current <- start
 
-    while length > 1 do
-        let across = length / 2
-        let mutable target = current
-        for n = 1 to across do 
-            target <- target.right
-        target.left.right <- target.right
-        target.right.left <- target.left
-        current <- current.right
-        length <- length - 1
+        while length > 1 do
+            let across = length / 2
+            let mutable target = current
+            for n = 1 to across do 
+                target <- target.right
+            target.left.right <- target.right
+            target.right.left <- target.left
+            current <- current.right
+            length <- length - 1
     
-    current.index
+        current.index
+
+    let test = [1..100] |> List.map counter
+    let ones = test |> List.indexed |> List.filter (snd >> (=) 1)
+
+    let heuristic total =
+        let closest3 = 
+            Seq.initInfinite (fun i -> i, pown 3 i) 
+            |> Seq.find (fun (_, v) -> v >= total) 
+            |> fun (i, _) -> 
+                pown 3 (i - 1)
+        total - closest3
+
+    let test2 = [1..100] |> List.map heuristic
+    
+    0

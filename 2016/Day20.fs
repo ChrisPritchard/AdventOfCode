@@ -48,7 +48,10 @@ let part2 () =
             valid 
             |> List.collect (fun (min, max) ->
                 if imax < min || imin > max then [min,max]
-                elif imax < max && imin > min then [min,imin-1u;imax+1u,max]
-                elif imax < max then [imax+1u,max]
-                else [min,imin-1u]))
-    valid |> List.sumBy (fun (min, max) -> max - min)
+                else
+                    if imin <= min && imax < max then [imax+1u, max]
+                    elif imin > min && imax >= max then [min,imin-1u]
+                    elif imin = min  && imax = max then []
+                    elif imin > min && imax < max then [min,imin-1u;imax+1u,max]
+                    else failwith "unhandled condition"))
+    valid |> List.sumBy (fun (min, max) -> max - min + 1u)

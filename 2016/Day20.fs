@@ -40,8 +40,13 @@ let part1 () =
         then max + 1L else result)
 
 let part2 () = 
-    ((0L, 0L), ranges)
-    ||> Array.fold (fun (count, lastMax) (min, rmax) ->
-        if min > lastMax then count + (min - lastMax), max rmax lastMax
-        else count, max rmax lastMax)
-    |> fst
+    let valid = 
+        ([0L, int64 System.Int32.MaxValue], ranges)
+        ||> Array.fold (fun valid (imin, imax) ->
+            valid 
+            |> List.collect (fun (min, max) ->
+                if imax < min || imin > max then [min,max]
+                elif imax < max && imin > min then [min,imin-1L;imax+1L,max]
+                elif imax < max then [imax+1L,max]
+                else [min,imin-1L]))
+    valid |> List.sumBy (fun (min, max) -> max - min)

@@ -30,23 +30,25 @@ let input = System.IO.File.ReadAllLines "Day20-input.txt"
 
 let ranges = 
     input 
-    |> Array.map (fun line -> let a = split "-" line in int64 a.[0], int64 a.[1]) 
+    |> Array.map (fun line -> 
+        let a = split "-" line 
+        uint32 a.[0], uint32 a.[1]) 
     |> Array.sortBy fst
 
 let part1 () = 
-    (0L, ranges)
+    (0u, ranges)
     ||> Array.fold (fun result (min, max) -> 
         if min <= result && max >= result 
-        then max + 1L else result)
+        then max + 1u else result)
 
 let part2 () = 
     let valid = 
-        ([0L, int64 System.Int32.MaxValue], ranges)
+        ([0u, 0u-1u], ranges)
         ||> Array.fold (fun valid (imin, imax) ->
             valid 
             |> List.collect (fun (min, max) ->
                 if imax < min || imin > max then [min,max]
-                elif imax < max && imin > min then [min,imin-1L;imax+1L,max]
-                elif imax < max then [imax+1L,max]
-                else [min,imin-1L]))
+                elif imax < max && imin > min then [min,imin-1u;imax+1u,max]
+                elif imax < max then [imax+1u,max]
+                else [min,imin-1u]))
     valid |> List.sumBy (fun (min, max) -> max - min)

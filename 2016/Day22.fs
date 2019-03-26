@@ -143,4 +143,27 @@ let part1 () =
     |> Array.length
 
 let part2 () =
+    let width = let o = (nodes |> Array.maxBy (fun o -> o.x)) in o.x
+    let height = let o = (nodes |> Array.maxBy (fun o -> o.y)) in o.y
+    let nodeForPos x y = nodes |> Array.find (fun o -> o.x = x && o.y = y)
+    let array = Array2D.init (width + 1) (height + 1) nodeForPos
+
+    let candidates array =
+        [
+            for x = 0 to width - 1 do
+                for y = 0 to height - 1 do
+                    let node = Array2D.get array x y
+                    if node.used > 0 then
+                        yield! 
+                            [-1,0;1,0;0,-1;0,1] 
+                            |> List.choose (fun (dx, dy) ->
+                                if x + dx >= 0 && x + dx < width && y + dy >= 0 && y + dy < height then
+                                    Array2D.get array (x + dx) (y + dy) |> Some
+                                else None)
+                            |> List.filter (fun n -> n.size - n.used >= node.used)
+                            |> List.map (fun n -> node, n)
+        ]
+
+    let test = candidates array
+
     0

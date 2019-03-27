@@ -99,7 +99,7 @@ let instructions = input |> Array.map parseInstruction
 let update registers i =
     match instructions.[i] with
     | Toggle (Register r) ->
-        let ir = getRegister r registers
+        let ir = i + (getRegister r registers)
         if ir >= 0 && ir < instructions.Length then 
             instructions.[ir] <- toggle instructions.[ir]
         registers, i + 1
@@ -150,33 +150,32 @@ let rec runLoggedInstruction registers i n acc =
 let part2 () =
     
     //cpy a b		
-    //dec b	          // b starts at 11
-    //cpy a d	      // d at 12
+    //dec b	          // b starts at 11 // then is 10 // then is 9
+    //cpy a d	      // d at 12 // then is 132 // then is 1320
         //cpy 0 a	 
         //cpy b c	 
         //inc a    
         //dec c		
         //jnz c -2    
         //dec d		
-        //jnz d -5    // set a to (b * d) (132 initially) (1320 second time)
-    //dec b           // b drops 1 (10) (9)
-    //cpy b c         // set c to b (10) (9)
+        //jnz d -5    // set a to (b * d) (132 initially) (then 1320) (then 11880)
+    //dec b           // b drops 1 (10) (then to 9) 8 
+    //cpy b c         // set c to b (10) (then to 9) 8
         //cpy c d         // 
         //dec d           // 
         //inc c           // 
-        //jnz d -2        // c is doubled (20) (18)
-    //tgl c             // swap c (20) (jnz 77 d becomes add 77 into d)
+        //jnz d -2        // c is doubled (20) (18) 16
+    //16: tgl c             // swap (c + 16 = 36) : do nothing (c + 16 = 34) : do nothing. when c is 8 this will toggle 24 to dec c. when c is 2 this will change jnz to copy 1 c
     //cpy -16 c         // set c to -16
-    //jnz 1 c           // go to 2 // copy 1 into c
+    //jnz 1 c           // go to 2
     //cpy 79 c          // copy 79 into c
     //jnz 77 d              // copy 77 into d
             //inc a         
-            //inc d
-            //jnz d -2  // increment a until d hits max int?
-        //inc c         // increment c until c hits max int?
-        //jnz c -5
+            //inc d     // after toggling this will dec c (which is 77 into a)
+            //jnz d -2
+        //inc c     // this will dec c (79)
+        //25: jnz c -5  // a will become a + 77 * 79
 
-    // is a (int32.max - 77) + 1320?
+    // is a 12! + 77 * 79? Yes.
 
-    //let result = runLoggedInstruction (Map.empty.Add ('a', 12)) 0 5000000 []
-    //System.IO.File.WriteAllLines ("Day24-output.txt", Seq.map (sprintf "%A") result |> Seq.toArray)
+    List.reduce (*) [2..12] + (77 * 79)

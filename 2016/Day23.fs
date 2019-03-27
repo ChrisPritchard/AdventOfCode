@@ -49,43 +49,38 @@ open Common
 
 let input = System.IO.File.ReadAllLines "Day23-input.txt"
 
+type Ref = Value of int | Register of char
+
+let refOf (s: string) =
+    if System.Char.IsLetter s.[0] then Register s.[0] else Value (int s)
+
 type Instruction =
-    | CopyValue of int64 * char
-    | CopyRegister of char * char
-    | Increment of char
-    | Decrement of char
-    | Jump of int
-    | JumpNotZero of char * int
-    | Toggle of char
+    | Copy of Ref * Ref
+    | Increment of Ref
+    | Decrement of Ref
+    | JumpNotZero of Ref * Ref
+    | Toggle of Ref
+
+let letter s = System.Char.IsLetter (Seq.head s)
 
 let parseInstruction text = 
     let segments = split " " text
     match segments.[0] with
-    | "tgl" -> Toggle segments.[1].[0]
-    | "inc" -> Increment segments.[1].[0]
-    | "dec" -> Decrement segments.[1].[0]
-    | "jnz" -> 
-        if System.Char.IsLetter segments.[1].[0] then
-            JumpNotZero (segments.[1].[0], int segments.[2])
-        else
-            Jump (if int segments.[1] = 0 then 1 else int segments.[2])
-    | "cpy" | _ -> 
-        if System.Char.IsLetter segments.[1].[0] then
-            CopyRegister (segments.[1].[0], segments.[2].[0])
-        else
-            CopyValue (int64 segments.[1], segments.[2].[0])
+    | "tgl" -> Toggle (refOf segments.[1])
+    | "inc" -> Increment (refOf segments.[1])
+    | "dec" -> Decrement (refOf segments.[1])
+    | "cpy" -> Copy (refOf segments.[1], refOf segments.[2])
+    | "jnz" | _ -> JumpNotZero (refOf segments.[1], refOf segments.[2])
 
 let getRegister r registers = 
-    Map.tryFind r registers |> Option.defaultValue 0L
+    Map.tryFind r registers |> Option.defaultValue 0
 
 let toggle instruction =
     match instruction with
-    | Toggle r | Decrement r -> Increment r
     | Increment r -> Decrement r
-    | JumpNotZero _ -> Jump 1 // this becomes copy, by spec, but can't work because no copy takes an int as second param
-    | CopyValue _ -> Jump 1 // this becomes jnz, but jnz does not accept a reg as its second param 
-    | CopyRegister _ -> Jump 1 // this becomes jnz, but jnz does not accept a reg as its second param
-    | Jump _ -> // NOTE: a instruciton could be toggled to invalid, then toggled back to valid!
+    | Toggle r | Decrement r -> Increment r
+    | JumpNotZero (r1, r2) -> Copy (r1, r2)
+    | Copy (r1, r2) -> JumpNotZero (r1, r2)
 
 let instructions = input |> Array.map parseInstruction
 
@@ -94,30 +89,37 @@ let rec runInstruction registers i =
         getRegister 'a' registers
     else
         match instructions.[i] with
-        | Toggle r ->
+        | Toggle (Register r) ->
             let ir = i + int (getRegister r registers)
             if ir >= 0 && ir < instructions.Length then 
                 instructions.[ir] <- toggle instructions.[ir]
             runInstruction registers (i + 1)
-        | Increment r -> 
-            let next = registers |> getRegister r |> fun e -> Map.add r (e + 1L) registers
+        | Increment (Register r) -> 
+            let next = registers |> getRegister r |> fun e -> Map.add r (e + 1) registers
             runInstruction next (i + 1)
-        | Decrement r ->
-            let next = registers |> getRegister r |> fun e -> Map.add r (e - 1L) registers
+        | Decrement (Register r) ->
+            let next = registers |> getRegister r |> fun e -> Map.add r (e - 1) registers
             runInstruction next (i + 1)
-        | CopyValue (v, r) ->
+        | Copy ((Value v), (Register r)) ->
             let next = Map.add r v registers
             runInstruction next (i + 1)
-        | CopyRegister (ra, r) ->
+        | Copy ((Register ra), (Register r)) ->
             let next = Map.add r (getRegister ra registers) registers
             runInstruction next (i + 1)
-        | Jump v ->
-            runInstruction registers (i + v)
-        | JumpNotZero (r, v) ->
-            if  getRegister r registers = 0L then
-                runInstruction registers (i + 1)    
-            else
-                runInstruction registers (i + v)
+        | JumpNotZero ((Register r), (Value v)) ->
+            let check = if getRegister r registers = 0 then 1 else v
+            runInstruction registers (i + check)  
+        | JumpNotZero ((Register r), (Register rv)) ->
+            let check = if getRegister r registers = 0 then 1 else getRegister rv registers
+            runInstruction registers (i + check)  
+        | JumpNotZero ((Value v1), (Value v2)) ->
+            let check = if v1 = 0 then 1 else v2
+            runInstruction registers (i + check)  
+        | JumpNotZero ((Value v), (Register rv)) ->
+            let check = if v = 0 then 1 else getRegister rv registers
+            runInstruction registers (i + check)  
+        | _ -> 
+            runInstruction registers (i + 1)
 
 let part1 () =
-    0
+    runInstruction (Map.empty.Add ('a', 7)) 0

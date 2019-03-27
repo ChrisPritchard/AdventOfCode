@@ -149,8 +149,34 @@ let rec runLoggedInstruction registers i n acc =
 
 let part2 () =
     
-    let at9 = 12*11*10
-    let at8 = at9 * 9
+    //cpy a b		
+    //dec b	          // b starts at 11
+    //cpy a d	      // d at 12
+        //cpy 0 a	 
+        //cpy b c	 
+        //inc a    
+        //dec c		
+        //jnz c -2    
+        //dec d		
+        //jnz d -5    // set a to (b * d) (132 initially) (1320 second time)
+    //dec b           // b drops 1 (10) (9)
+    //cpy b c         // set c to b (10) (9)
+        //cpy c d         // 
+        //dec d           // 
+        //inc c           // 
+        //jnz d -2        // c is doubled (20) (18)
+    //tgl c             // swap c (20) (jnz 77 d becomes add 77 into d)
+    //cpy -16 c         // set c to -16
+    //jnz 1 c           // go to 2 // copy 1 into c
+    //cpy 79 c          // copy 79 into c
+    //jnz 77 d              // copy 77 into d
+            //inc a         
+            //inc d
+            //jnz d -2  // increment a until d hits max int?
+        //inc c         // increment c until c hits max int?
+        //jnz c -5
 
-    let result = runLoggedInstruction (Map.empty.Add ('a', 12)) 0 300000 []
-    System.IO.File.WriteAllLines ("Day24-output.txt", Seq.map (sprintf "%A") result |> Seq.toArray)
+    // is a (int32.max - 77) + 1320?
+
+    //let result = runLoggedInstruction (Map.empty.Add ('a', 12)) 0 5000000 []
+    //System.IO.File.WriteAllLines ("Day24-output.txt", Seq.map (sprintf "%A") result |> Seq.toArray)

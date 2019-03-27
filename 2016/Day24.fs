@@ -31,5 +31,26 @@ Given your actual map, and starting from location 0, what is the fewest number o
 
 module Day24
 
+//let input = System.IO.File.ReadAllLines "Day24-input.txt"
+let input = 
+    [|
+        "###########"
+        "#0.1.....2#"
+        "#.#######.#"
+        "#4.......3#"
+        "###########"
+    |]
+
+let ductSystem, start, numbers = 
+    let a = Array2D.create input.[0].Length input.Length '#'
+    let mutable numbers = []
+    for x = 0 to input.[0].Length - 1 do
+        for y = 0 to input.Length - 1 do
+            let c = input.[y].[x]
+            a.[x, y] <- c
+            if System.Char.IsDigit c then 
+                numbers <- (c, (x, y))::numbers
+    a, List.find (fst >> (=) '0') numbers |> snd, List.filter (fst >> (<>) '0') numbers |> List.map snd
+
 let part1 () =
     0

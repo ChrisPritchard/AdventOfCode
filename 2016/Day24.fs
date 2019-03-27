@@ -52,5 +52,26 @@ let ductSystem, start, numbers =
                 numbers <- (c, (x, y))::numbers
     a, List.find (fst >> (=) '0') numbers |> snd, List.filter (fst >> (<>) '0') numbers |> List.map snd
 
+let bfs start goals =
+
+    let adjacent (x, y) =
+        [-1,0;1,0;0,-1;0,1] 
+        |> List.map (fun (dx, dy) -> x + dx, y + dy) 
+
+    let rec searcher edges visited goals steps =
+        let next = 
+            edges
+            |> List.collect (fun p ->
+                adjacent p
+                |> List.filter (fun (x, y) -> 
+                    ductSystem.[x, y] <> '#' && not (Set.contains (x, y) visited)))
+        let found = next |> List.filter (fun p -> List.contains p goals)
+        if found <> [] then found, steps + 1
+        else
+            let newVisited = (visited, edges) ||> List.fold (fun vis edg -> Set.add edg vis)
+            searcher edges newVisited goals (steps + 1)
+
+    0
+
 let part1 () =
     0

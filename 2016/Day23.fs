@@ -76,7 +76,7 @@ type Instruction =
 let letter s = System.Char.IsLetter (Seq.head s)
 
 let parseInstruction text = 
-    let segments = split " " text
+    let segments = split " \t" text
     match segments.[0] with
     | "tgl" -> Toggle (refOf segments.[1])
     | "inc" -> Increment (refOf segments.[1])
@@ -96,46 +96,61 @@ let toggle instruction =
 
 let instructions = input |> Array.map parseInstruction
 
+let update registers i =
+    match instructions.[i] with
+    | Toggle (Register r) ->
+        let ir = getRegister r registers
+        if ir >= 0 && ir < instructions.Length then 
+            instructions.[ir] <- toggle instructions.[ir]
+        registers, i + 1
+    | Increment (Register r) -> 
+        let next = let e = getRegister r registers in Map.add r (e + 1) registers
+        next, i + 1
+    | Decrement (Register r) ->
+        let next = let e = getRegister r registers in Map.add r (e - 1) registers
+        next, i + 1
+    | Copy (Value v, Register r) ->
+        let next = Map.add r v registers
+        next, i + 1
+    | Copy (Register ra, Register r) ->
+        let next = Map.add r (getRegister ra registers) registers
+        next, i + 1
+    | JumpNotZero (Register r, Value v) ->
+        let check = if getRegister r registers = 0 then 1 else v
+        registers, i + check
+    | JumpNotZero (Register r, Register rv) ->
+        let check = if getRegister r registers = 0 then 1 else getRegister rv registers
+        registers, i + check
+    | JumpNotZero (Value v1, Value v2) ->
+        let check = if v1 = 0 then 1 else v2
+        registers, i + check
+    | JumpNotZero (Value v, Register rv) ->
+        let check = if v = 0 then 1 else getRegister rv registers
+        registers, i + check
+    | _ -> 
+        registers, i + 1
+
 let rec runInstruction registers i =
     if i >= instructions.Length || i < 0 then
         getRegister 'a' registers
     else
-        match instructions.[i] with
-        | Toggle (Register r) ->
-            let ir = i + int (getRegister r registers)
-            if ir >= 0 && ir < instructions.Length then 
-                instructions.[ir] <- toggle instructions.[ir]
-            runInstruction registers (i + 1)
-        | Increment (Register r) -> 
-            let next = let e = getRegister r registers in Map.add r (e + 1) registers
-            runInstruction next (i + 1)
-        | Decrement (Register r) ->
-            let next = let e = getRegister r registers in Map.add r (e - 1) registers
-            runInstruction next (i + 1)
-        | Copy ((Value v), (Register r)) ->
-            let next = Map.add r v registers
-            runInstruction next (i + 1)
-        | Copy ((Register ra), (Register r)) ->
-            let next = Map.add r (getRegister ra registers) registers
-            runInstruction next (i + 1)
-        | JumpNotZero ((Register r), (Value v)) ->
-            let check = if getRegister r registers = 0 then 1 else v
-            runInstruction registers (i + check)  
-        | JumpNotZero ((Register r), (Register rv)) ->
-            let check = if getRegister r registers = 0 then 1 else getRegister rv registers
-            runInstruction registers (i + check)  
-        | JumpNotZero ((Value v1), (Value v2)) ->
-            let check = if v1 = 0 then 1 else v2
-            runInstruction registers (i + check)  
-        | JumpNotZero ((Value v), (Register rv)) ->
-            let check = if v = 0 then 1 else getRegister rv registers
-            runInstruction registers (i + check)  
-        | _ -> 
-            runInstruction registers (i + 1)
+        let next, di = update registers i
+        runInstruction next di
 
 let part1 () =
     runInstruction (Map.empty.Add ('a', 7)) 0
 
+let rec runLoggedInstruction registers i n acc =
+    if i >= instructions.Length || i < 0 || n = 0 then
+        acc
+    else
+        let next, di = update registers i
+        runLoggedInstruction next di (n - 1) (next::acc)
 
 let part2 () =
-    runInstruction (Map.empty.Add ('a', 12)) 0
+    
+    let at9 = 12*11*10
+    let at8 = at9 * 9
+
+    let result = runLoggedInstruction (Map.empty.Add ('a', 12)) 0 300000 []
+    System.IO.File.WriteAllLines ("Day24-output.txt", Seq.map (sprintf "%A") result |> Seq.toArray)

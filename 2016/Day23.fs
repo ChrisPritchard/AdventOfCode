@@ -167,14 +167,14 @@ let part2 () =
         //jnz d -2        // c is doubled (20) (18) 16
     //16: tgl c             // swap (c + 16 = 36) : do nothing (c + 16 = 34) : do nothing. when c is 8 this will toggle 24 to dec c. when c is 2 this will change jnz to copy 1 c
     //cpy -16 c         // set c to -16
-    //jnz 1 c           // go to 2
+    //jnz 1 c           // go to 2 // then, after toggling, copy 1 into c (do nothing, as next step sets it to 79)
     //cpy 79 c          // copy 79 into c
     //jnz 77 d              // copy 77 into d
             //inc a         
             //inc d     // after toggling this will dec c (which is 77 into a)
             //jnz d -2
-        //inc c     // this will dec c (79)
-        //25: jnz c -5  // a will become a + 77 * 79
+            //inc c     // this will dec c (79)
+            //25: jnz c -5  // a will become a + 77 * 79
 
     // is a 12! + 77 * 79? Yes.
 

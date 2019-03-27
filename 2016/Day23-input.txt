@@ -1,20 +1,20 @@
-﻿cpy a b		a 12 b 12 c 0  d 0
-dec b		a 12 b 11 c 0  d 0
-cpy a d		a 12 b 11 c 0  d 12
-cpy 0 a		a 0  b 11 c 0  d 12
-cpy b c		a 0  b 11 c 11 d 12
-inc a       a 1  b 11 c 11 d 12
-dec c		a 1  b 11 c 10 d 12
+﻿cpy a b		
+dec b	    
+cpy a d	    
+cpy 0 a	 
+cpy b c	
+inc a    
+dec c		
 jnz c -2
-dec d
-jnz d -5
-dec b
-cpy b c
-cpy c d
-dec d
-inc c
-jnz d -2
-tgl c
+dec d		
+jnz d -5    
+dec b       
+cpy b c     
+cpy c d     
+dec d       
+inc c       
+jnz d -2    
+tgl c       
 cpy -16 c
 jnz 1 c
 cpy 79 c

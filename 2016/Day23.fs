@@ -43,6 +43,18 @@ The rest of the electronics seem to place the keypad entry (the number of eggs, 
 What value should be sent to the safe?
 *)
 
+(*
+--- Part Two ---
+
+The safe doesn't open, but it does make several angry noises to express its frustration.
+
+You're quite sure your logic is working correctly, so the only other thing is... you check the painting again. As it turns out, colored eggs are still eggs. Now you count 12.
+
+As you run the program with this new input, the prototype computer begins to overheat. You wonder what's taking so long, and whether the lack of any instruction more powerful than "add one" has anything to do with it. Don't bunnies usually multiply?
+
+Anyway, what value should actually be sent to the safe?
+*)
+
 module Day23
 
 open Common
@@ -95,10 +107,10 @@ let rec runInstruction registers i =
                 instructions.[ir] <- toggle instructions.[ir]
             runInstruction registers (i + 1)
         | Increment (Register r) -> 
-            let next = registers |> getRegister r |> fun e -> Map.add r (e + 1) registers
+            let next = let e = getRegister r registers in Map.add r (e + 1) registers
             runInstruction next (i + 1)
         | Decrement (Register r) ->
-            let next = registers |> getRegister r |> fun e -> Map.add r (e - 1) registers
+            let next = let e = getRegister r registers in Map.add r (e - 1) registers
             runInstruction next (i + 1)
         | Copy ((Value v), (Register r)) ->
             let next = Map.add r v registers
@@ -123,3 +135,7 @@ let rec runInstruction registers i =
 
 let part1 () =
     runInstruction (Map.empty.Add ('a', 7)) 0
+
+
+let part2 () =
+    runInstruction (Map.empty.Add ('a', 12)) 0

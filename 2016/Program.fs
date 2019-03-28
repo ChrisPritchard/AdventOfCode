@@ -60,4 +60,12 @@ let main _ =
     time 24 2 Day24.part2
     time 25 1 Day25.part1
 
+    (*
+    You activate all fifty stars and transmit the signal. The star atop the antenna begins to glow.
+
+    Suddenly, you see the sleigh fly past you!
+
+    Looks like Santa was already waiting for your signal.
+    *)
+
     0

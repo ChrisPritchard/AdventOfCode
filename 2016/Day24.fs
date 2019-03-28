@@ -31,15 +31,15 @@ Given your actual map, and starting from location 0, what is the fewest number o
 
 module Day24
 
-//let input = System.IO.File.ReadAllLines "Day24-input.txt"
-let input = 
-    [|
-        "###########"
-        "#0.1.....2#"
-        "#.#######.#"
-        "#4.......3#"
-        "###########"
-    |]
+let input = System.IO.File.ReadAllLines "Day24-input.txt"
+//let input = 
+//    [|
+//        "###########"
+//        "#0.1.....2#"
+//        "#.#######.#"
+//        "#4.......3#"
+//        "###########"
+//    |]
 
 let ductSystem, start, numbers = 
     let a = Array2D.create input.[0].Length input.Length '#'
@@ -59,19 +59,37 @@ let bfs start goals =
         |> List.map (fun (dx, dy) -> x + dx, y + dy) 
 
     let rec searcher edges visited goals steps =
-        let next = 
-            edges
-            |> List.collect (fun p ->
-                adjacent p
-                |> List.filter (fun (x, y) -> 
-                    ductSystem.[x, y] <> '#' && not (Set.contains (x, y) visited)))
+        let (newVisited, next) = 
+            ((visited, []), edges)
+            ||> List.fold (fun (visited, acc) edge ->
+                ((visited, acc), adjacent edge)
+                ||> List.fold (fun (visited, acc) (x, y) -> 
+                    if ductSystem.[x, y] = '#' || Set.contains (x, y) visited then
+                        visited, acc
+                    else
+                        Set.add (x, y) visited, (x, y)::acc)
+                )
         let found = next |> List.filter (fun p -> List.contains p goals)
-        if found <> [] then found, steps + 1
+        if found <> [] then 
+            found, steps + 1
+        elif next = [] then
+            [], steps
         else
-            let newVisited = (visited, edges) ||> List.fold (fun vis edg -> Set.add edg vis)
-            searcher edges newVisited goals (steps + 1)
+            searcher next newVisited goals (steps + 1)
 
-    0
+    let rec pathFinder paths finished =
+        let next = 
+            paths
+            |> List.collect (fun (soFar, head, goalsRemaining) ->
+                let (next, steps) = searcher [head] Set.empty goalsRemaining 0
+                next |> List.map (fun g -> soFar + steps, g, goalsRemaining |> List.except [g]))
+        let newFinished, unfinished = next |> List.partition (fun (_, _, gs) -> gs = [])
+        if unfinished = [] then
+            (finished @ newFinished) |> List.map (fun (s,_,_) -> s) |> List.min
+        else
+            pathFinder unfinished (finished @ newFinished)
+    
+    pathFinder [0, start, goals] []
 
 let part1 () =
-    0
+    bfs start numbers

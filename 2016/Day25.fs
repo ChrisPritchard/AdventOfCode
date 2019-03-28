@@ -97,7 +97,7 @@ let part1 () =
     // let start = x
     // a = x
 
-    //9: cpy a d           d is x
+    //0: cpy a d           d is x
     //1: cpy 15 c          c 15
     //2: cpy 170 b         b 170
         //inc d             
@@ -109,7 +109,7 @@ let part1 () =
     //9:  jnz 0 0           nothing
     //10: cpy a b           b is x + 2550
     //11: cpy 0 a           a is 0
-    //12: cpy 2 c           c is 2
+        //12: cpy 2 c           c is 2
         //jnz b 2             
         //jnz 1 6
         //dec b             
@@ -118,21 +118,47 @@ let part1 () =
             //inc a     a = a = b / 2 + 2 = x/2 + 1276
             //jnz 1 -7
     //20: cpy 2 b           // b = 2 // a is 1274 + x, d is still 2550 + x, c is 2
-        //jnz c 2       // c = 0?
-        //jnz 1 4
+        //jnz c 2       // c = 2 // 1 // 0
+        //jnz 1 4       // b = c = 0
         //dec b     
         //dec c
-        //jnz 1 -4
+        //jnz 1 -4      
     //jnz 0 0
-    //27: out b         // out 2?
+    //27: out b         // out 0
     //jnz a -19
     //jnz 1 -21
 
     let x = 2
-    let regs = Map.empty.Add('a', x)
-    //let res = runInstruction regs [] 0 20000
+    //let regs = Map.empty.Add('a', x)
+    ////let res = runInstruction regs [] 0 20000
 
-    let at8 = regs.Add('d', x + 2550)
-    let res = runInstruction at8 [] 8 20000
+    //let at8 = regs.Add('d', x + 2550)
+    //let res = runInstruction at8 [] 8 20000
+
+    let translated x =
+        let mutable a, b, c, d, res = x, 0, 0, 0, []
+        d <- a
+        c <- 15
+        while c > 0 do
+            b <- 170
+            while b > 0 do
+                d <- d + 1
+                b <- b - 1
+            c <- c - 1
+        a <- d
+        while a > 0 do
+            b <- a
+            a <- 0
+            while b > 0 do
+                c <- 2
+                while c > 0 && b > 0 do
+                    c <- c - 1
+                    b <- b - 1
+                a <- a + 1
+            c <- 2 // final copy before jump
+            b <- 2
+        a, b, c, d
+                
+    let res = translated x
 
     0

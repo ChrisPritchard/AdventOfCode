@@ -8,6 +8,10 @@
 
   <ItemGroup>
     <Compile Include="Common.fs" />
+    <Content Include="Day25-input.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Compile Include="Day25.fs" />
     <Content Include="Day24-input.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -31,15 +31,15 @@ Given your actual map, and starting from location 0, what is the fewest number o
 
 module Day24
 
-//let input = System.IO.File.ReadAllLines "Day24-input.txt"
-let input = 
-    [|
-        "###########"
-        "#0.1.....2#"
-        "#.#######.#"
-        "#4.......3#"
-        "###########"
-    |]
+let input = System.IO.File.ReadAllLines "Day24-input.txt"
+//let input = 
+    //[|
+    //    "###########"
+    //    "#0.1.....2#"
+    //    "#.#######.#"
+    //    "#4.......3#"
+    //    "###########"
+    //|]
 
 let ductSystem, start, numbers = 
     let a = Array2D.create input.[0].Length input.Length '#'
@@ -52,6 +52,23 @@ let ductSystem, start, numbers =
                 numbers <- (c, (x, y))::numbers
     a, List.find (fst >> (=) '0') numbers |> snd, List.filter (fst >> (<>) '0') numbers |> List.map snd
 
+let bfs start goal =
+    let rec searcher edges visited steps = 
+        let adjacent (x, y) = [-1,0;1,0;0,-1;0,1] |> List.map (fun (dx, dy) -> dx + x, dy + y)
+        let newEdges, newVisited =
+            (([], visited), edges)
+            ||> List.fold (fun (acc, visited) edge ->
+                ((acc, visited), adjacent edge)
+                ||> List.fold (fun (acc, visited) (ox, oy) ->
+                    if ductSystem.[ox, oy] = '#' || Set.contains (ox, oy) visited then
+                        acc, visited
+                    else
+                        (ox, oy)::acc, Set.add (ox, oy) visited))
+        if List.contains goal newEdges then steps + 1
+        else
+            searcher newEdges newVisited (steps + 1)
+    searcher [start] Set.empty 0
+
 let part1 () =
     
     let rec possibles acc rem =
@@ -60,7 +77,23 @@ let part1 () =
                 yield acc
             for next in Set.toList rem do
                 yield! possibles (next::acc) (Set.remove next rem)
-        ]            
+        ]
+        
+    let mutable dists = Map.empty
+
+    let length path = 
+        ((0, List.head path), List.tail path)
+        ||> List.fold (fun (acc, last) next ->
+            if Map.containsKey (last, next) dists then
+                acc + dists.[last, next], next
+            elif Map.containsKey (next, last) dists then
+                acc + dists.[next, last], next
+            else
+                let dist = bfs last next
+                dists <- Map.add (last, next) dist dists
+                acc + dist, next)
+        |> fst
     
     let allPaths = possibles [start] (Set.ofList numbers)
-    0
+
+    allPaths |> List.map length |> List.min

@@ -94,41 +94,45 @@ let rec runInstruction registers res i n =
 
 let part1 () =
 
-    let target = [1..100] |> List.map (fun i -> i % 2)
-    let res = 
-        [1..100000] 
-        |> List.map (fun a -> a, runInstruction (Map.empty.Add ('a', a)) [] 0 100000)
-        |> List.filter (fun (_, l) -> List.length l > 0 && List.truncate 100 l = target)
+    // let start = x
+    // a = x
 
-    //cpy a d           d is a
-    //cpy 15 c          c 15
-    //cpy 170 b         b 170
+    //9: cpy a d           d is x
+    //1: cpy 15 c          c 15
+    //2: cpy 170 b         b 170
         //inc d             
         //dec b          
         //jnz b -2
         //dec c
-        //jnz c -5      d = a + (15 * 170) // 2550
-    //cpy d a           a = a + 2550
-    //jnz 0 0           nothing
-    //cpy a b           b is a + 2550        
-    //cpy 0 a           a is 0
-    //cpy 2 c           c is 2
+        //jnz c -5      d = x + (15 * 170) // 2550 
+    //8:  cpy d a           a = x + 2550
+    //9:  jnz 0 0           nothing
+    //10: cpy a b           b is x + 2550
+    //11: cpy 0 a           a is 0
+    //12: cpy 2 c           c is 2
         //jnz b 2             
         //jnz 1 6
         //dec b             
         //dec c
-        //jnz c -4      b = b - 2
-            //inc a         
-            //jnz 1 -7  a = a + (b / 2) = a + (a + 2548 / 2)
-    //cpy 2 b // b = 2
-        //jnz c 2 // c = 0?
+        //jnz c -4      b = b - 2 = x + 2548
+            //inc a     a = a = b / 2 + 2 = x/2 + 1276
+            //jnz 1 -7
+    //20: cpy 2 b           // b = 2 // a is 1274 + x, d is still 2550 + x, c is 2
+        //jnz c 2       // c = 0?
         //jnz 1 4
         //dec b     
         //dec c
         //jnz 1 -4
     //jnz 0 0
-    //27: out b
+    //27: out b         // out 2?
     //jnz a -19
     //jnz 1 -21
+
+    let x = 2
+    let regs = Map.empty.Add('a', x)
+    //let res = runInstruction regs [] 0 20000
+
+    let at8 = regs.Add('d', x + 2550)
+    let res = runInstruction at8 [] 8 20000
 
     0

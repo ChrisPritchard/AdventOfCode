@@ -29,6 +29,14 @@ Since the robot isn't very fast, you need to find it the shortest route. This pa
 Given your actual map, and starting from location 0, what is the fewest number of steps required to visit every non-0 number marked on the map at least once?
 *)
 
+(*
+--- Part Two ---
+
+Of course, if you leave the cleaning robot somewhere weird, someone is bound to notice.
+
+What is the fewest number of steps required to start at 0, visit every non-0 number marked on the map at least once, and then return to 0?
+*)
+
 module Day24
 
 let input = System.IO.File.ReadAllLines "Day24-input.txt"
@@ -69,31 +77,33 @@ let bfs start goal =
             searcher newEdges newVisited (steps + 1)
     searcher [start] Set.empty 0
 
-let part1 () =
-    
-    let rec possibles acc rem =
-        [
-            if Set.count rem = 0 then
-                yield acc
-            for next in Set.toList rem do
-                yield! possibles (next::acc) (Set.remove next rem)
-        ]
+let rec possibles acc rem =
+    [
+        if Set.count rem = 0 then
+            yield acc
+        for next in Set.toList rem do
+            yield! possibles (next::acc) (Set.remove next rem)
+    ]
         
-    let mutable dists = Map.empty
+let mutable dists = Map.empty
 
-    let length path = 
-        ((0, List.head path), List.tail path)
-        ||> List.fold (fun (acc, last) next ->
-            if Map.containsKey (last, next) dists then
-                acc + dists.[last, next], next
-            elif Map.containsKey (next, last) dists then
-                acc + dists.[next, last], next
-            else
-                let dist = bfs last next
-                dists <- Map.add (last, next) dist dists
-                acc + dist, next)
-        |> fst
-    
+let length path = 
+    ((0, List.head path), List.tail path)
+    ||> List.fold (fun (acc, last) next ->
+        if Map.containsKey (last, next) dists then
+            acc + dists.[last, next], next
+        elif Map.containsKey (next, last) dists then
+            acc + dists.[next, last], next
+        else
+            let dist = bfs last next
+            dists <- Map.add (last, next) dist dists
+            acc + dist, next)
+    |> fst
+
+let part1 () =
     let allPaths = possibles [start] (Set.ofList numbers)
+    allPaths |> List.map length |> List.min
 
+let part2 () =
+    let allPaths = (possibles [start] (Set.ofList numbers)) |> List.map (fun p -> start::p)
     allPaths |> List.map length |> List.min

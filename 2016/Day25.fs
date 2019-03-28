@@ -28,137 +28,59 @@ The code takes a value (via register a) that describes the signal to generate, b
 What is the lowest positive integer that can be used to initialize register a and cause the code to output a clock signal of 0, 1, 0, 1... repeating forever?
 *)
 
+(*
+--- Part Two ---
+
+The antenna is ready. Now, all you need is the fifty stars required to generate the signal for the sleigh, but you don't have enough.
+
+You look toward the sky in desperation... suddenly noticing that a lone star has been installed at the top of the antenna! Only 49 more to go.
+
+You have enough stars to TRANSMIT THE SYGNAL!
+.*)
+
 module Day25
-
-open Common
-
-let input = System.IO.File.ReadAllLines "Day25-input.txt"
-
-type Instruction =
-    | CopyValue of int * char
-    | CopyRegister of char * char
-    | Increment of char
-    | Decrement of char
-    | Jump of int
-    | JumpNotZero of char * int
-    | Out of char
-
-let parseInstruction text = 
-    let segments = split " " text
-    match segments.[0] with
-    | "out" -> Out segments.[1].[0]
-    | "inc" -> Increment segments.[1].[0]
-    | "dec" -> Decrement segments.[1].[0]
-    | "jnz" -> 
-        if System.Char.IsLetter segments.[1].[0] then
-            JumpNotZero (segments.[1].[0], int segments.[2])
-        else
-            Jump (if int segments.[1] = 0 then 1 else int segments.[2])
-    | "cpy" | _ -> 
-        if System.Char.IsLetter segments.[1].[0] then
-            CopyRegister (segments.[1].[0], segments.[2].[0])
-        else
-            CopyValue (int segments.[1], segments.[2].[0])
-
-let getRegister r registers = 
-    Map.tryFind r registers |> Option.defaultValue 0
-
-let instructions = input |> Array.map parseInstruction
-
-let rec runInstruction registers res i n =
-    if i >= instructions.Length || i < 0 || n = 0 then
-        res
-    else
-        match instructions.[i] with
-        | Out r ->
-            runInstruction registers ((getRegister r registers)::res) (i + 1) (n - 1)
-        | Increment r -> 
-            let next = registers |> getRegister r |> fun e -> Map.add r (e + 1) registers
-            runInstruction next res (i + 1) (n - 1)
-        | Decrement r ->
-            let next = registers |> getRegister r |> fun e -> Map.add r (e - 1) registers
-            runInstruction next res (i + 1) (n - 1)
-        | CopyValue (v, r) ->
-            let next = Map.add r v registers
-            runInstruction next res (i + 1) (n - 1)
-        | CopyRegister (ra, r) ->
-            let next = Map.add r (getRegister ra registers) registers
-            runInstruction next res (i + 1) (n - 1)
-        | Jump v ->
-            runInstruction registers res (i + v) (n - 1)
-        | JumpNotZero (r, v) ->
-            if  getRegister r registers = 0 then
-                runInstruction registers res (i + 1) (n - 1)
-            else
-                runInstruction registers res (i + v) (n - 1)
 
 let part1 () =
 
-    // let start = x
-    // a = x
+    let runProgram x =
+        seq {
+            let mutable a, b, c, d = x, 0, 0, 0
+            d <- a + 2550
+            //0:  cpy a d
+            //1:  cpy 15 c
+            //2:  cpy 170 b
+            //3:  inc d
+            //4:  dec b
+            //5:  jnz b -2
+            //6:  dec c
+            //7:  jnz c -5
+            while true do
+                a <- d //8:  cpy d a
+                while a > 0 do    //9:  jnz 0 0
+                    b <- a//10: cpy a b
+                    a <- 0//11: cpy 0 a
+                    c <- 2//12: cpy 2 c
+                    
+                    
+                    while b > 0 do//13: jnz b 2
+                    //14: jnz 1 6
+                        b <- b - 1 //15: dec b
+                        c <- c - 1 //16: dec c
+                        if c = 0 then //17: jnz c -4
+                            a <- a + 1//18: inc a
+                            c <- 2//19: jnz 1 -7 
+                    
+                    b <- 2 //20: cpy 2 b
+                    while c > 0 do//21: jnz c 2 //22: jnz 1 4 //25: jnz 1 -4
+                        b <- b - 1 //23: dec b
+                        c <- c - 1 //24: dec c
+                    //26: jnz 0 0
+                    yield b //27: out b
+                    //28: jnz a -19
+                //29: jnz 1 -21
+        }
 
-    //0: cpy a d           d is x
-    //1: cpy 15 c          c 15
-    //2: cpy 170 b         b 170
-        //inc d             
-        //dec b          
-        //jnz b -2
-        //dec c
-        //jnz c -5      d = x + (15 * 170) // 2550 
-    //8:  cpy d a           a = x + 2550
-    //9:  jnz 0 0           nothing
-    //10: cpy a b           b is x + 2550
-    //11: cpy 0 a           a is 0
-        //12: cpy 2 c           c is 2
-        //jnz b 2             
-        //jnz 1 6
-        //dec b             
-        //dec c
-        //jnz c -4      b = b - 2 = x + 2548
-            //inc a     a = a = b / 2 + 2 = x/2 + 1276
-            //jnz 1 -7
-    //20: cpy 2 b           // b = 2 // a is 1274 + x, d is still 2550 + x, c is 2
-        //jnz c 2       // c = 2 // 1 // 0
-        //jnz 1 4       // b = c = 0
-        //dec b     
-        //dec c
-        //jnz 1 -4      
-    //jnz 0 0
-    //27: out b         // out 0
-    //jnz a -19
-    //jnz 1 -21
-
-    let x = 2
-    //let regs = Map.empty.Add('a', x)
-    ////let res = runInstruction regs [] 0 20000
-
-    //let at8 = regs.Add('d', x + 2550)
-    //let res = runInstruction at8 [] 8 20000
-
-    let translated x =
-        let mutable a, b, c, d, res = x, 0, 0, 0, []
-        d <- a
-        c <- 15
-        while c > 0 do
-            b <- 170
-            while b > 0 do
-                d <- d + 1
-                b <- b - 1
-            c <- c - 1
-        a <- d
-        while a > 0 do
-            b <- a
-            a <- 0
-            while b > 0 do
-                c <- 2
-                while c > 0 && b > 0 do
-                    c <- c - 1
-                    b <- b - 1
-                a <- a + 1
-            c <- 2 // final copy before jump
-            b <- 2
-        a, b, c, d
-                
-    let res = translated x
-
-    0
+    Seq.initInfinite (fun i -> 
+        (i + 1), Seq.take 10 (runProgram (i + 1)) |> Seq.map string |> String.concat "")
+    |> Seq.find (fun (_, s) -> s = "0101010101")
+    |> fst

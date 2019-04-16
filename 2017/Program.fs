@@ -10,5 +10,6 @@ let main _ =
     //time 3 1 Day03.part1
     //time 3 2 Day03.part2
     time 4 1 Day04.part1
+    time 4 2 Day04.part2
 
     0

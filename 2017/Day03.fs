@@ -21,6 +21,28 @@ For example:
     Data from square 1024 must be carried 31 steps.
 
 How many steps are required to carry the data from the square identified in your puzzle input all the way to the access port?
+
+--- Part Two ---
+
+As a stress test on the system, the programs here clear the grid and then store the value 1 in square 1. Then, in the same allocation order as shown above, they store the sum of the values in all adjacent squares, including diagonals.
+
+So, the first few squares' values are chosen as follows:
+
+    Square 1 starts with the value 1.
+    Square 2 has only one adjacent filled square (with value 1), so it also stores 1.
+    Square 3 has both of the above squares as neighbors and stores the sum of their values, 2.
+    Square 4 has all three of the aforementioned squares as neighbors and stores the sum of their values, 4.
+    Square 5 only has the first and fourth squares as neighbors, so it gets the value 5.
+
+Once a square is written, its value does not change. Therefore, the first few squares would receive the following values:
+
+147  142  133  122   59
+304    5    4    2   57
+330   10    1    1   54
+351   11   23   25   26
+362  747  806--->   ...
+
+What is the first value written that is larger than your puzzle input?
 *)
 
 module Day03
@@ -30,20 +52,6 @@ let input = 312051
 type Dir = R | U | L | D
 
 let part1 () =
- //(* 65	64	63	62	61	60	59	58	57				32
- //   66	37	36	35	34	33	32	31	56				24
- //   67	38	17	16	15	14	13	30	55				16
- //   68	39	18	5	4	3	12	29	54				8
- //   69	40	19	6	1	2	11	28	53				1
- //   70	41	20	7	8	9	10	27	52				
- //   71	42	21	22	23	24	25	26	51				
- //   72	43	44	45	46	47	48	49	50				
- //   73	74	75	76	77	78	79	80	81 *)
- //   let ring = (input - 1) / 8
- //   let ringSize = ring * 8
- //   let ringStart = (ring - 1) * 8
- //   let sides = (ringSize - 4) / 4
- //   let topBottom = sides + 2
     let rec mapper (x, y) dir map n =
         let nextMap = Map.add (x, y) n map
         if n = input then x, y
@@ -64,4 +72,22 @@ let part1 () =
 
     abs x + abs y
 
-let part2 () = 0
+let part2 () = 
+    let rec mapper (x, y) dir map =
+        let n = [-1,-1;0,-1;1,-1;-1,0;1,0;-1,1;0,1;1,1] |> List.choose (fun (ox, oy) -> Map.tryFind (x + ox, y + oy) map) |> List.sum
+        let nextMap = Map.add (x, y) n map
+        if n > input then n
+        else
+            let nextPos, nextDir = 
+                match dir with
+                | R when not (Map.containsKey (x, y - 1) map) -> (x, y - 1), U
+                | U when not (Map.containsKey (x - 1, y) map) -> (x - 1, y), L
+                | L when not (Map.containsKey (x, y + 1) map) -> (x, y + 1), D
+                | D when not (Map.containsKey (x + 1, y) map) -> (x + 1, y), R
+                | R -> (x + 1, y), R
+                | U -> (x, y - 1), U
+                | L -> (x - 1, y), L
+                | D -> (x, y + 1), D
+            mapper nextPos nextDir nextMap
+
+    mapper (1, 0) R (Map.empty.Add ((0, 0), 1))

@@ -27,6 +27,14 @@ Positive jumps ("forward") move downward; negative jumps move upward. For legibi
 In this example, the exit is reached in 5 steps.
 
 How many steps does it take to reach the exit?
+
+--- Part Two ---
+
+Now, the jumps are even stranger: after each jump, if the offset was three or more, instead decrease it by 1. Otherwise, increase it by 1 as before.
+
+Using this rule with the above example, the process now takes 10 steps, and the offset values after finding the exit are left as 2 3 2 3 -1.
+
+How many steps does it now take to reach the exit?
 *)
 
 module Day05
@@ -41,6 +49,19 @@ let part1 () =
         else
             let new_i = i + buffer.[i]        
             buffer.[i] <- buffer.[i] + 1
+            processor new_i (c + 1)
+
+    processor 0 0
+
+let part2 () =
+    
+    let buffer = Array.copy input
+    let rec processor i c =
+        if i < 0 || i >= buffer.Length then c
+        else
+            let ins = buffer.[i]
+            let new_i = i + ins      
+            buffer.[i] <- if ins >= 3 then ins - 1 else ins + 1
             processor new_i (c + 1)
 
     processor 0 0

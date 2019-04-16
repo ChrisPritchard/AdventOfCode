@@ -51,21 +51,23 @@ let input = 312051
 
 type Dir = R | U | L | D
 
+let findNext (x, y) dir map = 
+    match dir with
+    | R when not (Map.containsKey (x, y - 1) map) -> (x, y - 1), U
+    | U when not (Map.containsKey (x - 1, y) map) -> (x - 1, y), L
+    | L when not (Map.containsKey (x, y + 1) map) -> (x, y + 1), D
+    | D when not (Map.containsKey (x + 1, y) map) -> (x + 1, y), R
+    | R -> (x + 1, y), R
+    | U -> (x, y - 1), U
+    | L -> (x - 1, y), L
+    | D -> (x, y + 1), D
+
 let part1 () =
     let rec mapper (x, y) dir map n =
         let nextMap = Map.add (x, y) n map
         if n = input then x, y
         else
-            let nextPos, nextDir = 
-                match dir with
-                | R when not (Map.containsKey (x, y - 1) map) -> (x, y - 1), U
-                | U when not (Map.containsKey (x - 1, y) map) -> (x - 1, y), L
-                | L when not (Map.containsKey (x, y + 1) map) -> (x, y + 1), D
-                | D when not (Map.containsKey (x + 1, y) map) -> (x + 1, y), R
-                | R -> (x + 1, y), R
-                | U -> (x, y - 1), U
-                | L -> (x - 1, y), L
-                | D -> (x, y + 1), D
+            let nextPos, nextDir = findNext (x, y) dir map
             mapper nextPos nextDir nextMap (n + 1)
 
     let (x, y) = mapper (0, 0) D Map.empty 1
@@ -78,16 +80,7 @@ let part2 () =
         let nextMap = Map.add (x, y) n map
         if n > input then n
         else
-            let nextPos, nextDir = 
-                match dir with
-                | R when not (Map.containsKey (x, y - 1) map) -> (x, y - 1), U
-                | U when not (Map.containsKey (x - 1, y) map) -> (x - 1, y), L
-                | L when not (Map.containsKey (x, y + 1) map) -> (x, y + 1), D
-                | D when not (Map.containsKey (x + 1, y) map) -> (x + 1, y), R
-                | R -> (x + 1, y), R
-                | U -> (x, y - 1), U
-                | L -> (x - 1, y), L
-                | D -> (x, y + 1), D
+            let nextPos, nextDir = findNext (x, y) dir map
             mapper nextPos nextDir nextMap
 
     mapper (1, 0) R (Map.empty.Add ((0, 0), 1))

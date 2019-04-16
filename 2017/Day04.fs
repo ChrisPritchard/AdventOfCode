@@ -40,3 +40,11 @@ let part1 () =
         let words = split " " line
         Seq.length (Seq.distinct words) = words.Length)
     |> Seq.length
+
+let part2 () =
+    input 
+    |> Seq.filter (fun line -> 
+        let words = split " " line
+        let distinctUnique = words |> Seq.map (Seq.sort >> asString) |> Seq.distinct |> Seq.length
+        distinctUnique = words.Length)
+    |> Seq.length

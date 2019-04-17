@@ -50,8 +50,21 @@ Before you're ready to help them, you need to make sure your information is corr
 
 module Day07
 
+open Common
+
+let input = 
+    System.IO.File.ReadAllLines "./inputs/day07.txt"
+    |> Array.map (fun line -> 
+        let parts = split " ()->," line
+        parts.[0], (int parts.[1], Array.skip 2 parts))
+
 let part1 () =
-    0
+    input 
+    |> Array.find (fun (name, _) -> 
+        input
+        |> Array.forall (fun (_, (_, holding)) -> 
+            not (Array.contains name holding)))
+    |> fst
 
 let part2 () =
     0

@@ -21,6 +21,14 @@ For example, imagine a scenario with only four memory banks:
 At this point, we've reached a state we've seen before: 2 4 1 2 was already seen. The infinite loop is detected after the fifth block redistribution cycle, and so the answer in this example is 5.
 
 Given the initial block counts in your puzzle input, how many redistribution cycles must be completed before a configuration is produced that has been seen before?
+
+--- Part Two ---
+
+Out of curiosity, the debugger would also like to know the size of the loop: starting from a state that has already been seen, how many block redistribution cycles must be performed before that same state is seen again?
+
+In the example above, 2 4 1 2 is seen again after four cycles, and so the answer in that example would be 4.
+
+How many cycles are in the infinite loop that arises from the configuration in your puzzle input?
 *)
 
 module Day06
@@ -31,23 +39,29 @@ let input = //[|0;2;7;0|]
     split " \t" "11	11	13	7	0	15	5	5	4	4	1	1	7	1	15	11"
     |> Array.map int
 
-let part1 () =
+let redistribute array =
+    let (i, n) = Array.indexed array |> Array.maxBy snd
+    let next = Array.copy array
+    next.[i] <- 0
+    [1..n] |> List.iter (fun oi -> 
+        let oi = (i + oi) % next.Length in next.[oi] <- next.[oi] + 1)
+    next
 
-    let redistribute array =
-        let (i, n) = Array.indexed array |> Array.maxBy snd
-        let next = Array.copy array
-        next.[i] <- 0
-        [1..n] |> List.iter (fun oi -> 
-            let oi = (i + oi) % next.Length in next.[oi] <- next.[oi] + 1)
-        next
+let rec firstDoubleSize soFar array c = 
+    let next = redistribute array
+    if Set.contains next soFar then (c + 1)
+    else
+        firstDoubleSize (Set.add next soFar) next (c + 1)
 
-    let rec firstDouble soFar array c = 
-        let next = redistribute array
-        if Set.contains next soFar then (c + 1)
-        else
-            firstDouble (Set.add next soFar) next (c + 1)
-
-    firstDouble Set.empty input 0
+let part1 () =    
+    firstDoubleSize Set.empty input 0
 
 let part2 () = 
-    0
+    let rec firstDouble soFar array = 
+        let next = redistribute array
+        if Set.contains next soFar then next
+        else
+            firstDouble (Set.add next soFar) next
+
+    let double = firstDouble Set.empty input
+    firstDoubleSize (Set.empty.Add double) double 0

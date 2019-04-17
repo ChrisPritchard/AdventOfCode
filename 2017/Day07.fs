@@ -71,6 +71,19 @@ module Day07
 open Common
 
 let input = 
+//    lines """pbga (66)
+//xhth (57)
+//ebii (61)
+//havc (66)
+//ktlj (57)
+//fwft (72) -> ktlj, cntj, xhth
+//qoyq (66)
+//padx (45) -> pbga, havc, qoyq
+//tknk (41) -> ugml, padx, fwft
+//jptl (61)
+//ugml (68) -> gyxo, ebii, jptl
+//gyxo (61)
+//cntj (57)"""
     System.IO.File.ReadAllLines "./inputs/day07.txt"
     |> Array.map (fun line -> 
         let parts = split " ()->," line
@@ -96,6 +109,20 @@ let part2 () =
                 newMap, acc + Map.find tower newMap)
         Map.add rootName (towersWeight + rootWeight) weightMap
 
-    let weightMap = weights (part1 ()) Map.empty
+    let baseProgram = part1 ()
+    let weightMap = weights baseProgram Map.empty
 
-    0
+    let rec findOff rootName offAmount = 
+        let (rootWeight, towers) = map.[rootName]
+        let towerWeights = 
+            towers 
+            |> Array.map (fun tower -> tower, weightMap.[tower])
+            |> Array.groupBy snd
+            |> Array.sortBy (snd >> Array.length)
+        if towerWeights.Length < 2 then rootWeight - offAmount
+        else
+            let (offName, offWeight) = (snd towerWeights.[0]).[0]
+            let offBy = offWeight - snd (snd towerWeights.[1]).[0]
+            findOff offName offBy
+
+    findOff baseProgram 0

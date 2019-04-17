@@ -85,5 +85,17 @@ let part1 () =
     |> fst
 
 let part2 () =
-    let root = part1 ()
+    let map = Map.ofArray input
+
+    let rec weights rootName weightMap =
+        let (rootWeight, towers) = map.[rootName]
+        let (weightMap, towersWeight) =
+            ((weightMap, 0), towers) 
+            ||> Array.fold (fun (weightMap, acc) tower ->
+                let newMap = weights tower weightMap
+                newMap, acc + Map.find tower newMap)
+        Map.add rootName (towersWeight + rootWeight) weightMap
+
+    let weightMap = weights (part1 ()) Map.empty
+
     0

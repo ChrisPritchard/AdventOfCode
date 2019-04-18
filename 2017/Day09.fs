@@ -48,7 +48,7 @@ What is the total score for all groups in your input?
 
 module Day09
 
-let input = "{}"//System.IO.File.ReadAllText "./inputs/day09.txt"
+let input = "{{{}}}"//System.IO.File.ReadAllText "./inputs/day09.txt"
 
 let part1 () =
     let rec ignoreGarbage =
@@ -62,15 +62,15 @@ let part1 () =
         function
         | '{'::tail -> 
             let childScore, after = counter 0 (parentScore + 1) tail
-            counter (childScore + childScores) (parentScore + 1) after
-        | '}'::tail -> parentScore + 1, tail
+            counter (childScores + childScore) parentScore after
+        | '}'::tail -> parentScore + 1 + childScores, tail
         | '<'::tail -> 
             let after = ignoreGarbage tail
             counter childScores parentScore after
         | '!'::_::tail | _::tail -> counter childScores parentScore tail
-        | [] ->  parentScore + 1, []
+        | [] ->  parentScore + 1 + childScores, []
 
-    counter 0 0 (Seq.toList input)
+    fst (counter 0 -1 (Seq.toList input))
 
 let part2 () =
     0

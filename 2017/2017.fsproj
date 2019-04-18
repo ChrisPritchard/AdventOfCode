@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="inputs\day11.txt" />
     <Content Include="inputs\day09.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -23,6 +24,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Compile Include="Common.fs" />
+    <Compile Include="Day11.fs" />
     <Compile Include="Day10.fs" />
     <Compile Include="Day09.fs" />
     <Compile Include="Day08.fs" />

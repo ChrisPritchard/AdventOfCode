@@ -51,7 +51,7 @@ let input = split "," "102,255,99,252,200,24,219,57,103,2,226,254,1,0,69,216" |>
 
 let part1 () =
     
-    let buffer = [|0..254|]
+    let buffer = [|0..255|]
 
     let rec twist pos skip =
         function

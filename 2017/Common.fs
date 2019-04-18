@@ -24,6 +24,11 @@ let lines s =
 
 let md5 = MD5.Create ()
 
+let hex (bytes: seq<byte>) =
+    bytes
+    |> Seq.map (fun b -> Convert.ToString(b, 16).PadLeft(2, '0'))
+    |> String.concat ""
+
 let hexMd5Hash (s: string) = 
     let bytes = (s.ToCharArray ()) |> Array.map byte
     let hash = md5.ComputeHash (bytes) |> Array.map (fun b -> Convert.ToString(b, 16).PadLeft(2, '0'))

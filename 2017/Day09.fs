@@ -44,6 +44,22 @@ Your goal is to find the total score for all groups in your input. Each group is
     {{<a!>},{<a!>},{<a!>},{<ab>}}, score of 1 + 2 = 3.
 
 What is the total score for all groups in your input?
+
+--- Part Two ---
+
+Now, you're ready to remove the garbage.
+
+To prove you've removed it, you need to count all of the characters within the garbage. The leading and trailing < and > don't count, nor do any canceled characters or the ! doing the canceling.
+
+    <>, 0 characters.
+    <random characters>, 17 characters.
+    <<<<>, 3 characters.
+    <{!>}>, 2 characters.
+    <!!>, 0 characters.
+    <!!!>>, 0 characters.
+    <{o""i!a,<{i<a>, 10 characters.
+
+How many non-canceled characters are within the garbage in your puzzle input?
 *)
 
 module Day09
@@ -74,4 +90,24 @@ let part1 () =
     fst (counter 0 -1 (Seq.toList input))
 
 let part2 () =
-    0
+    let rec countGarbage acc =
+        function 
+        | '!'::_::tail -> countGarbage acc tail
+        | '>'::tail -> acc, tail
+        | _::tail -> countGarbage (acc + 1) tail
+        | [] -> acc, []
+
+    let rec counter acc =
+        function
+        | '{'::tail -> 
+            let acc, after = counter acc tail
+            counter acc after
+        | '}'::tail -> 
+            acc, tail
+        | '<'::tail -> 
+            let acc, after = countGarbage acc tail
+            counter acc after
+        | '!'::_::tail | _::tail -> counter acc tail
+        | [] ->  acc, []
+
+    fst (counter 0 (Seq.toList input))

@@ -47,10 +47,22 @@ module Day10
 
 open Common
 
-let input = split "," "102,255,99,252,200,24,219,57,103,2,226,254,1,0,69,216" |> Array.map int
+let input = split "," "3,4,1,5" |> Seq.map int |> Seq.toList
 
 let part1 () =
-    0
+    
+    let buffer = [|0..4|]
+
+    let rec twist pos skip =
+        function
+        | [] -> ()
+        | length::rest ->
+            let section = Array.concat [buffer;buffer] |> Array.skip pos |> Array.take length
+            Array.blit (Array.rev section) 0 buffer pos length
+            twist ((pos + length + skip) % buffer.Length) (skip + 1) rest
+
+    twist 0 0 input
+    buffer.[0] * buffer.[1]
 
 let part2 () =
     0

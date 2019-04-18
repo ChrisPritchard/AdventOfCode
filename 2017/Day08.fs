@@ -63,5 +63,7 @@ let part1 () =
 
 let part2 () =
     
-    let (regs, _) = Array.mapFold (runCommand >> fun r -> r, r) Map.empty input
-    0
+    let (regs, _) = 
+        Array.mapFold (fun m l -> 
+            let r = runCommand m l in r, r) Map.empty input
+    regs |> Seq.collect Map.toList |> Seq.map snd |> Seq.max

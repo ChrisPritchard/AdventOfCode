@@ -95,7 +95,7 @@ let part1 () =
 let part2 () =
 
     let lengthSuffix = [|17; 31; 73; 47; 23|]
-    let lengths = input |> Seq.map int |> Seq.toArray |> Array.append lengthSuffix
+    let lengths = Array.append (input |> Seq.map int |> Seq.toArray) lengthSuffix
     let allRounds = [|1..64|] |> Array.map (fun _ -> lengths) |> Array.concat |> Array.toList
     
     let sparseHash = twist [|0..255|] 0 0 allRounds

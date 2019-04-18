@@ -48,8 +48,29 @@ What is the total score for all groups in your input?
 
 module Day09
 
+let input = "{}"//System.IO.File.ReadAllText "./inputs/day09.txt"
+
 let part1 () =
-    0
+    let rec ignoreGarbage =
+        function 
+        | '!'::_::tail -> ignoreGarbage tail
+        | '>'::tail -> tail
+        | _::tail -> ignoreGarbage tail
+        | [] -> []
+
+    let rec counter childScores parentScore =
+        function
+        | '{'::tail -> 
+            let childScore, after = counter 0 (parentScore + 1) tail
+            counter (childScore + childScores) (parentScore + 1) after
+        | '}'::tail -> parentScore + 1, tail
+        | '<'::tail -> 
+            let after = ignoreGarbage tail
+            counter childScores parentScore after
+        | '!'::_::tail | _::tail -> counter childScores parentScore tail
+        | [] ->  parentScore + 1, []
+
+    counter 0 0 (Seq.toList input)
 
 let part2 () =
     0

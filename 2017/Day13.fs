@@ -162,7 +162,57 @@ In this situation, you are caught in layers 0 and 6, because your packet entered
 The severity of getting caught on a layer is equal to its depth multiplied by its range. (Ignore layers in which you do not get caught.) The severity of the whole trip is the sum of these values. In the example above, the trip severity is 0*3 + 6*4 = 24.
 
 Given the details of the firewall you've recorded, if you leave immediately, what is the severity of your whole trip?
-*)
+
+
+[ ] [ ]         [ ]     [ ]
+[S]             [S]     [S]
+                [ ]     [ ]
+
+
+Picosecond 14:
+ 0   1   2   3   4   5   6
+[ ] [S] ... ... ( ) ... [ ]
+[ ] [ ]         [ ]     [ ]
+[S]             [S]     [S]
+                [ ]     [ ]
+
+ 0   1   2   3   4   5   6
+[ ] [ ] ... ... ( ) ... [ ]
+[S] [S]         [ ]     [ ]
+[ ]             [ ]     [ ]
+                [S]     [S]
+
+
+Picosecond 15:
+ 0   1   2   3   4   5   6
+[ ] [ ] ... ... [ ] (.) [ ]
+[S] [S]         [ ]     [ ]
+[ ]             [ ]     [ ]
+                [S]     [S]
+
+ 0   1   2   3   4   5   6
+[S] [S] ... ... [ ] (.) [ ]
+[ ] [ ]         [ ]     [ ]
+[ ]             [S]     [S]
+                [ ]     [ ]
+
+
+Picosecond 16:
+ 0   1   2   3   4   5   6
+[S] [S] ... ... [ ] ... ( )
+[ ] [ ]         [ ]     [ ]
+[ ]             [S]     [S]
+                [ ]     [ ]
+
+ 0   1   2   3   4   5   6
+[ ] [ ] ... ... [ ] ... ( )
+[S] [S]         [S]     [S]
+[ ]             [ ]     [ ]
+                [ ]     [ ]
+
+Because all smaller delays would get you caught, the fewest number of picoseconds you would need to delay to get through safely is 10.
+
+What is the fewest number of picoseconds that you need to delay the packet to pass through the firewall without being caught?*)
 
 module Day13
 
@@ -170,11 +220,30 @@ open Common
 
 let input = 
     System.IO.File.ReadAllLines "./inputs/day13.txt"
-    |> Array.map (split ": " >> Array.map int >> fun sa -> sa.[0], sa.[1])
+    //lines """0: 3
+    //1: 2
+    //4: 4
+    //6: 4"""
+    |> Array.map (split ": \t" >> Array.map int >> fun sa -> sa.[0], sa.[1])
     |> Map.ofArray
 
+let severity counter0 depth time =
+    match Map.tryFind depth input with
+    | None -> 0
+    | Some range ->
+        let pos = time % ((range * 2) - 2)
+        let relPos = if pos >= range then (range - 1) - (pos - (range - 1)) else pos
+        if relPos = 0 then 
+            if (depth = 0 || range = 0) && counter0 then 1 else depth * range 
+        else 0
+
 let part1 () =
-    0
+    [0..100]
+    |> List.sumBy (fun depthAndTime -> 
+        severity false depthAndTime depthAndTime)
 
 let part2 () =
-    0
+    Seq.initInfinite id |> Seq.find (fun delay ->
+        [0..100]
+        |> Seq.forall (fun depth -> 
+            severity true depth (depth + delay) = 0))

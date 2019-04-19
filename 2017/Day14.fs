@@ -78,7 +78,7 @@ let binary (c: char) =
         else int c - int 'a' + 10
     System.Convert.ToString(i, 2).PadLeft(4, '0')
 
-let input = "flqrgnkx"//"hxtvlmkl"
+let input = "hxtvlmkl"
 
 let map = 
     [|0..127|] 
@@ -95,4 +95,21 @@ let part1 () =
     |> Seq.length
 
 let part2 () =
-    0
+    let mutable count, visited = 0, Set.empty
+
+    let rec addAdjacent (x, y) =
+        visited <- Set.add (x, y) visited
+        [-1,0;1,0;0,-1;0,1] 
+        |> List.map (fun (dx, dy) -> (x + dx, y + dy))
+        |> List.filter (fun (ox, oy) -> 
+            ox >= 0 && ox <= 127 && oy >= 0 && oy <= 127 
+            && not (Set.contains (ox, oy) visited)
+            && map.[ox, oy] = '1')
+        |> List.iter addAdjacent
+
+    for x = 0 to 127 do
+        for y = 0 to 127 do
+            if map.[x, y] = '1' && not (Set.contains (x, y) visited) then
+                count <- count + 1
+                addAdjacent (x, y)
+    count

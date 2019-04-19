@@ -35,8 +35,8 @@ let part1 () =
     let apply (dancers: char []) (move: string []) =
         match move.[0].[0] with
         | 's' -> 
-            let count = int (asString move.[0].[1..]) + 1
-            Array.append dancers.[dancers.Length - count..] dancers.[0..dancers.Length - count]
+            let count = int (asString move.[0].[1..])
+            Array.append dancers.[dancers.Length - count..] dancers.[0..dancers.Length - count - 1]
         | 'x' ->
             let pos1 = int move.[0].[1..]
             let pos2 = int move.[1]

@@ -25,12 +25,37 @@ For example:
     ne,ne,sw,sw is 0 steps away (back where you started).
     ne,ne,s,s is 2 steps away (se,se).
     se,sw,se,sw,sw is 3 steps away (s,s,sw).
+
+--- Part Two ---
+
+How many steps away is the furthest he ever got from his starting position?
 *)
 
 module Day11
 
+open Common
+
+let input = split "," <| System.IO.File.ReadAllText "./inputs/day11.txt"
+
+// using cubic coords from here: https://www.redblobgames.com/grids/hexagons/
+type Hex = Cube of x:int * y:int * z:int
+
+let next (Cube (x, y, z)) dir =
+    match dir with
+    | "n" -> Cube (x, y + 1, z - 1)
+    | "ne" -> Cube (x + 1, y, z - 1)
+    | "se" -> Cube (x + 1, y - 1, z)
+    | "s" -> Cube (x, y - 1, z + 1)
+    | "sw" -> Cube (x - 1, y, z + 1)
+    | "nw" -> Cube (x - 1, y + 1, z)
+    | _ -> failwith "invalid direction"
+
+let distance (Cube (x, y, z)) =
+    (abs x + abs y + abs z) / 2
+
 let part1 () =
-    0
+    distance (Array.fold next (Cube (0, 0, 0)) input)
 
 let part2 () =
-    0
+    let mapFold = fun current dir -> let res = next current dir in distance res, res
+    Array.mapFold mapFold (Cube (0, 0, 0)) input |> fst |> Array.max

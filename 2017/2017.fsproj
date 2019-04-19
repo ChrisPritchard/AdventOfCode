@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="inputs\day11.txt" />
+    <Content Include="inputs\day11.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="inputs\day09.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

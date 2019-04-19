@@ -41,11 +41,16 @@ open Common
 
 let input = 
     System.IO.File.ReadAllLines "./inputs/day12.txt"
-    |> Array.map (split " <->," >> Array.map int >> fun sa -> sa.[0], Set.ofArray (sa.[1..]))
+    |> Array.map (split " <->," >> Array.map int >> fun sa -> sa.[0], sa.[1..])
     |> Map.ofArray
 
 let part1 () =
-    0
+    let rec counter acc n =
+        let others = input.[n]
+        others 
+        |> Array.filter (fun on -> not (Set.contains on acc))
+        |> Array.fold (fun acc on -> counter (Set.add on acc) on) acc
+    counter (Set.empty.Add 0) 0 |> Set.count
 
 let part2 () =
     0

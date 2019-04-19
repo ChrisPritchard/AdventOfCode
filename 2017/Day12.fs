@@ -44,13 +44,17 @@ let input =
     |> Array.map (split " <->," >> Array.map int >> fun sa -> sa.[0], sa.[1..])
     |> Map.ofArray
 
+let rec group acc n =
+    let others = input.[n]
+    others 
+    |> Array.filter (fun on -> not (Set.contains on acc))
+    |> Array.fold (fun acc on -> group (Set.add on acc) on) acc
+
 let part1 () =
-    let rec counter acc n =
-        let others = input.[n]
-        others 
-        |> Array.filter (fun on -> not (Set.contains on acc))
-        |> Array.fold (fun acc on -> counter (Set.add on acc) on) acc
-    counter (Set.empty.Add 0) 0 |> Set.count
+    group (Set.empty.Add 0) 0 |> Set.count
 
 let part2 () =
-    0
+    [0..1999] 
+    |> List.map (fun n -> group (Set.empty.Add n) n) 
+    |> List.distinct 
+    |> List.length

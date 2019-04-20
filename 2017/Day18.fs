@@ -80,60 +80,71 @@ let input = System.IO.File.ReadAllLines "./inputs/day18.txt"
 let inline regVal reg registers =
     Map.tryFind reg registers |> Option.defaultValue 0L
 
-let regOrVal (text: string) registers =
-    if System.Char.IsLetter text.[0] then regVal text.[0] registers else int64 text
+type Inst = 
+    | Set of reg: char * value: Source
+    | Add of reg: char * value: Source
+    | Mul of reg: char * value: Source
+    | Mod of reg: char * value: Source
+    | Jgz of reg: char * value: Source
+    | Rcv of reg: char
+    | Snd of value: Source
+and Source = Reg of char | Value of int64
 
-let soundReg = '@'
-let recvReg = '&'            
+let getSource (text: string) =
+    if System.Char.IsLetter text.[0] then Reg (text.[0]) else Value (int64 text)
 
-let runInstruction index (instructions: string []) registers =
-    let elems = split " " instructions.[index]
-    match elems.[0] with
-    | "snd" -> 
-        let newVal = regOrVal elems.[1] registers
-        index + 1, Map.add soundReg newVal registers
-    | "set" -> 
-        let reg = elems.[1].[0]
-        let newVal = regOrVal elems.[2] registers
-        index + 1, Map.add reg newVal registers
-    | "add" -> 
-        let reg = elems.[1].[0]
-        let newVal = regVal reg registers + regOrVal elems.[2] registers
-        index + 1, Map.add reg newVal registers
-    | "mul" -> 
-        let reg = elems.[1].[0]
-        let newVal = regVal reg registers * regOrVal elems.[2] registers
-        index + 1, Map.add reg newVal registers
-    | "mod" -> 
-        let reg = elems.[1].[0]
-        let newVal = regVal reg registers % regOrVal elems.[2] registers
-        index + 1, Map.add reg newVal registers
-    | "rcv" -> 
-        if regOrVal elems.[1] registers = 0L then
-            index + 1, registers
-        else
-            let lastSound = registers.[soundReg]
-            index + 1, Map.add recvReg lastSound registers
-    | "jgz" -> 
-        let regVal = regOrVal elems.[1] registers
-        let jump = regOrVal elems.[2] registers
-        if regVal <= 0L then
-            index + 1, registers
-        else
-            index + int jump, registers
-    | _ -> failwith "unrecognised instruction"
+let getSourceValue registers =
+    function
+    | Value n -> n
+    | Reg c -> regVal c registers
+
+let instructions =
+    Array.map (fun line ->
+        match split " " line with
+        | [|"set";reg;regOrVal|] -> Set (reg.[0], getSource regOrVal)
+        | [|"add";reg;regOrVal|] -> Add (reg.[0], getSource regOrVal)
+        | [|"mul";reg;regOrVal|] -> Mul (reg.[0], getSource regOrVal)
+        | [|"mod";reg;regOrVal|] -> Mod (reg.[0], getSource regOrVal)
+        | [|"jgz";reg;regOrVal|] -> Jgz (reg.[0], getSource regOrVal)
+        | [|"rcv";reg|] -> Rcv reg.[0]
+        | [|"snd";regOrVal|] -> Snd (getSource regOrVal)
+        | _ -> failwith "unrecognised instruction") input
+
+let apply registers =
+    function
+    | Set (target, source) ->
+        Map.add target (getSourceValue registers source) registers
+    | Add (target, source) ->
+        let newVal = regVal target registers + getSourceValue registers source
+        Map.add target newVal registers
+    | Mul (target, source) ->
+        let newVal = regVal target registers * getSourceValue registers source
+        Map.add target newVal registers
+    | Mod (target, source) ->
+        let newVal = regVal target registers % getSourceValue registers source
+        Map.add target newVal registers
+    | _ -> registers
 
 let part1 () =
 
-    let mutable index = 0
-    let mutable registers = Map.empty
-    while index >= 0 && index < input.Length do
-        let newIndex, newRegisters = runInstruction index input registers
-        index <- newIndex
-        registers <- newRegisters
-        if Map.containsKey recvReg registers then
-            index <- -1 // exit loop
-    int registers.[recvReg]
+    let rec processor index registers lastSound =
+        match instructions.[index] with
+        | Snd source ->
+            processor (index + 1) registers (getSourceValue registers source)
+        | Rcv register ->
+            if regVal register registers = 0L then
+                processor (index + 1) registers lastSound
+            else
+                int lastSound
+        | Jgz (register, amount) ->
+            if regVal register registers <= 0L then
+                processor (index + 1) registers lastSound
+            else
+                processor (index + int (getSourceValue registers amount)) registers lastSound
+        | other ->
+            processor (index + 1) (apply registers other) lastSound
+
+    processor 0 Map.empty 0L
 
 let part2 () =
     0

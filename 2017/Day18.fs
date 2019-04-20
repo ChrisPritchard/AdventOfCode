@@ -98,47 +98,51 @@ let runInstruction index (instructions: string []) registers =
 let part1 () =
     
     (*
-    set i 31        
-    set a 1     
-    mul p 17        p is 0 so 0
-    jgz p p         no jump
-    mul a 2         
-    add i -1
-    jgz i -2
-    add a -1
-    set i 127
-    set p 952
-    mul p 8505
-    mod p a
-    mul p 129749
-    add p 12345
-    mod p a
-    set b p
-    mod b 10000
-    snd b
-    add i -1
-    jgz i -9
-    jgz a 3
-    rcv b
-    jgz b -1
-    set f 0
-    set i 126
-    rcv a
-    rcv b
-    set p a
-    mul p -1
-    add p b
-    jgz p 4
-    snd a
-    set a b
-    jgz 1 3
-    snd b
-    set f 1
-    add i -1
-    jgz i -11
-    snd a
-    jgz f -16
-    jgz a -19*)
+        // loop one
+0 :        set i 31        
+1 :        set a 1     
+2 :    mul p 17        p is 0 so 0
+3 :    jgz p p         no jump
+4 :        mul a 2         
+5 :        add i -1
+6 :        jgz i -2        a becomes 2^31 = 2147483648    
+7 :    add a -1        then a = 2147483647
+        
+        // loop two
+8 :    set i 127
+9 :    set p 952
+10:        mul p 8505      8096760 on first loop   3631823828010 on second loop
+11:        mod p a         no change               428980933
+12:        mul p 129749    1050546513240           55659847075817
+13:        add p 12345     1050546525585           55659847088162
+14:        mod p a         427022202               1365925216
+15:        set b p
+16:        mod b 10000     2202                    5216
+17:        snd b
+18:    add i -1
+19:    jgz i -9
+
+20:    jgz a 3
+21:        rcv b                infinite loop here if b > 0
+22:        jgz b -1
+23:            set f 0
+24:            set i 126
+25:            rcv a
+26:                rcv b
+27:                set p a
+28:                mul p -1
+29:                add p b
+30:                jgz p 4
+31:                snd a
+32:                set a b
+33:                jgz 1 3
+34:                snd b
+35:                set f 1
+36:                add i -1
+37:                jgz i -11
+38:            snd a
+39:            jgz f -16
+40:        jgz a -19*)
 
     let mutable index = 0
     let mutable registers = Map.empty
@@ -146,6 +150,8 @@ let part1 () =
         let newIndex, newRegisters = runInstruction index input registers
         index <- newIndex
         registers <- newRegisters
+        if index = 21 && registers.['b'] > 0L then
+            index <- -1
     registers.[recvReg]
 
 let part2 () =

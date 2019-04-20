@@ -61,9 +61,8 @@ let runInstruction index (instructions: string []) registers =
     let elems = split " " instructions.[index]
     match elems.[0] with
     | "snd" -> 
-        let reg = soundReg
         let newVal = regOrVal elems.[1] registers
-        index + 1, Map.add reg newVal registers
+        index + 1, Map.add soundReg newVal registers
     | "set" -> 
         let reg = elems.[1].[0]
         let newVal = regOrVal elems.[2] registers
@@ -81,11 +80,11 @@ let runInstruction index (instructions: string []) registers =
         let newVal = regVal reg registers % regOrVal elems.[2] registers
         index + 1, Map.add reg newVal registers
     | "rcv" -> 
-        let regVal = regOrVal elems.[1] registers
-        if regVal = 0L then
+        if regOrVal elems.[1] registers = 0L then
             index + 1, registers
         else
-            index + 1, Map.add recvReg regVal registers
+            let lastSound = registers.[soundReg]
+            index + 1, Map.add recvReg lastSound registers
     | "jgz" -> 
         let regVal = regOrVal elems.[1] registers
         let jump = regOrVal elems.[2] registers
@@ -150,9 +149,9 @@ let part1 () =
         let newIndex, newRegisters = runInstruction index input registers
         index <- newIndex
         registers <- newRegisters
-        if index = 21 && registers.['b'] > 0L then
-            index <- -1
-    registers.[recvReg]
+        if Map.containsKey recvReg registers then
+            index <- -1 // exit loop
+    int registers.[recvReg]
 
 let part2 () =
     0

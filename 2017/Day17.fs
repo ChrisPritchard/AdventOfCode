@@ -61,14 +61,27 @@ let part1 () =
 
     finalBuffer.[index + 1 % finalBuffer.Length]
 
+type Node = {
+    mutable last: Node
+    mutable next: Node
+    value: int
+}
+
 let part2 () =
     
-    let step ((buffer: int []), index, after0) n =
-        let afterStep = (index + input) % buffer.Length
-        let after0 = if buffer.[afterStep] = 0 then n else after0
-        Array.concat [|buffer.[0..afterStep]; [|n|]; buffer.[afterStep + 1..]|], afterStep + 1, after0
+    let start = { last = Unchecked.defaultof<Node>; next = Unchecked.defaultof<Node>; value = 0 }
+    start.next <- start; start.last <- start
 
-    let _, _, after0 = 
-        [1..50000000] |> List.fold step ([|0|], 0, 0)
+    let step (current: Node, after0) n =
+        let mutable current = current
+        for x = 1 to input do
+            current <- current.next
+        let after0 = if current.value = 0 then n else after0
+        let newNode = { last = current; next = current.next; value = n }
+        current.next <- newNode
+        newNode, after0
+
+    let _, after0 = 
+        [1..50000000] |> List.fold step (start, 0)
 
     after0

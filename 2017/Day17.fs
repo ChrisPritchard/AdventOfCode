@@ -61,27 +61,14 @@ let part1 () =
 
     finalBuffer.[index + 1 % finalBuffer.Length]
 
-type Node = {
-    mutable last: Node
-    mutable next: Node
-    value: int
-}
-
 let part2 () =
     
-    let start = { last = Unchecked.defaultof<Node>; next = Unchecked.defaultof<Node>; value = 0 }
-    start.next <- start; start.last <- start
+    // 0 is always the first entry. so after zero is whenever the pos is 1
 
-    let step (current: Node, after0) n =
-        let mutable current = current
-        for x = 1 to input do
-            current <- current.next
-        let after0 = if current.value = 0 then n else after0
-        let newNode = { last = current; next = current.next; value = n }
-        current.next <- newNode
-        newNode, after0
-
-    let _, after0 = 
-        [1..50000000] |> List.fold step (start, 0)
+    let mutable index, after0 = 0, 0
+    for n = 1 to 50000000 do
+        let afterStep = (index + input) % n
+        if afterStep = 0 then after0 <- n
+        index <- afterStep + 1
 
     after0

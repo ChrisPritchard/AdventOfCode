@@ -40,6 +40,35 @@ jgz a -2
 At the time the recover operation is executed, the frequency of the last sound played is 4.
 
 What is the value of the recovered frequency (the value of the most recently played sound) the first time a rcv instruction is executed with a non-zero value?
+
+--- Part Two ---
+
+As you congratulate yourself for a job well done, you notice that the documentation has been on the back of the tablet this entire time. While you actually got most of the instructions correct, there are a few key differences. This assembly code isn't about sound at all - it's meant to be run twice at the same time.
+
+Each running copy of the program has its own set of registers and follows the code independently - in fact, the programs don't even necessarily run at the same speed. To coordinate, they use the send (snd) and receive (rcv) instructions:
+
+    snd X sends the value of X to the other program. These values wait in a queue until that program is ready to receive them. Each program has its own message queue, so a program can never receive a message it sent.
+    rcv X receives the next value and stores it in register X. If no values are in the queue, the program waits for a value to be sent to it. Programs do not continue to the next instruction until they have received a value. Values are received in the order they are sent.
+
+Each program also has its own program ID (one 0 and the other 1); the register p should begin with this value.
+
+For example:
+
+snd 1
+snd 2
+snd p
+rcv a
+rcv b
+rcv c
+rcv d
+
+Both programs begin by sending three values to the other. Program 0 sends 1, 2, 0; program 1 sends 1, 2, 1. Then, each program receives a value (both 1) and stores it in a, receives another value (both 2) and stores it in b, and then each receives the program ID of the other program (program 0 receives 1; program 1 receives 0) and stores it in c. Each program now sees a different value in its own copy of register c.
+
+Finally, both programs try to rcv a fourth time, but no data is waiting for either of them, and they reach a deadlock. When this happens, both programs terminate.
+
+It should be noted that it would be equally valid for the programs to run at different speeds; for example, program 0 might have sent all three values and then stopped at the first rcv before program 1 executed even its first instruction.
+
+Once both of your programs have terminated (regardless of what caused them to do so), how many times did program 1 send a value?
 *)
 
 module Day18
@@ -48,14 +77,14 @@ open Common
 
 let input = System.IO.File.ReadAllLines "./inputs/day18.txt"
 
-let regVal reg registers =
+let inline regVal reg registers =
     Map.tryFind reg registers |> Option.defaultValue 0L
 
 let regOrVal (text: string) registers =
     if System.Char.IsLetter text.[0] then regVal text.[0] registers else int64 text
 
 let soundReg = '@'
-let recvReg = '&'
+let recvReg = '&'            
 
 let runInstruction index (instructions: string []) registers =
     let elems = split " " instructions.[index]
@@ -95,53 +124,6 @@ let runInstruction index (instructions: string []) registers =
     | _ -> failwith "unrecognised instruction"
 
 let part1 () =
-    
-    (*
-        // loop one
-0 :        set i 31        
-1 :        set a 1     
-2 :    mul p 17        p is 0 so 0
-3 :    jgz p p         no jump
-4 :        mul a 2         
-5 :        add i -1
-6 :        jgz i -2        a becomes 2^31 = 2147483648    
-7 :    add a -1        then a = 2147483647
-        
-        // loop two
-8 :    set i 127
-9 :    set p 952
-10:        mul p 8505      8096760 on first loop   3631823828010 on second loop
-11:        mod p a         no change               428980933
-12:        mul p 129749    1050546513240           55659847075817
-13:        add p 12345     1050546525585           55659847088162
-14:        mod p a         427022202               1365925216
-15:        set b p
-16:        mod b 10000     2202                    5216
-17:        snd b
-18:    add i -1
-19:    jgz i -9
-
-20:    jgz a 3
-21:        rcv b                infinite loop here if b > 0
-22:        jgz b -1
-23:            set f 0
-24:            set i 126
-25:            rcv a
-26:                rcv b
-27:                set p a
-28:                mul p -1
-29:                add p b
-30:                jgz p 4
-31:                snd a
-32:                set a b
-33:                jgz 1 3
-34:                snd b
-35:                set f 1
-36:                add i -1
-37:                jgz i -11
-38:            snd a
-39:            jgz f -16
-40:        jgz a -19*)
 
     let mutable index = 0
     let mutable registers = Map.empty

@@ -35,6 +35,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Compile Include="Common.fs" />
+    <Compile Include="Day17.fs" />
     <Compile Include="Day16.fs" />
     <Compile Include="Day15.fs" />
     <Compile Include="Day14.fs" />

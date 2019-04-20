@@ -32,6 +32,18 @@ Eventually, after 2017 insertions, the section of the circular buffer near the l
 Perhaps, if you can identify the value that will ultimately be after the last value written (2017), you can short-circuit the spinlock. In this example, that would be 638.
 
 What is the value after 2017 in your completed circular buffer?
+
+--- Part Two ---
+
+The spinlock does not short-circuit. Instead, it gets more angry. At least, you assume that's what happened; it's spinning significantly faster than it was a moment ago.
+
+You have good news and bad news.
+
+The good news is that you have improved calculations for how to stop the spinlock. They indicate that you actually need to identify the value after 0 in the current state of the circular buffer.
+
+The bad news is that while you were determining this, the spinlock has just finished inserting its fifty millionth value (50000000).
+
+What is the value after 0 the moment 50000000 is inserted?
 *)
 
 module Day17
@@ -50,4 +62,13 @@ let part1 () =
     finalBuffer.[index + 1 % finalBuffer.Length]
 
 let part2 () =
-    0
+    
+    let step ((buffer: int []), index, after0) n =
+        let afterStep = (index + input) % buffer.Length
+        let after0 = if buffer.[afterStep] = 0 then n else after0
+        Array.concat [|buffer.[0..afterStep]; [|n|]; buffer.[afterStep + 1..]|], afterStep + 1, after0
+
+    let _, _, after0 = 
+        [1..50000000] |> List.fold step ([|0|], 0, 0)
+
+    after0

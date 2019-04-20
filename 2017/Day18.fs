@@ -49,10 +49,10 @@ open Common
 let input = System.IO.File.ReadAllLines "./inputs/day18.txt"
 
 let regVal reg registers =
-    Map.tryFind reg registers |> Option.defaultValue 0
+    Map.tryFind reg registers |> Option.defaultValue 0L
 
 let regOrVal (text: string) registers =
-    if System.Char.IsLetter text.[0] then regVal text.[0] registers else int text
+    if System.Char.IsLetter text.[0] then regVal text.[0] registers else int64 text
 
 let soundReg = '@'
 let recvReg = '&'
@@ -82,20 +82,64 @@ let runInstruction index (instructions: string []) registers =
         index + 1, Map.add reg newVal registers
     | "rcv" -> 
         let regVal = regOrVal elems.[1] registers
-        if regVal = 0 then
+        if regVal = 0L then
             index + 1, registers
         else
             index + 1, Map.add recvReg regVal registers
     | "jgz" -> 
         let regVal = regOrVal elems.[1] registers
         let jump = regOrVal elems.[2] registers
-        if regVal = 0 then
+        if regVal <= 0L then
             index + 1, registers
         else
-            index + jump, registers
+            index + int jump, registers
     | _ -> failwith "unrecognised instruction"
 
 let part1 () =
+    
+    (*
+    set i 31        
+    set a 1     
+    mul p 17        p is 0 so 0
+    jgz p p         no jump
+    mul a 2         
+    add i -1
+    jgz i -2
+    add a -1
+    set i 127
+    set p 952
+    mul p 8505
+    mod p a
+    mul p 129749
+    add p 12345
+    mod p a
+    set b p
+    mod b 10000
+    snd b
+    add i -1
+    jgz i -9
+    jgz a 3
+    rcv b
+    jgz b -1
+    set f 0
+    set i 126
+    rcv a
+    rcv b
+    set p a
+    mul p -1
+    add p b
+    jgz p 4
+    snd a
+    set a b
+    jgz 1 3
+    snd b
+    set f 1
+    add i -1
+    jgz i -11
+    snd a
+    jgz f -16
+    jgz a -19*)
+
     let mutable index = 0
     let mutable registers = Map.empty
     while index >= 0 && index < input.Length do

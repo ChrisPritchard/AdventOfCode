@@ -199,7 +199,6 @@ let part2 () =
                 p2Queue <- List.tail p2Queue
             | Sent (value, regs, index) -> 
                 p1Queue <- p1Queue @ [value]
-                sentCount <- sentCount + 1
                 p1State <- runFor index regs
             | Running (regs, index) -> 
                 p1State <- runFor index regs
@@ -211,6 +210,7 @@ let part2 () =
                 p1Queue <- List.tail p1Queue
             | Sent (value, regs, index) -> 
                 p2Queue <- p2Queue @ [value]
+                sentCount <- sentCount + 1
                 p2State <- runFor index regs
             | Running (regs, index) -> 
                 p2State <- runFor index regs

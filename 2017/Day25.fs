@@ -63,3 +63,25 @@ Recreate the Turing machine and save the computer! What is the diagnostic checks
 
 module Day25
 
+let part1 () =
+
+    let tape = Map.empty<int, int>
+    let startX = 0
+    let startS = 'A'
+    let steps = 12919244
+
+    let rec turing tape x state steps =
+        if steps = 0 then
+            tape |> Map.toList |> List.sumBy snd
+        else
+            let currentVal = Map.tryFind x tape |> Option.defaultValue 0
+            if state = 'A' && currentVal = 0 then
+                turing (Map.add x 1 tape) (x + 1) 'B' (steps - 1)
+            elif state = 'A' then
+                turing (Map.add x 0 tape) (x - 1) 'C' (steps - 1)
+            elif state = 'B' && currentVal = 0 then
+                turing (Map.add x 1 tape) (x - 1) 'A' (steps - 1)
+            elif state = 'B' then
+                turing (Map.add x 1 tape) (x + 1) 'D' (steps - 1)
+
+    0

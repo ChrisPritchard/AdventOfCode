@@ -15,7 +15,20 @@ The code it's running seems to be a variant of the kind you saw recently on that
 The coprocessor is currently set to some kind of debug mode, which allows for testing, but prevents it from doing any meaningful work.
 
 If you run the program (your puzzle input), how many times is the mul instruction invoked?
-*)
+
+--- Part Two ---
+
+Now, it's time to fix the problem.
+
+The debug mode switch is wired directly to register a. You flip the switch, which makes register a now start at 1 when the program is executed.
+
+Immediately, the coprocessor begins to overheat. Whoever wrote this program obviously didn't choose a very efficient implementation. You'll need to optimize the program if it has any hope of completing before Santa needs that printer working.
+
+The coprocessor's ultimate goal is to determine the final value left in register h once the program completes. Technically, if it had that... it wouldn't even need to run the program.
+
+After setting register a to 1, if the program were to run to completion, what value would be left in register h?
+
+Although it hasn't changed, you can still get your puzzle in*)
 
 module Day23
 
@@ -83,4 +96,23 @@ let part1 () =
     processor 0 Map.empty 0
 
 let part2 () =
-    0
+    
+    // based on analysis, count of non-primes between 106500 and 123500
+
+    // prime tester from here: http://www.fssnip.net/7E/title/Prime-testing
+    let isPrime n =
+        match n with
+        | _ when n > 3 && (n % 2 = 0 || n % 3 = 0) -> false
+        | _ ->
+            let maxDiv = int(System.Math.Sqrt(float n)) + 1
+            let rec f d i = 
+                if d > maxDiv then 
+                    true
+                else
+                    if n % d = 0 then 
+                        false
+                    else
+                        f (d + i) (6 - i)     
+            f 5 2
+    
+    [106500..17..123500] |> List.filter (isPrime >> not) |> List.length

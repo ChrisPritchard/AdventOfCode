@@ -1,32 +1,37 @@
 ﻿set b 65
-set c b				// c and b are 65
-jnz a 2				// a is 0 so nothing
-jnz 1 5				// jump 5
-mul b 100
-sub b -100000
+set c b			// b and c are 65
+jnz a 2			// if a is 1 then
+jnz 1 5
+mul b 100		
+sub b -100000	// b is 106500
 set c b
-sub c -17000
-	set f 1			
-	set d 2			
-		set e 2			
-			set g d								2			
-			mul g e			// g is 4			2		0
-			sub g b			// 4 - 65 is -61	-63		-65
-			jnz g 2			
-				set f 0		// skipped			
-			sub e -1									-2
-			set g e			// g is -1					
-			sub g b			// g is -66			-65		etc
-			jnz g -8
-		sub d -1
-		set g d
-		sub g b
-		jnz g -13
-	jnz f 2
-	sub h -1
-	set g b
-	sub g c
-	jnz g 2
-		jnz 1 3 // program exit
-	sub b -17
-	jnz 1 -23
+sub c -17000	// c is 123500 (17000 difference from b)
+
+set f 1
+set d 2
+set e 2
+	set g d
+	mul g e		// when e reaches 53250 (half b) on the first loop
+	sub g b		// g becomes 0
+	jnz g 2		// if g is 0 then 
+	set f 0		// f is 0 (h is increased by 1)
+	sub e -1
+	set g e		// when e reaches b then
+	sub g b		// it becomes 0
+	jnz g -8	// loop is existed
+sub d -1	// d is increased. so the loop repeats while d <> 106500
+set g d
+sub g b
+jnz g -13
+
+jnz f 2		// if f is 0 then
+sub h -1	// h is increased by 1
+
+set g b		// g is set to b
+sub g c		// then c is removed from it
+jnz g 2		// if g is 0 (c = b) then
+jnz 1 3		// the app is existed
+sub b -17	// else b is increased by 17
+jnz 1 -23	// this means with enhanced settings this is looped 1000 times
+
+// h is the count of prime numbers between 106500 and 123500?

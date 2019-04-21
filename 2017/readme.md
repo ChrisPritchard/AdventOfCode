@@ -18,6 +18,6 @@ Notes on days:
 
 - Day 18 part 2 took a long while to get right in my head, and when I finally got it running it took longer before I realised I had a critical bug (two bugs, the first causing an infinite loop and the second the wrong answer).
 
-- Day 20 part 1 I didn't solve myself. My brute force solution consistently gave the wrong answer. Ultimately I went to reddit and found the math way of solving it to my shame :(
+- Day 20 part 1 I didn't solve myself. My brute force solution consistently gave the wrong answer. Ultimately I went to reddit and found the math way of solving it to my shame :( I redeemed myself somewhat by solving part 2 without (much) issue on my own.
 
 Very few solutions required much code this year, which was nice as I went through them all on holiday :)

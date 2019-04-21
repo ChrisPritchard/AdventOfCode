@@ -147,4 +147,22 @@ let part1 () =
     processor 0 Map.empty 0L
 
 let part2 () =
+
+    let rec processor index registers sent =
+        if index < 0 || index >= instructions.Length then 
+            None
+        else
+            match instructions.[index] with
+            | Snd source ->
+                processor (index + 1) registers ((getSourceValue registers source)::sent)
+            | Rcv register ->
+                Some ((fun value -> Map.add register value registers), index + 1, sent)
+            | Jgz (register, amount) ->
+                if regVal register registers <= 0L then
+                    processor (index + 1) registers sent
+                else
+                    processor (index + int (getSourceValue registers amount)) registers sent
+            | other ->
+                processor (index + 1) (apply registers other) sent
+                
     0

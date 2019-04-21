@@ -51,16 +51,24 @@ let advance ((xp, yp, zp), (xv, yv, zv), (xa, ya, za)) _ =
     float (abs xp + abs yp + abs xp), ((xp, yp, zp), (xv, yv, zv), (xa, ya, za))
 
 let part1 () =
-    let particles = Array.copy input |> Array.indexed
-    let iterations = 100000
-    let simulation =
-        particles
-        |> Array.map (fun (index, start) ->
-            let dists, _ =
-                (start, [1..iterations])
-                ||> List.mapFold advance
-            index, List.average dists)
-    simulation |> Array.minBy snd |> fst
+
+    //let particles = Array.copy input |> Array.indexed
+    //let iterations = 100000
+    //let simulation =
+    //    particles
+    //    |> Array.map (fun (index, start) ->
+    //        let dists, _ =
+    //            (start, [1..iterations])
+    //            ||> List.mapFold advance
+    //        index, List.average dists)
+    //simulation |> Array.minBy snd |> fst
+
+    // after looking at the reddit solutions...
+    input 
+    |> Array.indexed
+    |> Array.sortBy (fun (_, ((xp, yp, zp), (xv, yv, zv), (xa, ya, za))) ->
+        abs xa + abs ya + abs za, abs xv + abs yv + abs zv, abs xp + abs yp + abs zp)
+    |> Array.head |> fst
 
 let part2 () =
     0

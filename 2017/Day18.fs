@@ -176,27 +176,36 @@ let part2 () =
         Running (Map.empty.Add ('p', 0L), 0), 
         Running (Map.empty.Add ('p', 1L), 0)
 
+    let mutable p1Queue, p2Queue = [], []
+
     while running do
         match p1State, p2State with
-        | Terminated, Terminated 
-        | WaitingFor _, WaitingFor _ -> running <- false
-        | WaitingFor (reg, regs, index), Sent (value, regs2, index2) -> 
-            p1State <- runFor index (Map.add reg value regs)
-            p2State <- runFor index2 regs2
-        | Sent (value, regs, index), WaitingFor (reg, regs2, index2) -> 
-            sentCount <- sentCount + 1
-            p1State <- runFor index regs
-            p2State <- runFor index2 (Map.add reg value regs2)
-        | WaitingFor _, Running (regs, index) 
-        | Terminated, Running (regs, index) 
-        | Sent _, Running (regs, index) ->
-            p2State <- runFor index regs
-        | Running (regs, index), WaitingFor _ 
-        | Running (regs, index), Terminated 
-        | Running (regs, index), Sent _ ->
-            p1State <- runFor index regs
-        | Running (regs, index), Running (regs2, index2) ->
-            p1State <- runFor index regs
-            p2State <- runFor index2 regs2
+        | Terminated, Terminated -> running <- false
+        | WaitingFor _, WaitingFor _ when (p1Queue = [] && p2Queue = []) -> running <- false
+        | Terminated, WaitingFor _ when p1Queue = [] -> running <- false
+        | WaitingFor _, Terminated when p2Queue = [] -> running <- false
+        | _ ->
+            match p1State with
+            | WaitingFor (reg, regs, index) when p2Queue <> [] -> 
+                p1State <- runFor index (Map.add reg (List.head p2Queue) regs)
+                p2Queue <- List.tail p2Queue
+            | Sent (value, regs, index) -> 
+                p1Queue <- p1Queue @ [value]
+                sentCount <- sentCount + 1
+                p1State <- runFor index regs
+            | Running (regs, index) -> 
+                p1State <- runFor index regs
+            | _ -> ()
+
+            match p2State with
+            | WaitingFor (reg, regs, index) when p1Queue <> [] -> 
+                p2State <- runFor index (Map.add reg (List.head p1Queue) regs)
+                p1Queue <- List.tail p1Queue
+            | Sent (value, regs, index) -> 
+                p2Queue <- p2Queue @ [value]
+                p2State <- runFor index regs
+            | Running (regs, index) -> 
+                p2State <- runFor index regs
+            | _ -> ()
             
-    0
+    sentCount

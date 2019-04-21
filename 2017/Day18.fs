@@ -86,6 +86,7 @@ type Inst =
     | Mul of reg: char * value: Source
     | Mod of reg: char * value: Source
     | Jgz of reg: char * value: Source
+    | Jump of value: Source
     | Rcv of reg: char
     | Snd of value: Source
 and Source = Reg of char | Value of int64
@@ -105,7 +106,10 @@ let instructions =
         | [|"add";reg;regOrVal|] -> Add (reg.[0], getSource regOrVal)
         | [|"mul";reg;regOrVal|] -> Mul (reg.[0], getSource regOrVal)
         | [|"mod";reg;regOrVal|] -> Mod (reg.[0], getSource regOrVal)
-        | [|"jgz";reg;regOrVal|] -> Jgz (reg.[0], getSource regOrVal)
+        | [|"jgz";test;regOrVal|] -> 
+            match getSource test with
+            | Reg r -> Jgz (r, getSource regOrVal)
+            | Value v -> if v > 0L then Jump (getSource regOrVal) else Jump (Value 1L)
         | [|"rcv";reg|] -> Rcv reg.[0]
         | [|"snd";regOrVal|] -> Snd (getSource regOrVal)
         | _ -> failwith "unrecognised instruction") input
@@ -136,6 +140,8 @@ let part1 () =
                 processor (index + 1) registers lastSound
             else
                 int lastSound
+        | Jump amount ->
+            processor (index + int (getSourceValue registers amount)) registers lastSound
         | Jgz (register, amount) ->
             if regVal register registers <= 0L then
                 processor (index + 1) registers lastSound
@@ -162,6 +168,8 @@ let part2 () =
                 Sent (getSourceValue registers source, registers, index + 1)
             | Rcv register ->
                 WaitingFor (register, registers, index + 1)
+            | Jump amount ->
+                Running (registers, index + int (getSourceValue registers amount))
             | Jgz (register, amount) ->
                 if regVal register registers <= 0L then
                     Running (registers, index + 1)

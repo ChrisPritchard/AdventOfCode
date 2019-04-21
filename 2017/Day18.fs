@@ -146,23 +146,57 @@ let part1 () =
 
     processor 0 Map.empty 0L
 
+type State = 
+    | WaitingFor of char * Map<char, int64> * int 
+    | Sent of int64 * Map<char, int64> * int 
+    | Running of Map<char, int64> * int 
+    | Terminated
+
 let part2 () =
 
-    let rec processor index registers sent =
-        if index < 0 || index >= instructions.Length then 
-            None
+    let runFor index registers =
+        if index < 0 || index >= instructions.Length then Terminated
         else
             match instructions.[index] with
             | Snd source ->
-                processor (index + 1) registers ((getSourceValue registers source)::sent)
+                Sent (getSourceValue registers source, registers, index + 1)
             | Rcv register ->
-                Some ((fun value -> Map.add register value registers), index + 1, sent)
+                WaitingFor (register, registers, index + 1)
             | Jgz (register, amount) ->
                 if regVal register registers <= 0L then
-                    processor (index + 1) registers sent
+                    Running (registers, index + 1)
                 else
-                    processor (index + int (getSourceValue registers amount)) registers sent
+                    Running (registers, index + int (getSourceValue registers amount))
             | other ->
-                processor (index + 1) (apply registers other) sent
-                
+                Running (apply registers other, index + 1)
+
+    
+    let mutable running, sentCount = true, 0
+    let mutable p1State, p2State = 
+        Running (Map.empty.Add ('p', 0L), 0), 
+        Running (Map.empty.Add ('p', 1L), 0)
+
+    while running do
+        match p1State, p2State with
+        | Terminated, Terminated 
+        | WaitingFor _, WaitingFor _ -> running <- false
+        | WaitingFor (reg, regs, index), Sent (value, regs2, index2) -> 
+            p1State <- runFor index (Map.add reg value regs)
+            p2State <- runFor index2 regs2
+        | Sent (value, regs, index), WaitingFor (reg, regs2, index2) -> 
+            sentCount <- sentCount + 1
+            p1State <- runFor index regs
+            p2State <- runFor index2 (Map.add reg value regs2)
+        | WaitingFor _, Running (regs, index) 
+        | Terminated, Running (regs, index) 
+        | Sent _, Running (regs, index) ->
+            p2State <- runFor index regs
+        | Running (regs, index), WaitingFor _ 
+        | Running (regs, index), Terminated 
+        | Running (regs, index), Sent _ ->
+            p1State <- runFor index regs
+        | Running (regs, index), Running (regs2, index2) ->
+            p1State <- runFor index regs
+            p2State <- runFor index2 regs2
+            
     0

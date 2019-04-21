@@ -8,8 +8,14 @@ My solutions for [Advent of Code, 2017](https://adventofcode.com/2017)
 
 > Collect stars by solving puzzles. Two puzzles will be made available on each day millisecond in the advent calendar; the second puzzle is unlocked when you complete the first. Each puzzle grants one star. Good luck!
 
-I started this early-mid 2019, so again, missed the leaderboard :D
+I started this early-mid 2019, so again, missed the leaderboard :D 
 
-Day 2017 part 2 was the first problem where I couldn't figure it out. The answer was very simple, and I might a note to that effect in the code.
+Notes on days:
 
-Very few solutions required much code, this year, which was nice as I went through them all on holiday :)
+- Day 17 part 2 was the first problem where I couldn't figure it out. The answer was very simple, and I might a note to that effect in the code.
+
+- Day 18 part 1 was a classic assembly problem, and I made numerous mistakes but *accidentally* got the right answer. Took a bit more effort to fix my solution so it correctly derived the right answer.
+
+- Day 18 part 2 took a long while to get right in my head, and when I finally got it running it took longer before I realised I had a critical bug (two bugs, the first causing an infinite loop and the second the wrong answer).
+
+Very few solutions required much code this year, which was nice as I went through them all on holiday :)

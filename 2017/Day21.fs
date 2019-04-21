@@ -86,6 +86,10 @@ Finally, the squares are joined into a new grid:
 Thus, after 2 iterations, the grid contains 12 pixels that are on.
 
 How many pixels stay on after 5 iterations?
+
+--- Part Two ---
+
+How many pixels stay on after 18 iterations?
 *)
 
 module Day21
@@ -118,16 +122,66 @@ let allPossibilities pattern =
     |] |> Array.distinct
 
 let rules =
-    input 
+    input
+    //[|
+    //    "../.# => ##./#../..."
+    //    ".#./..#/### => #..#/..../..../#..#"
+    //|]
     |> Array.collect (fun line -> 
         let parts = split " =>" line
-        let outs = split "/" parts.[1] |> array2D
+        let outs = split "/" parts.[1]
         let ins = split "/" parts.[0]
         allPossibilities ins |> Array.map (fun p -> p, outs))
     |> Map.ofArray
 
+let partition (array: string []) =
+    let dim = array.Length
+    if dim % 2 = 0 then
+        [|0..dim/2-1|] |> Array.map (fun y ->
+            [|0..dim/2-1|] |> Array.map (fun x ->
+                let oy, ox = y * 2, x * 2
+                [|
+                    array.[oy].[ox..ox+1]
+                    array.[oy+1].[ox..ox+1]
+                |]))
+    else
+        [|0..dim/3-1|] |> Array.map (fun y ->
+            [|0..dim/3-1|] |> Array.map (fun x ->
+                let oy, ox = y * 3, x * 3
+                [|
+                    array.[oy].[ox..ox+2]
+                    array.[oy+1].[ox..ox+2]
+                    array.[oy+2].[ox..ox+2]
+                |]))
+
+let transform (arrays: string [][][]) =
+    arrays |> Array.map (fun row -> row |> Array.map (fun chunk -> rules.[chunk]))
+
+let combine (arrays: string [][][]) =
+    arrays 
+    |> Array.map (fun subArrays ->
+        [|0..subArrays.[0].Length - 1|] 
+        |> Array.map (fun row -> 
+            subArrays 
+            |> Array.map (fun subArray -> subArray.[row])
+            |> Array.reduce (+)))
+    |> Array.collect id
+
+let countOn iterations = 
+    let start = 
+        [|
+            ".#."
+            "..#"
+            "###"
+        |]
+    let result = 
+        (start, [1..iterations]) 
+        ||> List.fold (fun state _ -> 
+            state |> partition |> transform |> combine)
+    result |> Seq.collect id |> Seq.filter ((=) '#') |> Seq.length
+
 let part1 () =
-    0
+    countOn 5
 
 let part2 () =
-    0
+    countOn 18

@@ -41,26 +41,26 @@ open Common
 
 let input = 
     System.IO.File.ReadAllLines "./inputs/day20.txt"
-    |> Array.map (fun line -> line |> split "p=<,>va " |> Array.map int)
+    |> Array.map (fun line -> 
+        line |> split "p=<,>va " |> Array.map int 
+        |> fun a -> ((a.[0], a.[1], a.[2]), (a.[3], a.[4], a.[5]), (a.[6], a.[7], a.[8])))
 
-let advance =
-    function
-    | [|xp;yp;zp; xv;yv;zv; xa;ya;za|] ->
-        let xv, yv, zv = xv + xa, yv + ya, zv + za
-        let xp, yp, zp = xp + xv, yp + yv, zp + zv
-        [|xp;yp;zp;xv;yv;zv;xa;ya;za|], abs xp + abs yp + abs xp
-    | _ -> failwith "invalid line"
+let advance ((xp, yp, zp), (xv, yv, zv), (xa, ya, za)) _ =
+    let xv, yv, zv = xv + xa, yv + ya, zv + za
+    let xp, yp, zp = xp + xv, yp + yv, zp + zv
+    float (abs xp + abs yp + abs xp), ((xp, yp, zp), (xv, yv, zv), (xa, ya, za))
 
 let part1 () =
-    let particles = Array.copy input |> Array.map (fun p -> p, 0) |> Array.indexed
-    (particles, [0..100000]) 
-    ||> List.fold (fun particles _ ->
+    let particles = Array.copy input |> Array.indexed
+    let iterations = 100000
+    let simulation =
         particles
-        |> Array.map (fun (index, (particle, distSum)) ->
-            let np, dist = advance particle
-            index, (np, distSum + dist))
-        )
-    |> Array.minBy (snd >> snd) |> fst
+        |> Array.map (fun (index, start) ->
+            let dists, _ =
+                (start, [1..iterations])
+                ||> List.mapFold advance
+            index, List.average dists)
+    simulation |> Array.minBy snd |> fst
 
 let part2 () =
     0

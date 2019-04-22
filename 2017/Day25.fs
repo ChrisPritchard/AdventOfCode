@@ -59,6 +59,23 @@ Running it until the number of steps required to take the listed diagnostic chec
 The CPU can confirm that the Turing machine is working by taking a diagnostic checksum after a specific number of steps (given in the blueprint). Once the specified number of steps have been executed, the Turing machine should pause; once it does, count the number of times 1 appears on the tape. In the above example, the diagnostic checksum is 3.
 
 Recreate the Turing machine and save the computer! What is the diagnostic checksum it produces once it's working again?
+
+--- Part Two ---
+
+The Turing machine, and soon the entire computer, springs back to life. A console glows dimly nearby, awaiting your command.
+
+> reboot printer
+Error: That command requires priority 50. You currently have priority 0.
+You must deposit 50 stars to increase your priority to the required level.
+
+The console flickers for a moment, and then prints another message:
+
+Star accepted.
+You must deposit 49 stars to increase your priority to the required level.
+
+The garbage collector winks at you, then continues sweeping.
+
+[Reboot the Printer]
 *)
 
 module Day25
@@ -83,5 +100,21 @@ let part1 () =
                 turing (Map.add x 1 tape) (x - 1) 'A' (steps - 1)
             elif state = 'B' then
                 turing (Map.add x 1 tape) (x + 1) 'D' (steps - 1)
+            elif state = 'C' && currentVal = 0 then
+                turing (Map.add x 1 tape) (x + 1) 'A' (steps - 1)
+            elif state = 'C' then
+                turing (Map.add x 0 tape) (x - 1) 'E' (steps - 1)
+            elif state = 'D' && currentVal = 0 then
+                turing (Map.add x 1 tape) (x + 1) 'A' (steps - 1)
+            elif state = 'D' then
+                turing (Map.add x 0 tape) (x + 1) 'B' (steps - 1)
+            elif state = 'E' && currentVal = 0 then
+                turing (Map.add x 1 tape) (x - 1) 'F' (steps - 1)
+            elif state = 'E' then
+                turing (Map.add x 1 tape) (x - 1) 'C' (steps - 1)
+            elif state = 'F' && currentVal = 0 then
+                turing (Map.add x 1 tape) (x + 1) 'D' (steps - 1)
+            else //if state = 'F' then
+                turing (Map.add x 1 tape) (x + 1) 'A' (steps - 1)
 
-    0
+    turing tape startX startS steps

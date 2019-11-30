@@ -7,6 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="descriptions\dat01.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="inputs\day01.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="Common.fs" />
     <Compile Include="Day01.fs" />
     <Compile Include="Program.fs" />

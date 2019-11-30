@@ -1,11 +1,12 @@
 ﻿module Day01
 
+open System.IO
 open Common
 
-let input = System.IO.File.ReadAllLines("./inputs/day01.txt")
+let input = File.ReadAllLines("./inputs/day01.txt")
 
 let part1 () =
-    0
+    input
 
 let part2 () =
     0

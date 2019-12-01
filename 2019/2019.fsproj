@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Compile Include="Common.fs" />
+    <Compile Include="BFS.fs" />
     <Compile Include="Day01.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

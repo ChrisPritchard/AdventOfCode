@@ -33,6 +33,9 @@ let bfs<'T when 'T : equality> (isGoal: 'T -> bool) (edges: 'T -> seq<'T>) (star
             
     searcher ()
 
+// example of use:
+
+(*
 let testData = [
     (1,2);  (1,3);  (1,4)
     (2,5);  (2,6)
@@ -48,3 +51,4 @@ let edges v =
      testData |> Seq.filter (fst >> (=) v) |> Seq.map snd
 
 let result = bfs<int> isGoal edges 1
+*)

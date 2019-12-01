@@ -7,11 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="descriptions\dat01.md" />
+    <None Include="descriptions\day01.md" />
+    <None Include="descriptions\day02.md" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="inputs\day01.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="inputs\day02.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -20,6 +24,7 @@
     <Compile Include="Common.fs" />
     <Compile Include="BFS.fs" />
     <Compile Include="Day01.fs" />
+    <Compile Include="Day02.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

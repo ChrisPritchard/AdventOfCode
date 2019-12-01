@@ -34,6 +34,12 @@ let hexMd5Hash (s: string) =
     let hash = md5.ComputeHash (bytes) |> Array.map (fun b -> Convert.ToString(b, 16).PadLeft(2, '0'))
     (String.concat "" hash).ToLower()
 
+let dist2 (x1, y1) (x2, y2) =
+    sqrt (((x2 - x1) ** 2.) + ((y2 - y1) ** 2.))
+
+let dist3 (x1, y1, z1) (x2, y2, z2) =
+    sqrt (((x2 - x1) ** 2.) + ((y2 - y1) ** 2.) + ((z2 - z1) ** 2.))
+
 let time day part func =
     let timer = Stopwatch.StartNew();    
     let result = func ()

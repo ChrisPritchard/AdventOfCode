@@ -6,7 +6,7 @@ open Common
 let input = File.ReadAllLines ("./inputs/day02.txt")
 
 let part1 () =
-    0
+    input.Length + 1
 
 let part2 () =
-    0
+    input.Length + 2

@@ -1,7 +1,6 @@
 ﻿module Day02
 
 open System.IO
-open Common
 
 let input = File.ReadAllText ("./inputs/day02.txt") |> fun s -> s.Split (',') |> Array.map int
 

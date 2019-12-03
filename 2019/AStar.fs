@@ -67,6 +67,7 @@ let astar<'T when 'T : equality> (isGoal: 'T -> bool) (edges: 'T -> seq<'T>) (d:
     
     let start = 0, 0
     let gx, gy = testArray.GetLength(1) - 1, testArray.GetLength(0) - 1
+
     let d _ _ = 1.
     let h (x, y) = sqrt ((float gx - float x) ** 2. + (float gy - float y) ** 2.)
     let isGoal = (=) (gx, gy)

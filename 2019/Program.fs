@@ -28,8 +28,11 @@ let main _ =
     // time 12 1 Day12.part1
     // time 12 2 Day12.part2
     // time 13 1 Day13.part1
+    // time 13 2 Day13.part1
     // time 14 1 Day14.part1
     // time 14 2 Day14.part2
+    // time 15 1 Day15.part1
+    // time 15 2 Day15.part2
     // time 16 1 Day16.part1
     // time 16 2 Day16.part2
     // time 17 1 Day17.part1
@@ -39,10 +42,15 @@ let main _ =
     // time 19 1 Day19.part1
     // time 19 2 Day19.part2
     // time 20 1 Day20.part1
+    // time 20 2 Day20.part2
     // time 21 1 Day21.part1
+    // time 21 2 Day21.part2
     // time 22 1 Day22.part1
+    // time 22 2 Day22.part2
     // time 23 1 Day23.part1
     // time 23 2 Day23.part2
+    // time 24 1 Day24.part1
+    // time 24 2 Day24.part2
     // time 25 1 Day25.part1
 
     0

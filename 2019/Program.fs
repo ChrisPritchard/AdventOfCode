@@ -9,8 +9,8 @@ let main _ =
     time 2 2 Day02.part2
     time 3 1 Day03.part1
     time 3 2 Day03.part2
-    // time 4 1 Day04.part1
-    // time 4 2 Day04.part2
+    time 4 1 Day04.part1
+    time 4 2 Day04.part2
     // time 5 1 Day05.part1
     // time 5 2 Day05.part2
     // time 6 1 Day06.part1

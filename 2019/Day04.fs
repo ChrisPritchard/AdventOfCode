@@ -28,3 +28,23 @@ let part2 () =
                 cnt > 1 && s.Contains (sc + sc) && not (s.Contains (sc + sc + sc)))
             |> Seq.isEmpty |> not)
     |> Seq.length
+
+// simpler way of doing this, thinking the following morning (note the use of Seq.exists):
+
+(*
+let part1 () =
+    [min..max] 
+    |> Seq.filter (fun n ->
+        let s = string n
+        asString (Seq.sort s) = s && 
+        s |> Seq.exists (fun c -> s.Contains(string c + string c)))
+    |> Seq.length
+
+let part2 () =
+    [min..max] 
+    |> Seq.filter (fun n ->
+        let s = string n
+        asString (Seq.sort s) = s && 
+        s |> Seq.exists (fun c -> let sc = string c in s.Contains(sc + sc) && not (s.Contains(sc + sc + sc))))
+    |> Seq.length
+*)

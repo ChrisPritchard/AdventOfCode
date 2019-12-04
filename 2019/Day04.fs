@@ -37,7 +37,7 @@ let part1 () =
     |> Seq.filter (fun n ->
         let s = string n
         asString (Seq.sort s) = s && 
-        s |> Seq.exists (fun c -> s.Contains(string c + string c)))
+        s |> Seq.exists (fun c -> let sc = string c in s.Contains(sc + sc)))
     |> Seq.length
 
 let part2 () =

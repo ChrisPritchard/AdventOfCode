@@ -1,14 +1,30 @@
 ﻿module Day04
 
+open Common
 open System.IO
-open System.Collections.Generic
 
 let text = File.ReadAllText ("./inputs/day04.txt")
-let cells = text.Split ','
-let lines = File.ReadAllLines ("./inputs/day04.txt")
+
+let min = text.Split('-').[0] |> int
+let max = text.Split('-').[1] |> int
 
 let part1 () =
-    lines
+    [min..max] 
+    |> Seq.filter (fun n ->
+        let s = string n
+        asString (Seq.sort s) = s && Seq.pairwise s |> Seq.filter (fun (a,b) -> a = b) |> Seq.isEmpty |> not)
+    |> Seq.length
 
 let part2 () =
-    text
+    [min..max] 
+    |> Seq.filter (fun n ->
+        let s = string n
+        if asString (Seq.sort s) <> s then false
+        else
+            let grouped = Seq.countBy id s
+            grouped 
+            |> Seq.filter (fun (c, cnt) -> 
+                let sc = string c
+                cnt > 1 && s.Contains (sc + sc) && not (s.Contains (sc + sc + sc)))
+            |> Seq.isEmpty |> not)
+    |> Seq.length

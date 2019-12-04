@@ -10,7 +10,7 @@
     <None Include="descriptions\day01.md" />
     <None Include="descriptions\day02.md" />
     <None Include="descriptions\day03.md" />
-    <None Include="descriptions\day05.md" />
+    <None Include="descriptions\day04.md" />
   </ItemGroup>
 
   <ItemGroup>

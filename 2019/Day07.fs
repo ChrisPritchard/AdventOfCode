@@ -111,48 +111,51 @@ let part2 () =
                             let dInput = Queue<int>([d])
                             let eInput = Queue<int>([e])
 
-                            let memory = [|Array.copy startMemory; Array.copy startMemory; Array.copy startMemory; Array.copy startMemory; Array.copy startMemory|]
-                            let mutable aState, bState, cState, dState, eState = Running, Running, Running, Running, Running
-                            
-                            let mutable finished = false
-                            while not finished do
-                                match aState with
-                                | Running ->
-                                    aState <- intcodeRun ops 0 memory.[0] aInput bInput
-                                | Blocked (ip, mem) ->
-                                    aState <- intcodeRun ops ip mem aInput bInput
-                                | _ -> ()
+                            let rec amplifier aState bState cState dState eState =
+                                let aState =
+                                    match aState with
+                                    | Running ->
+                                        intcodeRun ops 0 (Array.copy startMemory) aInput bInput
+                                    | Blocked (ip, mem) ->
+                                        intcodeRun ops ip mem aInput bInput
+                                    | _ -> aState
 
-                                match bState with
-                                | Running ->
-                                    bState <- intcodeRun ops 0 memory.[1] bInput cInput
-                                | Blocked (ip, mem) ->
-                                    bState <- intcodeRun ops ip mem bInput cInput
-                                | _ -> ()
+                                let bState =
+                                    match bState with
+                                    | Running ->
+                                        intcodeRun ops 0 (Array.copy startMemory) bInput cInput
+                                    | Blocked (ip, mem) ->
+                                        intcodeRun ops ip mem bInput cInput
+                                    | _ -> bState
 
-                                match cState with
-                                | Running ->
-                                    cState <- intcodeRun ops 0 memory.[2] cInput dInput
-                                | Blocked (ip, mem) ->
-                                    cState <- intcodeRun ops ip mem cInput dInput
-                                | _ -> ()
+                                let cState =
+                                    match cState with
+                                    | Running ->
+                                        intcodeRun ops 0 (Array.copy startMemory) cInput dInput
+                                    | Blocked (ip, mem) ->
+                                        intcodeRun ops ip mem cInput dInput
+                                    | _ -> cState
 
-                                match dState with
-                                | Running ->
-                                    dState <- intcodeRun ops 0 memory.[3] dInput eInput
-                                | Blocked (ip, mem) ->
-                                    dState <- intcodeRun ops ip mem dInput eInput
-                                | _ -> ()
+                                let dState =
+                                    match dState with
+                                    | Running ->
+                                        intcodeRun ops 0 (Array.copy startMemory) dInput eInput
+                                    | Blocked (ip, mem) ->
+                                        intcodeRun ops ip mem dInput eInput
+                                    | _ -> dState
 
-                                match eState with
-                                | Running ->
-                                    eState <- intcodeRun ops 0 memory.[4] eInput aInput
-                                | Blocked (ip, mem) ->
-                                    eState <- intcodeRun ops ip mem eInput aInput
-                                | _ -> ()
+                                let eState =
+                                    match eState with
+                                    | Running ->
+                                        intcodeRun ops 0 (Array.copy startMemory) eInput aInput
+                                    | Blocked (ip, mem) ->
+                                        intcodeRun ops ip mem eInput aInput
+                                    | _ -> eState
 
                                 if eState = Halted && aInput.Count > 0 then
-                                    yield aInput.Dequeue ()
-                                    finished <- true
-                            
+                                    aInput.Dequeue ()
+                                else
+                                    amplifier aState bState cState dState eState
+
+                            yield amplifier Running Running Running Running Running
     } |> Seq.max

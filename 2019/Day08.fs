@@ -2,7 +2,6 @@
 
 open Common
 open System.IO
-open System.Collections.Generic
 
 let input = File.ReadAllText ("./inputs/day08.txt")
 

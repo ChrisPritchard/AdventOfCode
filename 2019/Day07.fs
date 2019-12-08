@@ -1,6 +1,7 @@
 ﻿module Day07
 
 open Common
+open System
 open System.IO
 open System.Collections.Generic
 
@@ -12,61 +13,60 @@ type State = Running | Halted | Blocked of int * int[]
 let intcodeRun opcodes startIp (memory: int[]) input output =
     let parseOp code = 
         let op = code % 100
-        (op, code % 1000 / 100, code % 10000 / 1000, code % 100000 / 10000)
+        (op, code % 1000 / 100, code % 10000 / 1000)
     let rec processor ip =
-        let opcode, mode1, mode2, mode3 = parseOp memory.[ip]
-        if opcode = 99 || not (Map.containsKey opcode opcodes) then Halted
-        else
-            let op = opcodes.[opcode]
-            let nextIp, nextState = op ip memory [|mode1; mode2; mode3|] input output
+        let opcode, mode1, mode2 = parseOp memory.[ip]
+        let v1 () = let v = memory.[ip + 1] in if mode1 = 0 then memory.[v] else v
+        let v2 () = let v = memory.[ip + 2] in if mode2 = 0 then memory.[v] else v
+        try
+            let op = Map.find opcode opcodes
+            let nextIp, nextState = op ip memory v1 v2 input output
             if nextState = Running then processor nextIp else nextState
+        with
+        | :? KeyNotFoundException | :? IndexOutOfRangeException  -> Halted
     processor startIp
 
 let parse (mem: int[]) value mode =
     if mode = 0 then mem.[value] else value
 
 let ops = Map.ofList [
-    1, (fun pIndex (mem: int[]) (modes: int[]) _ _ ->
-        mem.[mem.[pIndex + 3]] <- 
-            parse mem mem.[pIndex + 1] modes.[0] + 
-            parse mem mem.[pIndex + 2] modes.[1]
-        pIndex + 4, Running)
-    2, (fun pIndex (mem: int[]) (modes: int[]) _ _ ->
-        mem.[mem.[pIndex + 3]] <- 
-            parse mem mem.[pIndex + 1] modes.[0] *
-            parse mem mem.[pIndex + 2] modes.[1]
-        pIndex + 4, Running)
-    3, (fun pIndex (mem: int[]) _ (input: Queue<int>) _->
+    99, (fun ip _ _ _ _ _ -> // halt
+        ip, Halted)
+
+    1, (fun ip (mem: int[]) v1 v2 _ _ -> // Add
+        mem.[mem.[ip + 3]] <- v1() + v2()
+        ip + 4, Running)
+
+    2, (fun ip (mem: int[]) v1 v2 _ _ -> // Mul
+        mem.[mem.[ip + 3]] <- v1() * v2()
+        ip + 4, Running)
+
+    3, (fun ip (mem: int[]) _ _ (input: Queue<int>) _-> // Read or block
         if input.Count = 0 then
-            pIndex, Blocked (pIndex, mem)
+            ip, Blocked (ip, mem)
         else
-            mem.[mem.[pIndex + 1]] <- input.Dequeue ()
-            pIndex + 2, Running)
-    4, (fun pIndex (mem: int[]) (modes: int[]) _ (output: Queue<int>) ->
-       output.Enqueue (parse mem mem.[pIndex + 1] modes.[0])
-       pIndex + 2, Running)
-    5, (fun pIndex (mem: int[]) (modes: int[]) _ _ ->
-        let value = parse mem mem.[pIndex + 1] modes.[0]
-        let nextIp = 
-            if value > 0 then parse mem mem.[pIndex + 2] modes.[1] 
-            else pIndex + 3
+            mem.[mem.[ip + 1]] <- input.Dequeue ()
+            ip + 2, Running)
+
+    4, (fun ip _ v1 _ _ (output: Queue<int>) -> // Write
+       output.Enqueue (v1())
+       ip + 2, Running)
+
+    5, (fun ip _ v1 v2 _ _ -> // jump if greater
+        let nextIp = if v1() > 0 then v2() else ip + 3
         nextIp, Running)
-    6, (fun pIndex (mem: int[]) (modes: int[]) _ _ ->
-        let value = parse mem mem.[pIndex + 1] modes.[0]
-        let nextIp =
-            if value = 0 then parse mem mem.[pIndex + 2] modes.[1] 
-            else pIndex + 3
+
+    6, (fun ip _ v1 v2 _ _ -> // jump if equal
+        let nextIp = if v1() = 0 then v2() else ip + 3
         nextIp, Running)
-    7, (fun pIndex (mem: int[]) (modes: int[]) _ _ ->
-        let value1 = parse mem mem.[pIndex + 1] modes.[0]
-        let value2 = parse mem mem.[pIndex + 2] modes.[1]
-        mem.[mem.[pIndex + 3]] <- if value1 < value2 then 1 else 0
-        pIndex + 4, Running)
-    8, (fun pIndex (mem: int[]) (modes: int[]) _ _ ->
-        let value1 = parse mem mem.[pIndex + 1] modes.[0]
-        let value2 = parse mem mem.[pIndex + 2] modes.[1]
-        mem.[mem.[pIndex + 3]] <- if value1 = value2 then 1 else 0
-        pIndex + 4, Running)
+
+    7, (fun ip (mem: int[]) v1 v2 _ _ -> // set if less
+        mem.[mem.[ip + 3]] <- if v1() < v2() then 1 else 0
+        ip + 4, Running)
+
+    8, (fun ip (mem: int[]) v1 v2 _ _ -> // set if equal
+        mem.[mem.[ip + 3]] <- if v1() = v2() then 1 else 0
+        ip + 4, Running)
     ]
 
 let part1 () =

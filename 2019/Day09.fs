@@ -10,29 +10,30 @@ let startMemory = (File.ReadAllText ("./inputs/day09.txt")).Split ',' |> Array.m
 
 type State = Running | Halted | Blocked
 
-let intcodeRun opcodes (memory: Dictionary<int64, int64>) read write =
+let intcodeRun opcodes memoryArray read write =
+    let memory = 
+        Array.indexed memoryArray 
+        |> Array.map (fun (k, v) -> int64 k, v) 
+        |> dict 
+        |> Dictionary<int64, int64>
     let parseOp code = 
         let op = code % 100L
-        (op, code % 1000L / 100L, code % 10000L / 1000L, code % 100000L / 10000L)
+        op, [|code % 1000L / 100L; code % 10000L / 1000L; code % 100000L / 10000L|]
     let rec processor ip rb =
-        let opcode, mode1, mode2, mode3 = parseOp memory.[ip]
+        let opcode, modes = parseOp memory.[ip]
         let v1 () = 
             let v = memory.[ip + 1L] 
-            if mode1 = 0L then memory.[v] 
-            elif mode1 = 2L then memory.[rb + v]
+            if modes.[0] = 0L then memory.[v] 
+            elif modes.[0] = 2L then memory.[rb + v]
             else v
         let v2 () = 
             let v = memory.[ip + 2L] 
-            if mode2 = 0L then memory.[v] 
-            elif mode2 = 2L then memory.[rb + v]
+            if modes.[1] = 0L then memory.[v] 
+            elif modes.[1] = 2L then memory.[rb + v]
             else v
         let set i v = 
             let o = memory.[ip + i]
-            let sidx = 
-                if i = 1L && mode1 = 2L then rb + o
-                elif i = 2L && mode2 = 2L then rb + o
-                elif i = 3L && mode3 = 2L then rb + o
-                else o
+            let sidx = if modes.[int i - 1] = 2L then rb + o else o
             memory.[sidx] <- v
         let op = Map.find opcode opcodes
         let nextIp, nextRb, nextState = op ip rb v1 v2 set read write
@@ -95,14 +96,12 @@ let part1 () =
 
     let input = Queue<int64>([1L])
     let output = Queue<int64>()
-    let memory = Dictionary<int64, int64> (Array.indexed startMemory |> Array.map (fun (k, v) -> int64 k, v) |> dict)
-    intcodeRun ops memory (read input) (output.Enqueue) |> ignore
+    intcodeRun ops startMemory (read input) (output.Enqueue) |> ignore
     output.Dequeue () |> string
 
 let part2 () =
     
     let input = Queue<int64>([2L])
     let output = Queue<int64>()
-    let memory = Dictionary<int64, int64> (Array.indexed startMemory |> Array.map (fun (k, v) -> int64 k, v) |> dict)
-    intcodeRun ops memory (read input) (output.Enqueue) |> ignore
+    intcodeRun ops startMemory (read input) (output.Enqueue) |> ignore
     output.Dequeue () |> string

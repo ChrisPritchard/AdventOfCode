@@ -26,12 +26,12 @@ let intcodeRun opcodes startIp startRb (memory: int64[]) read write =
             if mode2 = 0L then memory.[int v] 
             elif mode2 = 2L then memory.[int (rb + int v)]
             else v
-        let set i idx v = 
-            let o = memory.[i]
+        let set i v = 
+            let o = memory.[ip + i]
             let sidx = 
-                if idx = 1 && mode1 = 2L then rb + int o
-                elif idx = 2 && mode2 = 2L then rb + int o
-                elif idx = 3 && mode3 = 2L then rb + int o
+                if i = 1 && mode1 = 2L then rb + int o
+                elif i = 2 && mode2 = 2L then rb + int o
+                elif i = 3 && mode3 = 2L then rb + int o
                 else int o
             memory.[sidx] <- v
         let op = Map.find opcode opcodes
@@ -48,17 +48,17 @@ let ops = Map.ofList [
         ip, rb, Halted)
 
     1L, (fun ip rb v1 v2 set _ _ -> // Add
-        v1() + v2() |> set (ip + 3) 3
+        v1() + v2() |> set 3
         ip + 4, rb, Running)
 
     2L, (fun ip rb v1 v2 set _ _ -> // Mul
-        v1() * v2() |> set (ip + 3) 3
+        v1() * v2() |> set 3
         ip + 4, rb, Running)
 
     3L, (fun ip rb _ _ set read _-> // Read or block
         let (canRead, value) = read ()
         if canRead then
-            set (ip + 1) 1 value
+            set 1 value
             ip + 2, rb, Running
         else
             ip, rb, Blocked)
@@ -76,11 +76,11 @@ let ops = Map.ofList [
         nextIp, rb, Running)
 
     7L, (fun ip rb v1 v2 set _ _ -> // set if less
-        set (ip + 3) 3 <| if v1() < v2() then 1L else 0L
+        set 3 <| if v1() < v2() then 1L else 0L
         ip + 4, rb, Running)
 
     8L, (fun ip rb v1 v2 set _ _ -> // set if equal
-        set (ip + 3) 3 <| if v1() = v2() then 1L else 0L
+        set 3 <| if v1() = v2() then 1L else 0L
         ip + 4, rb, Running)
 
     9L, (fun ip rb v1 _ _ _ _ -> // alter relative base

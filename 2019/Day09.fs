@@ -1,107 +1,111 @@
 ﻿module Day09
 
-open Common
-open System
 open System.IO
 open System.Collections.Generic
 
-let startMemory = (File.ReadAllText ("./inputs/day09.txt")).Split ',' |> Array.map int64
-//let startMemory = "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99" |> split "," |> Array.map (int64)
 
+type T = int64
+type TQueue = Queue<T>
+let stot (o: string) = int64 o
+let itot (o: int) = int64 o
+
+let input = (File.ReadAllText ("./inputs/day09.txt")).Split ',' |> Array.map stot
+//let input = "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99" |> split "," |> Array.map stot
+    
+let t0, t1, t2, t3, t4, t100, t1000, t10000, t100000 = 
+    itot 0, itot 1, itot 2, itot 3, itot 4, 
+    itot 100, itot 1000, itot 10000, itot 100000
+
+let read (queue: TQueue) = 
+    fun () -> if queue.Count > 0 then true, queue.Dequeue () else false, t0
+    
 type State = Running | Halted | Blocked
 
 let intcodeRun opcodes memoryArray read write =
     let memory = 
         Array.indexed memoryArray 
-        |> Array.map (fun (k, v) -> int64 k, v) 
+        |> Array.map (fun (k, v) -> itot k, v) 
         |> dict 
-        |> Dictionary<int64, int64>
+        |> Dictionary<T, T>
     let parseOp code = 
-        let op = code % 100L
-        op, [|code % 1000L / 100L; code % 10000L / 1000L; code % 100000L / 10000L|]
+        let op = code % t100
+        op, [|code % t1000 / t100; code % t10000 / t1000; code % t100000 / t10000|]
     let rec processor ip rb =
         let opcode, modes = parseOp memory.[ip]
         let v1 () = 
-            let v = memory.[ip + 1L] 
-            if modes.[0] = 0L then memory.[v] 
-            elif modes.[0] = 2L then memory.[rb + v]
+            let v = memory.[ip + t1] 
+            if modes.[0] = t0 then memory.[v] 
+            elif modes.[0] = t2 then memory.[rb + v]
             else v
         let v2 () = 
-            let v = memory.[ip + 2L] 
-            if modes.[1] = 0L then memory.[v] 
-            elif modes.[1] = 2L then memory.[rb + v]
+            let v = memory.[ip + t2] 
+            if modes.[1] = t0 then memory.[v] 
+            elif modes.[1] = t2 then memory.[rb + v]
             else v
         let set i v = 
             let o = memory.[ip + i]
-            let sidx = if modes.[int i - 1] = 2L then rb + o else o
+            let sidx = if modes.[int i - 1] = t2 then rb + o else o
             memory.[sidx] <- v
         let op = Map.find opcode opcodes
         let nextIp, nextRb, nextState = op ip rb v1 v2 set read write
         if nextState = Running then processor nextIp nextRb else nextState, nextIp
-    let finalState, finalIp = processor 0L 0L
+    let finalState, finalIp = processor t0 t0
     finalState, finalIp, memory
 
-let parse (mem: int[]) value mode =
-    if mode = 0 then mem.[value] else value
-
 let ops = Map.ofList [
-    99L, (fun ip rb _ _ _ _ _ -> // halt
+    itot 99, (fun ip rb _ _ _ _ _ -> // halt
         ip, rb, Halted)
 
-    1L, (fun ip rb v1 v2 set _ _ -> // Add
-        v1() + v2() |> set 3L
-        ip + 4L, rb, Running)
+    itot 1, (fun ip rb v1 v2 set _ _ -> // Add
+        v1() + v2() |> set t3
+        ip + t4, rb, Running)
 
-    2L, (fun ip rb v1 v2 set _ _ -> // Mul
-        v1() * v2() |> set 3L
-        ip + 4L, rb, Running)
+    itot 2, (fun ip rb v1 v2 set _ _ -> // Mul
+        v1() * v2() |> set t3
+        ip + t4, rb, Running)
 
-    3L, (fun ip rb _ _ set read _-> // Read or block
+    itot 3, (fun ip rb _ _ set read _-> // Read or block
         let (canRead, value) = read ()
         if canRead then
-            set 1L value
-            ip + 2L, rb, Running
+            set t1 value
+            ip + t2, rb, Running
         else
             ip, rb, Blocked)
 
-    4L, (fun ip rb v1 _ _ _ write -> // Write
+    itot 4, (fun ip rb v1 _ _ _ write -> // Write
        write <| v1()
-       ip + 2L, rb, Running)
+       ip + t2, rb, Running)
 
-    5L, (fun ip rb v1 v2 _ _ _ -> // jump if greater
-        let nextIp = if v1() > 0L then v2() else ip + 3L
+    itot 5, (fun ip rb v1 v2 _ _ _ -> // jump if greater
+        let nextIp = if v1() > t0 then v2() else ip + t3
         nextIp, rb, Running)
 
-    6L, (fun ip rb v1 v2 _ _ _ -> // jump if equal
-        let nextIp = if v1() = 0L then v2() else ip + 3L
+    itot 6, (fun ip rb v1 v2 _ _ _ -> // jump if equal
+        let nextIp = if v1() = t0 then v2() else ip + t3
         nextIp, rb, Running)
 
-    7L, (fun ip rb v1 v2 set _ _ -> // set if less
-        set 3L <| if v1() < v2() then 1L else 0L
-        ip + 4L, rb, Running)
+    itot 7, (fun ip rb v1 v2 set _ _ -> // set if less
+        set t3 <| if v1() < v2() then t1 else t0
+        ip + t4, rb, Running)
 
-    8L, (fun ip rb v1 v2 set _ _ -> // set if equal
-        set 3L <| if v1() = v2() then 1L else 0L
-        ip + 4L, rb, Running)
+    itot 8, (fun ip rb v1 v2 set _ _ -> // set if equal
+        set t3 <| if v1() = v2() then t1 else t0
+        ip + t4, rb, Running)
 
-    9L, (fun ip rb v1 _ _ _ _ -> // alter relative base
-        ip + 2L, rb + v1(), Running)
+    itot 9, (fun ip rb v1 _ _ _ _ -> // alter relative base
+        ip + t2, rb + v1(), Running)
     ]
-
-let read (queue: Queue<int64>) = 
-    fun () -> if queue.Count > 0 then true, queue.Dequeue () else false, 0L
-
-
+    
 let part1 () =
 
-    let input = Queue<int64>([1L])
-    let output = Queue<int64>()
-    intcodeRun ops startMemory (read input) (output.Enqueue) |> ignore
-    output.Dequeue () |> string
+    let inputStream = TQueue([itot 1])
+    let outputStream = TQueue()
+    intcodeRun ops input (read inputStream) (outputStream.Enqueue) |> ignore
+    outputStream.Dequeue () |> string
 
 let part2 () =
     
-    let input = Queue<int64>([2L])
-    let output = Queue<int64>()
-    intcodeRun ops startMemory (read input) (output.Enqueue) |> ignore
-    output.Dequeue () |> string
+    let inputStream = TQueue([itot 2])
+    let outputStream = TQueue()
+    intcodeRun ops input (read inputStream) (outputStream.Enqueue) |> ignore
+    outputStream.Dequeue () |> string

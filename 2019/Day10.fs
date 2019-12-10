@@ -16,33 +16,27 @@ let asteroids =
         line |> Seq.mapi (fun x cell -> (x, y), cell = '#') |> Seq.filter snd |> Seq.map fst)
     |> Seq.collect id
     |> Seq.toArray
-let blockers = Set.ofArray asteroids
-
     
 let part1 () =
 
-    let step = 0.5
-
-    let lineOfSight (x, y) (tx, ty) =
-
-        if (x, y) = (tx, ty) then false
+    let cache = Dictionary<((int * int) * (int * int)), float>()
+    let dist (x1, y1) (x2, y2) =
+        let key = (x1, y1), (x2, y2)
+        let keyi = (x2, y2), (x1, y1)
+        if cache.ContainsKey key then cache.[key]
+        elif cache.ContainsKey keyi then cache.[keyi]
         else
-            let angle = (float ty - float y) / step |> sin
-            let nx = step * cos angle
-            let ny = step * sin angle
+            let d = sqrt ((float x2 - float x1) ** 2. + (float y2 - float y1) ** 2.)
+            cache.Add (key, d)
+            d
 
-            let rec crawl (ox, oy) lastDist =
-                let rounded = (int ox, int oy)
-                if rounded = (tx, ty) then true
-                elif rounded <> (x, y) && Set.contains (int ox, int oy) blockers then false
-                else 
-                    let dist = sqrt ((float tx - ox) ** 2. + (float ty - oy) ** 2.)
-                    if dist > lastDist then 
-                        false
-                    else
-                        crawl (ox + nx, oy + ny) dist
+    let margin = 0.0001
 
-            crawl (float x, float y) System.Double.MaxValue
+    let lineOfSight a b =
+        a <> b &&
+        asteroids 
+        |> Seq.exists (fun c -> c <> a && c <> b && abs ((dist a c + dist b c) - dist a b) <= margin)
+        |> not
 
     let maxReachable (x, y) =
         asteroids |> Seq.filter (lineOfSight (x, y)) |> Seq.length

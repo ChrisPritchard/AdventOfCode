@@ -12,25 +12,30 @@ let asteroids =
     
 let part1 () =
 
-    let angle (x1, y1) (x2, y2) =
-        ((float y2 - float y1) / (float x2 - float x1)) |> tanh
+    let simplified (dx, dy) =
+        if dx = 0 then 0, dy / abs dy
+        elif dy = 0 then dx / abs dx, 0
+        elif dx > dy && dx % dy = 0 then dx / dy, dy / abs dy
+        elif dy > dx && dy % dx = 0 then dx / abs dx, dy / dx
+        elif dx = dy then dx / abs dx, dy / abs dy
+        else dx, dy
 
-    let dist (x1, y1) (x2, y2) =
-        (pown (x2 - x1) 2 + pown (y2 - y1) 2) |> float |> sqrt
-        
-    let lineOfSight a b =
-        if a = b then false
+    let linesOfSight (ox, oy) (visible, blocked) (x, y) =
+        if Set.contains (x, y) blocked || (ox, oy) = (x, y) then (visible, blocked)
         else
-            let angleAB = angle a b
-            let distAB = dist a b
-            asteroids 
-            |> Seq.exists (fun c -> c <> a && c <> b && angle a c = angleAB && dist a c < distAB)
-            |> not
+            let dx, dy = simplified (x - ox, y - oy)
+            let rec ray (visible, blocked) (nx, ny) =
+                if nx < 0 || ny < 0 || nx >= input.[0].Length || ny >= input.Length then
+                    visible, blocked
+                else
+                    ray (Set.remove (nx, ny) visible, Set.add (nx, ny) blocked) (nx + dx, ny + dy)
+            ray (Set.add (x, y) visible, blocked) (x + dx, y + dy)
 
-    let maxReachable (x, y) =
-        asteroids |> Seq.filter (lineOfSight (x, y)) |> Seq.length
+    let visible (x, y) =
+        ((Set.empty, Set.empty), asteroids) ||> Array.fold (linesOfSight (x, y))
+        |> fst |> fun visible -> (x, y), visible
     
-    asteroids |> Seq.map maxReachable |> Seq.max
+    asteroids |> Seq.map (visible >> snd >> Set.count) |> Seq.max
 
 let part2 () =
     

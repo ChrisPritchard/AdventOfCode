@@ -1,52 +1,190 @@
-# Day 9: Sensor Boost
+# Day 10: Monitoring Station
 
-You've just said goodbye to the rebooted rover and left Mars when you receive a faint distress signal coming from the asteroid belt. It must be the Ceres monitoring station!
+You fly into the asteroid belt and reach the Ceres monitoring station. The Elves here have an emergency: they're having trouble tracking all of the asteroids and can't be sure they're safe.
 
-In order to lock on to the signal, you'll need to boost your sensors. The Elves send up the latest BOOST program - Basic Operation Of System Test.
+The Elves would like to build a new monitoring station in a nearby area of space; they hand you a map of all of the asteroids in that region (your puzzle input).
 
-While BOOST (your puzzle input) is capable of boosting your sensors, for tenuous safety reasons, it refuses to do so until the computer it runs on passes some checks to demonstrate it is a complete Intcode computer.
+The map indicates whether each position is empty (.) or contains an asteroid (#). The asteroids are much smaller than they appear on the map, and every asteroid is exactly in the center of its marked position. The asteroids can be described with X,Y coordinates where X is the distance from the left edge and Y is the distance from the top edge (so the top-left corner is 0,0 and the position immediately to its right is 1,0).
 
-Your existing Intcode computer is missing one key feature: it needs support for parameters in relative mode.
+Your job is to figure out which asteroid would be the best place to build a new monitoring station. A monitoring station can detect any asteroid to which it has direct line of sight - that is, there cannot be another asteroid exactly between them. This line of sight can be at any angle, not just lines aligned to the grid or diagonally. The best location is the asteroid that can detect the largest number of other asteroids.
 
-Parameters in mode 2, relative mode, behave very similarly to parameters in position mode: the parameter is interpreted as a position. Like position mode, parameters in relative mode can be read from or written to.
+For example, consider the following map:
 
-The important difference is that relative mode parameters don't count from address 0. Instead, they count from a value called the relative base. The relative base starts at 0.
+```
+.#..#
+.....
+#####
+....#
+...##
+```
 
-The address a relative mode parameter refers to is itself plus the current relative base. When the relative base is 0, relative mode parameters and position mode parameters with the same value refer to the same address.
+The best location for a new monitoring station on this map is the highlighted asteroid at 3,4 because it can detect 8 asteroids, more than any other location. (The only asteroid it cannot detect is the one at 1,0; its view of this asteroid is blocked by the asteroid at 2,2.) All other asteroids are worse locations; they can detect 7 or fewer other asteroids. Here is the number of other asteroids a monitoring station on each asteroid could detect:
 
-For example, given a relative base of 50, a relative mode parameter of -7 refers to memory address 50 + -7 = 43.
+```
+.7..7
+.....
+67775
+....7
+...87
+```
 
-The relative base is modified with the relative base offset instruction:
+Here is an asteroid (#) and some examples of the ways its line of sight might be blocked. If there were another asteroid at the location of a capital letter, the locations marked with the corresponding lowercase letter would be blocked and could not be detected:
 
-    Opcode 9 adjusts the relative base by the value of its only parameter. The relative base increases (or decreases, if the value is negative) by the value of the parameter.
+```
+#.........
+...A......
+...B..a...
+.EDCG....a
+..F.c.b...
+.....c....
+..efd.c.gb
+.......c..
+....f...c.
+...e..d..c
+```
 
-For example, if the relative base is 2000, then after the instruction 109,19, the relative base would be 2019. If the next instruction were 204,-34, then the value at address 1985 would be output.
+Here are some larger examples:
 
-Your Intcode computer will also need a few other capabilities:
+    Best is 5,8 with 33 other asteroids detected:
 
-    The computer's available memory should be much larger than the initial program. Memory beyond the initial program starts with the value 0 and can be read or written like any other memory. (It is invalid to try to access memory at a negative address, though.)
-    The computer should have support for large numbers. Some instructions near the beginning of the BOOST program will verify this capability.
+    ......#.#.
+    #..#.#....
+    ..#######.
+    .#.#.###..
+    .#..#.....
+    ..#....#.#
+    #..#....#.
+    .##.#..###
+    ##...#..#.
+    .#....####
 
-Here are some example programs that use these features:
+    Best is 1,2 with 35 other asteroids detected:
 
-    109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99 takes no input and produces a copy of itself as output.
-    1102,34915192,34915192,7,4,7,99,0 should output a 16-digit number.
-    104,1125899906842624,99 should output the large number in the middle.
+    #.#...#.#.
+    .###....#.
+    .#....#...
+    ##.#.#.#.#
+    ....#.#.#.
+    .##..###.#
+    ..#...##..
+    ..##....##
+    ......#...
+    .####.###.
 
-The BOOST program will ask for a single input; run it in test mode by providing it the value 1. It will perform a series of checks on each opcode, output any opcodes (and the associated parameter modes) that seem to be functioning incorrectly, and finally output a BOOST keycode.
+    Best is 6,3 with 41 other asteroids detected:
 
-Once your Intcode computer is fully functional, the BOOST program should report no malfunctioning opcodes when run in test mode; it should only output a single value, the BOOST keycode. What BOOST keycode does it produce?
+    .#..#..###
+    ####.###.#
+    ....###.#.
+    ..###.##.#
+    ##.##.#.#.
+    ....###..#
+    ..#.#..#.#
+    #..#.#.###
+    .##...##.#
+    .....#.#..
 
-Your puzzle answer was 3638931938.
+    Best is 11,13 with 210 other asteroids detected:
+
+    .#..##.###...#######
+    ##.############..##.
+    .#.######.########.#
+    .###.#######.####.#.
+    #####.##.#.##.###.##
+    ..#####..#.#########
+    ####################
+    #.####....###.#.#.##
+    ##.#################
+    #####.##.###..####..
+    ..######..##.#######
+    ####.##.####...##..#
+    .#####..#.######.###
+    ##...#.##########...
+    #.##########.#######
+    .####.#.###.###.#.##
+    ....##.##.###..#####
+    .#.#.###########.###
+    #.#.#.#####.####.###
+    ###.##.####.##.#..##
+
+Find the best location for a new monitoring station. How many other asteroids can be detected from that location?
+
+Your puzzle answer was 230.
 
 ## Part Two
 
-You now have a complete Intcode computer.
+Once you give them the coordinates, the Elves quickly deploy an Instant Monitoring Station to the location and discover the worst: there are simply too many asteroids.
 
-Finally, you can lock on to the Ceres distress signal! You just need to boost your sensors using the BOOST program.
+The only solution is complete vaporization by giant laser.
 
-The program runs in sensor boost mode by providing the input instruction the value 2. Once run, it will boost the sensors automatically, but it might take a few seconds to complete the operation on slower hardware. In sensor boost mode, the program will output a single value: the coordinates of the distress signal.
+Fortunately, in addition to an asteroid scanner, the new monitoring station also comes equipped with a giant rotating laser perfect for vaporizing asteroids. The laser starts by pointing up and always rotates clockwise, vaporizing any asteroid it hits.
 
-Run the BOOST program in sensor boost mode. What are the coordinates of the distress signal?
+If multiple asteroids are exactly in line with the station, the laser only has enough power to vaporize one of them before continuing its rotation. In other words, the same asteroids that can be detected can be vaporized, but if vaporizing one asteroid makes another one detectable, the newly-detected asteroid won't be vaporized until the laser has returned to the same position by rotating a full 360 degrees.
 
-Your puzzle answer was 86025.
+For example, consider the following map, where the asteroid with the new monitoring station (and laser) is marked X:
+
+```
+.#....#####...#..
+##...##.#####..##
+##...#...#.#####.
+..#.....X...###..
+..#.#.....#....##
+```
+
+The first nine asteroids to get vaporized, in order, would be:
+
+```
+.#....###24...#..
+##...##.13#67..9#
+##...#...5.8####.
+..#.....X...###..
+..#.#.....#....##
+```
+
+Note that some asteroids (the ones behind the asteroids marked 1, 5, and 7) won't have a chance to be vaporized until the next full rotation. The laser continues rotating; the next nine to be vaporized are:
+
+```
+.#....###.....#..
+##...##...#.....#
+##...#......1234.
+..#.....X...5##..
+..#.9.....8....76
+```
+
+The next nine to be vaporized are then:
+
+```
+.8....###.....#..
+56...9#...#.....#
+34...7...........
+..2.....X....##..
+..1..............
+```
+
+Finally, the laser completes its first full rotation (1 through 3), a second rotation (4 through 8), and vaporizes the last asteroid (9) partway through its third rotation:
+
+```
+......234.....6..
+......1...5.....7
+.................
+........X....89..
+.................
+```
+
+In the large example above (the one with the best monitoring station location at 11,13):
+
+    The 1st asteroid to be vaporized is at 11,12.
+    The 2nd asteroid to be vaporized is at 12,1.
+    The 3rd asteroid to be vaporized is at 12,2.
+    The 10th asteroid to be vaporized is at 12,8.
+    The 20th asteroid to be vaporized is at 16,0.
+    The 50th asteroid to be vaporized is at 16,9.
+    The 100th asteroid to be vaporized is at 10,16.
+    The 199th asteroid to be vaporized is at 9,6.
+    The 200th asteroid to be vaporized is at 8,2.
+    The 201st asteroid to be vaporized is at 10,9.
+    The 299th and final asteroid to be vaporized is at 11,1.
+
+The Elves are placing bets on which will be the 200th asteroid to be vaporized. Win the bet by determining which asteroid that will be; what do you get if you multiply its X coordinate by 100 and then add its Y coordinate? (For example, 8,2 becomes 802.)
+
+Your puzzle answer was 1205.

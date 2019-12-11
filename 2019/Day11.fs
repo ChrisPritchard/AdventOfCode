@@ -4,7 +4,7 @@ open Common
 open System.IO
 open System.Collections.Generic
 
-// type specification
+// type specification : this allows the system to be switched from int to int64 to bigint or float if necessary
 
 type T = int64
 type TQueue = Queue<T>
@@ -17,7 +17,7 @@ let t0, t1, t2, t3, t4, t100, t1000, t10000, t100000 =
 
 let input = (File.ReadAllText ("./inputs/day11.txt")).Split ',' |> Array.map stot
 
-// intcode vm code
+// generic intcode vm code
 
 let read (queue: TQueue) = 
     fun () -> if queue.Count > 0 then true, queue.Dequeue () else false, t0
@@ -95,7 +95,7 @@ let ops = Map.ofList [
         ip + t2, rb + v1(), Running)
     ]
 
-// painter code
+// painter code for day 11
 
 let inputStream = TQueue()
 let outputStream = TQueue()
@@ -138,6 +138,8 @@ let rec painter (map: Map<int * int, T>) (x, y) dir (_, ip, rb, mem) =
         map 
     else
         painter map pos (dx, dy) (state, ip, rb, mem)
+
+// individual parts
 
 let part1 () =    
     

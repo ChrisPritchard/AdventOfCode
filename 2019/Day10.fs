@@ -1,8 +1,10 @@
 ﻿module Day10
 
+open System
 open System.IO
 
 let input = File.ReadAllLines ("./inputs/day10.txt")
+
 let asteroids = 
     input 
     |> Seq.mapi (fun y line ->
@@ -41,10 +43,8 @@ let part1 () =
 
 let part2 () =
     
-    let pi = System.Math.PI
-
     let angle (x1, y1) (x2, y2) = 
-        let a = (atan2 (float (y2 - y1)) (float (x2 - x1))) * 180./pi
+        let a = (atan2 (float (y2 - y1)) (float (x2 - x1))) * 180./Math.PI
         if a < 0. then 360. + a else a
 
     let angleNorth o1 o2 =

@@ -1,46 +1,45 @@
 ﻿module Day11
 
+open Common
 open System.IO
 open System.Collections.Generic
 
+// type specification
 
 type T = int64
 type TQueue = Queue<T>
 let stot (o: string) = int64 o
 let itot (o: int) = int64 o
 
-let input = (File.ReadAllText ("./inputs/day11.txt")).Split ',' |> Array.map stot
-//let input = "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99" |> split "," |> Array.map stot
-    
 let t0, t1, t2, t3, t4, t100, t1000, t10000, t100000 = 
     itot 0, itot 1, itot 2, itot 3, itot 4, 
     itot 100, itot 1000, itot 10000, itot 100000
+
+let input = (File.ReadAllText ("./inputs/day11.txt")).Split ',' |> Array.map stot
+
+// intcode vm code
 
 let read (queue: TQueue) = 
     fun () -> if queue.Count > 0 then true, queue.Dequeue () else false, t0
     
 type State = Running | Halted | Blocked
 
-let intcodeRun opcodes memoryArray read write =
-    let memory = 
-        Array.indexed memoryArray 
-        |> Array.map (fun (k, v) -> itot k, v) 
-        |> dict 
-        |> Dictionary<T, T>
+let intcodeRun opcodes ip rb (memory: Dictionary<T, T>) read write =
     let parseOp code = 
         let op = code % t100
         op, [|code % t1000 / t100; code % t10000 / t1000; code % t100000 / t10000|]
     let rec processor ip rb =
         let opcode, modes = parseOp memory.[ip]
+        let value i = if memory.ContainsKey i then memory.[i] else t0
         let v1 () = 
             let v = memory.[ip + t1] 
-            if modes.[0] = t0 then memory.[v] 
-            elif modes.[0] = t2 then memory.[rb + v]
+            if modes.[0] = t0 then value v
+            elif modes.[0] = t2 then value (rb + v)
             else v
         let v2 () = 
             let v = memory.[ip + t2] 
-            if modes.[1] = t0 then memory.[v] 
-            elif modes.[1] = t2 then memory.[rb + v]
+            if modes.[1] = t0 then value v
+            elif modes.[1] = t2 then value (rb + v)
             else v
         let set i v = 
             let o = memory.[ip + i]
@@ -48,9 +47,9 @@ let intcodeRun opcodes memoryArray read write =
             memory.[sidx] <- v
         let op = Map.find opcode opcodes
         let nextIp, nextRb, nextState = op ip rb v1 v2 set read write
-        if nextState = Running then processor nextIp nextRb else nextState, nextIp
-    let finalState, finalIp = processor t0 t0
-    finalState, finalIp, memory
+        if nextState = Running then processor nextIp nextRb else nextState, nextIp, nextRb
+    let finalState, finalIp, finalRb = processor ip rb
+    finalState, finalIp, finalRb, memory
 
 let ops = Map.ofList [
     itot 99, (fun ip rb _ _ _ _ _ -> // halt
@@ -95,17 +94,77 @@ let ops = Map.ofList [
     itot 9, (fun ip rb v1 _ _ _ _ -> // alter relative base
         ip + t2, rb + v1(), Running)
     ]
-    
-let part1 () =
 
-    let inputStream = TQueue([itot 1])
-    let outputStream = TQueue()
-    intcodeRun ops input (read inputStream) (outputStream.Enqueue) |> ignore
-    outputStream.Dequeue () |> string
+// painter code
+
+let inputStream = TQueue()
+let outputStream = TQueue()
+    
+let turnLeft (dx, dy) =
+    if dx = 1 then 0, -1
+    elif dx = -1 then 0, 1
+    elif dy = 1 then 1, 0
+    else -1, 0
+
+let turnRight (dx, dy) =
+    if dx = 1 then 0, 1
+    elif dx = -1 then 0, -1
+    elif dy = 1 then -1, 0
+    else 1, 0
+
+let rec painter (map: Map<int * int, T>) (x, y) dir (_, ip, rb, mem) =
+    let currentTile = Map.tryFind (x, y) map |> Option.defaultValue t0
+    inputStream.Enqueue(currentTile)
+
+    let (state, ip, rb, mem) = intcodeRun ops ip rb mem (read inputStream) (outputStream.Enqueue)
+
+    let map = 
+        if outputStream.Count > 0 then 
+            Map.add (x, y) (outputStream.Dequeue()) map
+        else
+            failwith "expected colour"
+    let (dx, dy) = 
+        if outputStream.Count > 0 then 
+            if (outputStream.Dequeue()) = t0 then
+                turnLeft dir
+            else
+                turnRight dir
+        else
+            failwith "expected turn instruction"
+
+    let pos = (x + dx, y + dy)
+    if state = Halted 
+    then 
+        map 
+    else
+        painter map pos (dx, dy) (state, ip, rb, mem)
+
+let part1 () =    
+    
+    let mem =
+        Array.indexed input 
+        |> Array.map (fun (k, v) -> itot k, v) 
+        |> dict 
+        |> Dictionary<T, T>
+    
+    let final = painter Map.empty (0, 0) (0, -1) (Running, t0, t0, mem)
+    final.Count
 
 let part2 () =
     
-    let inputStream = TQueue([itot 2])
-    let outputStream = TQueue()
-    intcodeRun ops input (read inputStream) (outputStream.Enqueue) |> ignore
-    outputStream.Dequeue () |> string
+    let mem =
+        Array.indexed input 
+        |> Array.map (fun (k, v) -> itot k, v) 
+        |> dict 
+        |> Dictionary<T, T>
+    
+    let final = painter (Map.empty.Add ((0, 0), t1)) (0, 0) (0, -1) (Running, t0, t0, mem)
+    
+    asString <| seq {
+        yield '\n'
+        for y = 0 to 6 do
+            for x = 0 to 40 do
+                yield 
+                    Map.tryFind (x, y) final |> Option.defaultValue t0 |> function n when n = t0 -> ' ' | _ -> '#'
+            yield '\n'
+    }

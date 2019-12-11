@@ -32,12 +32,12 @@ let visible map (x, y) =
     ((Set.empty, Set.empty), map) ||> Array.fold (linesOfSight (x, y))
     |> fst
     
-let (best, visibleFromBest) = 
-    asteroids |> Seq.map (fun o -> o, visible asteroids o) |> Seq.maxBy (snd >> Set.count)
+let (laserBase, part1Answer) = 
+    asteroids |> Seq.map (fun o -> o, visible asteroids o |> Set.count) |> Seq.maxBy snd
 
 let part1 () =
     
-    Set.count visibleFromBest
+    part1Answer
 
 let part2 () =
     
@@ -56,7 +56,10 @@ let part2 () =
     let rec laser targets map count = 
         match targets with
         | [] ->
-            let newVisible = visible (Seq.toArray map) best |> Seq.sortBy (angleNorth best) |> Seq.toList
+            let newVisible = 
+                visible (Seq.toArray map) laserBase 
+                |> Seq.sortBy (angleNorth laserBase) 
+                |> Seq.toList
             laser newVisible map count
         | next::_ when count = targetCount - 1 ->
             next

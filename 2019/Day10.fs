@@ -37,6 +37,20 @@ let visible map (x, y) =
 let (laserBase, part1Answer) = 
     asteroids |> Seq.map (fun o -> o, visible asteroids o |> Set.count) |> Seq.maxBy snd
 
+// note: a simpler way to calculate visible is grouping by angle, as below
+
+(*
+let angle (x1, y1) (x2, y2) = 
+    let a = (atan2 (float (y2 - y1)) (float (x2 - x1))) * 180./Math.PI
+    if a < 0. then 360. + a else a
+
+let visible map (x, y) =
+    let distance (ox, oy) = ((pown (ox - x) 2) + (pown (oy - y) 2)) |> float |> sqrt
+    map |> Array.except [|x, y|] |> Array.groupBy (angle (x, y)) |> Array.map (snd >> Array.minBy distance)
+
+let laserBase, part1Answer = asteroids |> Seq.map (fun o -> o, visible asteroids o |> Array.length) |> Seq.maxBy snd
+*)
+
 let part1 () =
     
     part1Answer
@@ -68,3 +82,4 @@ let part2 () =
 
     let x, y = laser [] (Set.ofArray asteroids) 0
     x * 100 + y
+

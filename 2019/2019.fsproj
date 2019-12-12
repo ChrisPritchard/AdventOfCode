@@ -62,12 +62,16 @@
 
   <ItemGroup>
     <None Include="readme.md" />
+    <None Include="SDL2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="Common.fs" />
     <Compile Include="BFS.fs" />
     <Compile Include="AStar.fs" />
+    <Compile Include="SDL.fs" />
     <Compile Include="Day01.fs" />
     <Compile Include="Day02.fs" />
     <Compile Include="Day03.fs" />

@@ -43,4 +43,10 @@ let part1 () =
 
 let part2 () =
     
-    0
+    let rec counter acc moons =
+        let next = timeStep moons
+        if next.[0] = moons.[0] then acc
+        else
+            counter (acc + 1UL) next
+
+    counter 0UL moons

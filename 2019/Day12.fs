@@ -42,11 +42,14 @@ let part1 () =
     runSteps 1000 moons |> energy
 
 let part2 () =
+
+    let tracker = Dictionary<(((int * int * int) * (int * int * int))[]), uint64>()
     
     let rec counter acc moons =
         let next = timeStep moons
-        if next.[0] = moons.[0] then acc
+        if tracker.ContainsKey(next) then acc - tracker.[next]
         else
+            tracker.Add (next, acc)
             counter (acc + 1UL) next
 
     counter 0UL moons

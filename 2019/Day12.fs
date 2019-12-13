@@ -56,7 +56,8 @@ Ultimately I had to go to reddit to get the hint on calculating axii independent
 - So the final result is to find the number that will coincide with all three cycles. 
   The count where all three cycles will repeat at the same time.
   
-- This is called the least common multiple. Brute forcing this is possible, but slow. 
+- This is called the least common multiple. 
+  Brute forcing this is possible, but slow: multiplying the largest cycle until you find a number that mods 0 with the other two. 
   A formula that uses the greatest common denominator is much faster.
   
 The final number is insanely large, proving that this would have been likely impossible using even a very powerful computer.

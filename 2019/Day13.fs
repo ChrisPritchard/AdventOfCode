@@ -3,6 +3,9 @@
 open Common
 open System.IO
 open System.Collections.Generic
+open SDL
+open System
+open System.Runtime.InteropServices
 
 // type specification : this allows the system to be switched from int to int64 to bigint or float if necessary
 
@@ -11,11 +14,11 @@ type TQueue = Queue<T>
 let stot (o: string) = int64 o
 let itot (o: int) = int64 o
 
-let t0, t1, t2, t3, t4, t100, t1000, t10000, t100000 = 
-    itot 0, itot 1, itot 2, itot 3, itot 4, 
+let t1m, t0, t1, t2, t3, t4, t100, t1000, t10000, t100000 = 
+    itot -1, itot 0, itot 1, itot 2, itot 3, itot 4, 
     itot 100, itot 1000, itot 10000, itot 100000
 
-let input = (File.ReadAllText ("./inputs/day11.txt")).Split ',' |> Array.map stot
+let input = (File.ReadAllText ("./inputs/day13.txt")).Split ',' |> Array.map stot
 
 // generic intcode vm code
 
@@ -99,45 +102,6 @@ let ops = Map.ofList [
 
 let inputStream = TQueue()
 let outputStream = TQueue()
-    
-let turnLeft (dx, dy) =
-    if dx = 1 then 0, -1
-    elif dx = -1 then 0, 1
-    elif dy = 1 then 1, 0
-    else -1, 0
-
-let turnRight (dx, dy) =
-    if dx = 1 then 0, 1
-    elif dx = -1 then 0, -1
-    elif dy = 1 then -1, 0
-    else 1, 0
-
-let rec painter (map: Map<int * int, T>) (x, y) dir (_, ip, rb, mem) =
-    let currentTile = Map.tryFind (x, y) map |> Option.defaultValue t0
-    inputStream.Enqueue(currentTile)
-
-    let (state, ip, rb, mem) = intcodeRun ops ip rb mem (read inputStream) (outputStream.Enqueue)
-
-    let map = 
-        if outputStream.Count > 0 then 
-            Map.add (x, y) (outputStream.Dequeue()) map
-        else
-            failwith "expected colour"
-    let (dx, dy) = 
-        if outputStream.Count > 0 then 
-            if (outputStream.Dequeue()) = t0 then
-                turnLeft dir
-            else
-                turnRight dir
-        else
-            failwith "expected turn instruction"
-
-    let pos = (x + dx, y + dy)
-    if state = Halted 
-    then 
-        map 
-    else
-        painter map pos (dx, dy) (state, ip, rb, mem)
 
 // individual parts
 
@@ -149,24 +113,95 @@ let part1 () =
         |> dict 
         |> Dictionary<T, T>
     
-    let final = painter Map.empty (0, 0) (0, -1) (Running, t0, t0, mem)
-    final.Count
+    let res = intcodeRun ops t0 t0 mem (read inputStream) (outputStream.Enqueue)
+
+    Seq.chunkBySize 3 outputStream
+    |> Seq.map Seq.toArray
+    |> Seq.filter (fun a -> a.[2] = t2)
+    |> Seq.length
 
 let part2 () =
-    
-    let mem =
+
+    let startMem =
         Array.indexed input 
         |> Array.map (fun (k, v) -> itot k, v) 
         |> dict 
         |> Dictionary<T, T>
+
+    startMem.[t0] <- t2
     
-    let final = painter (Map.empty.Add ((0, 0), t1)) (0, 0) (0, -1) (Running, t0, t0, mem)
+    let viewWidth, viewHeight = 1800, 1000
+    let asUint32 (r, g, b) = BitConverter.ToUInt32 (ReadOnlySpan [|b; g; r; 255uy|])
     
-    asString <| seq {
-        yield '\n'
-        for y = 0 to 6 do
-            for x = 0 to 40 do
-                yield 
-                    Map.tryFind (x, y) final |> Option.defaultValue t0 |> function n when n = t0 -> ' ' | _ -> '#'
-            yield '\n'
-    }
+    let colours = 
+        [|
+            asUint32 (0uy, 0uy, 0uy)
+            asUint32 (255uy, 0uy, 0uy)
+            asUint32 (0uy, 255uy, 0uy)
+            asUint32 (0uy, 0uy, 255uy)
+            asUint32 (255uy, 255uy, 255uy)
+        |]
+    let black = asUint32 (0uy, 0uy, 0uy)
+
+    SDL_Init(SDL_INIT_VIDEO) |> ignore
+
+    let mutable window, renderer = IntPtr.Zero, IntPtr.Zero
+    let windowFlags = SDL_WindowFlags.SDL_WINDOW_SHOWN ||| SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS
+    SDL_CreateWindowAndRenderer(viewWidth, viewHeight, windowFlags, &window, &renderer) |> ignore
+
+    let texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, viewWidth, viewHeight)
+    let frameBuffer = Array.create (viewWidth * viewHeight) black
+    let bufferPtr = IntPtr ((Marshal.UnsafeAddrOfPinnedArrayElement (frameBuffer, 0)).ToPointer ())
+    let mutable keyEvent = Unchecked.defaultof<SDL_KeyboardEvent>
+
+    let drawRect x y w h colour =
+        for dy = y to y + h - 1 do
+            let pos = (dy * viewWidth) + x
+            Array.fill frameBuffer pos w colour
+
+    let mutable score = 0
+
+    let rec drawLoop ip rb mem =
+
+        let (state, ip, rb, mem) = intcodeRun ops ip rb mem (read inputStream) (outputStream.Enqueue)
+        if state = Halted then 
+            printfn "Score: %i" score
+            drawLoop t0 t0 startMem
+            ()
+        else
+            drawRect 0 0 viewWidth viewHeight black
+            Seq.chunkBySize 3 outputStream
+            |> Seq.map Seq.toArray
+            |> Seq.iter (fun a ->
+                if a.[0] = t1m && a.[1] = t0 then score <- int a.[2]
+                else drawRect (int a.[0] * 30) (int a.[1] * 30) 30 30 colours.[int a.[2]])
+        
+            SDL_UpdateTexture(texture, IntPtr.Zero, bufferPtr, viewWidth * 4) |> ignore
+            SDL_RenderClear(renderer) |> ignore
+            SDL_RenderCopy(renderer, texture, IntPtr.Zero, IntPtr.Zero) |> ignore
+            SDL_RenderPresent(renderer) |> ignore
+        
+            inputStream.Enqueue t1m
+            drawLoop ip rb mem
+            //if SDL_PollEvent(&keyEvent) = 0 || (keyEvent.``type`` <> SDL_KEYDOWN && keyEvent.``type`` <> SDL_KEYUP) then
+            //    //SDL_Delay 50ul
+            //    drawLoop ip rb mem
+            //else if keyEvent.keysym.sym = SDLK_ESCAPE then 
+            //    () // quit the game by exiting the loop
+            //else
+            //    match keyEvent.keysym.sym with
+            //    | c when c = uint32 'a' -> inputStream.Enqueue t1m
+            //    | c when c = uint32 's' -> inputStream.Enqueue t0
+            //    | c when c = uint32 'd' -> inputStream.Enqueue t1
+            //    | _ -> ()
+            //    //SDL_Delay 50ul
+            //    drawLoop ip rb mem
+
+    drawLoop t0 t0 startMem
+
+    SDL_DestroyTexture(texture)
+    SDL_DestroyRenderer(renderer)
+    SDL_DestroyWindow(window)
+    SDL_Quit()
+
+    0

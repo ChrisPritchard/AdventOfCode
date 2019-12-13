@@ -40,7 +40,27 @@ let part1 () =
 
     runSteps 1000 moons |> energy
 
-// ultimately I had to go to reddit to get the hint on calculating axii independently
+(*
+Ultimately I had to go to reddit to get the hint on calculating axii independently. To be clear, the way part 2 works is:
+
+- The x, y, and z movements of the moons effect themselves, but not each other. 
+   That is, moon A x affects moon B, C and D x, but doesnt affect moon A y or any of the other ys.
+   So each axis (x, y and z), can be viewed in isolation.
+   
+- The obvious insight for part two is to find the cycle: what number of steps result in the total state repeating.
+  However, that is un-bruteforceable (at least not in anything less than a day or more) for all three axis at once.
+   
+- But, if you look for the cycle for each axis independently, then you can find them quickly. 
+  For my data they're each in the 200k range.
+  
+- So the final result is to find the number that will coincide with all three cycles. 
+  The count where all three cycles will repeat at the same time.
+  
+- This is called the least common multiple. Brute forcing this is possible, but slow. 
+  A formula that uses the greatest common denominator is much faster.
+  
+The final number is insanely large, proving that this would have been likely impossible using even a very powerful computer.
+*)
 
 let part2 () =
 

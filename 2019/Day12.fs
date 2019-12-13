@@ -44,8 +44,8 @@ let part1 () =
 Ultimately I had to go to reddit to get the hint on calculating axii independently. To be clear, the way part 2 works is:
 
 - The x, y, and z movements of the moons effect themselves, but not each other. 
-   That is, moon A x affects moon B, C and D x, but doesnt affect moon A y or any of the other ys.
-   So each axis (x, y and z), can be viewed in isolation.
+  That is, moon A x affects moon B, C and D x, but doesnt affect moon A y or any of the other ys.
+  So each axis (x, y and z), can be viewed in isolation.
    
 - The obvious insight for part two is to find the cycle: what number of steps result in the total state repeating.
   However, that is un-bruteforceable (at least not in anything less than a day or more) for all three axis at once.

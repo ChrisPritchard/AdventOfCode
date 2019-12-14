@@ -20,6 +20,7 @@
     <None Include="descriptions\day11.md" />
     <None Include="descriptions\day12.md" />
     <None Include="descriptions\day13.md" />
+    <None Include="descriptions\day14.md" />
   </ItemGroup>
 
   <ItemGroup>
@@ -62,6 +63,9 @@
     <Content Include="inputs\day13.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="inputs\day14.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -89,6 +93,7 @@
     <Compile Include="Day11.fs" />
     <Compile Include="Day12.fs" />
     <Compile Include="Day13.fs" />
+    <Compile Include="Day14.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

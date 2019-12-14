@@ -13,33 +13,45 @@ let transforms =
         |> split " ,=>"
         |> fun a ->
             a.[a.Length - 1], 
-                (int a.[a.Length - 2], 
+                (int64 a.[a.Length - 2], 
                     a 
                     |> Array.truncate (a.Length - 2) 
                     |> Array.chunkBySize 2 
-                    |> Array.map (fun b -> b.[1], int b.[0])
-                    |> Map.ofArray))
+                    |> Array.map (fun b -> b.[1], int64 b.[0])))
     |> Map.ofArray
 
 let part1 () =    
     
-    let multiply required (amount, needed) =
-        let multiplier = required / amount
-        needed
-        |> Map.toArray
-        |> Array.map (fun (s, n) -> s, n * multiplier) 
+    let start = snd transforms.["FUEL"]
 
-    let rec expander map =
-        let next = 
-            map |> Array.collect (fun (s, n) ->
-                if s = "ORE" then [|s, n|]
-                else multiply n transforms.[s])
-        if next |> Array.forall (fun (s, _) -> s = "ORE") then
-            Array.sumBy snd next
+    let adder multiplier (ore, required) (other, needed) =
+        if other = "ORE" then ore + (needed * multiplier), required
+        else ore, (other, needed * multiplier)::required
+    
+    let replacer (ore, spare, required) (needed, amount) =
+        let trueAmount = amount - (Map.tryFind needed spare |> Option.defaultValue 0L)
+        if trueAmount < 0L then
+            (ore, Map.add needed (abs trueAmount) spare, required)
+        elif trueAmount = 0L then 
+            (ore, Map.remove needed spare, required)
         else
-            expander next
+            let (amountMade, requirements) = transforms.[needed]
+            let multiplier = ceil (float trueAmount / float amountMade) |> int64
+            let spare = Map.add needed ((multiplier * amountMade) - trueAmount) spare
+            let ore, required = 
+                ((ore, required), requirements) 
+                ||> Array.fold (adder multiplier)
+            ore, spare, required
 
-    expander (snd transforms.["FUEL"] |> Map.toArray)
+    let rec expander ore spare (required: (string * int64) list) =
+        let ore, spare, required = 
+            ((ore, spare, []), required)
+            ||> List.fold replacer
+        if List.length required = 0 then ore
+        else
+            expander ore spare required
+
+    expander 0L Map.empty (List.ofArray start) |> string
 
 let part2 () =
 

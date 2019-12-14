@@ -23,7 +23,23 @@ let transforms =
 
 let part1 () =    
     
-    transforms
+    let multiply required (amount, needed) =
+        let multiplier = required / amount
+        needed
+        |> Map.toArray
+        |> Array.map (fun (s, n) -> s, n * multiplier) 
+
+    let rec expander map =
+        let next = 
+            map |> Array.collect (fun (s, n) ->
+                if s = "ORE" then [|s, n|]
+                else multiply n transforms.[s])
+        if next |> Array.forall (fun (s, _) -> s = "ORE") then
+            Array.sumBy snd next
+        else
+            expander next
+
+    expander (snd transforms.["FUEL"] |> Map.toArray)
 
 let part2 () =
 

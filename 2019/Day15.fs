@@ -52,13 +52,15 @@ let part2 () =
     let mem = Intcode.memFrom input
     let start = { x = 0; y = 0; state = 1L; memstate = mem }
     
+    let visited = HashSet<int * int> ()
     let fullmap = HashSet<int * int> ([0, 0])
+
     let mutable target = (0, 0)
     let getedges a =
-        let r = edges a fullmap
-        match r |> List.tryFind (fun s -> s.state = 2L) with
-        | Some e -> target <- (e.x, e.y)
-        | _ -> ()
+        let r = edges a visited
+        for e in r do
+            if e.state = 2L then target <- (e.x, e.y)
+            else fullmap.Add (e.x, e.y) |> ignore
         Seq.ofList r
 
     BFS.run (fun _ -> false) getedges start |> ignore
@@ -70,10 +72,30 @@ let part2 () =
 
     let rec oxygen edges remaining cnt =
         let next = edges |> Array.collect (adjacent remaining) |> Array.distinct
-        let remaining = (edges, remaining) ||> Array.foldBack Set.remove
-        if Set.count remaining = 0 then cnt
+        
+        //System.Console.CursorLeft <- 0
+        //System.Console.CursorTop <- 0
+        //System.Console.Write (string (cnt + 1))
+        //for (x, y) in next do
+        //    System.Console.CursorLeft <- 30 + x
+        //    System.Console.CursorTop <- 30 + y
+        //    System.Console.Write "O"
+        //System.Console.ReadKey true |> ignore
+
+        let remaining = (next, remaining) ||> Array.foldBack Set.remove
+        if Set.count remaining = 0 then cnt + 1
         else
             oxygen next remaining (cnt + 1)
 
+    //System.Console.Clear ()
+    //for x = -30 to 30 do
+    //    for y = -30 to 30 do
+    //        System.Console.CursorLeft <- 30 + x
+    //        System.Console.CursorTop <- 30 + y
+    //        if (x, y) = target then System.Console.Write "O"
+    //        elif fullmap.Contains (x, y) then System.Console.Write "."
+    //        else System.Console.Write "#"
+
+    fullmap.Remove target |> ignore
     oxygen [|target|] (Set.ofSeq fullmap) 0
     

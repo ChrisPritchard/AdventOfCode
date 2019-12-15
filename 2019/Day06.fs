@@ -18,7 +18,7 @@ let part1 () =
 let part2 () =
     let orbits = lines |> Array.map (fun s -> (s.Split ')').[1], (s.Split(')').[0]))
     let orbitMap = orbits |> Map.ofArray
-    BFS.bfs 
+    BFS.run 
         (fun s -> orbitMap.["SAN"] = s) 
         (fun s -> 
             let orbiting = orbits |> Array.filter (snd >> (=) s) |> Array.map fst

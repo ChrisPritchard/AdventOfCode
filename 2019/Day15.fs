@@ -37,6 +37,17 @@ let part1 () =
                 let result = findResult position newMap
                 (position, ip, rb, mem, newMap, true, Some result)
             | _ -> failwith "invalidstate"
+
+    let deadEnd (x, y) map =
+        let back = 
+            [
+                (x, y - 1)
+                (x, y + 1)
+                (x - 1, y)
+                (x + 1, y)
+            ] |> List.find (fun t -> Map.find t map = '.')
+        printfn "%A" back
+        back, Map.add (x, y) '#' map
     
     let rec runner (x, y) ip rb mem map = 
         let dirs = 
@@ -45,14 +56,19 @@ let part1 () =
                 (x, y + 1), 2L
                 (x - 1, y), 3L
                 (x + 1, y), 4L
-            ] |> List.filter (fun (t, _) -> (Map.tryFind t map |> Option.defaultValue '.') <> '#')
-        let (nextPos, ip, rb, mem, nextMap, _, result) =
-            (((x, y), ip, rb, mem, map, false, None), dirs)
-            ||> List.fold tryDirection
-        match result with
-        | Some n -> n
-        | None ->
+            ] |> List.filter (fun (t, _) -> Map.containsKey t map |> not)
+        if List.length dirs = 0 then
+            let nextPos, nextMap = deadEnd (x, y) map
             runner nextPos ip rb mem nextMap
+        else
+            let (nextPos, ip, rb, mem, nextMap, _, result) =
+                (((x, y), ip, rb, mem, map, false, None), dirs)
+                ||> List.fold tryDirection
+            printfn "%A" nextPos
+            match result with
+            | Some n -> n
+            | None ->
+                runner nextPos ip rb mem nextMap
 
     let startMap = Map.empty.Add ((0, 0), '.')
     runner (0, 0) 0L 0L mem startMap

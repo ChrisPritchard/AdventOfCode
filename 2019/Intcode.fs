@@ -12,9 +12,9 @@ with
     static member create() = 
         { input = Queue<int64>(); output = Queue<int64>() }
     member o.read() =
-        if o.input.Count > 0 then true, o.input.Dequeue () else false, 0L
+        if o.output.Count > 0 then true, o.output.Dequeue () else false, 0L
     member o.write n =
-        o.output.Enqueue n
+        o.input.Enqueue n
     member o.clear() = 
         o.input.Clear()
         o.output.Clear()
@@ -38,7 +38,9 @@ let private opcodes = Map.ofList [
         ip + 4L, rb, Running)
 
     3L, (fun ip rb _ _ set (io: IO) -> // Read or block
-        let (canRead, value) = io.read ()
+        let (canRead, value) = 
+            if io.input.Count > 0 then true, io.input.Dequeue () 
+            else false, 0L
         if canRead then
             set 1L value
             ip + 2L, rb, Running
@@ -46,7 +48,7 @@ let private opcodes = Map.ofList [
             ip, rb, Blocked)
 
     4L, (fun ip rb v1 _ _ (io: IO) -> // Write
-       io.write <| v1()
+       io.output.Enqueue <| v1()
        ip + 2L, rb, Running)
 
     5L, (fun ip rb v1 v2 _ _ -> // jump if greater

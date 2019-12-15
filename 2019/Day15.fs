@@ -51,8 +51,29 @@ let part2 () =
 
     let mem = Intcode.memFrom input
     let start = { x = 0; y = 0; state = 1L; memstate = mem }
-    let visited = HashSet<int * int> ()
+    
+    let fullmap = HashSet<int * int> ([0, 0])
+    let mutable target = (0, 0)
+    let getedges a =
+        let r = edges a fullmap
+        match r |> List.tryFind (fun s -> s.state = 2L) with
+        | Some e -> target <- (e.x, e.y)
+        | _ -> ()
+        Seq.ofList r
 
-    let result = BFS.run (fun a -> a.state = 2L) (fun a -> edges a visited |> Seq.ofList) start
-    0
+    BFS.run (fun _ -> false) getedges start |> ignore
+
+    let adjacent openSpace (x, y) = 
+        [|0, -1; 0, 1; -1, 0; 1, 0|]
+        |> Array.map (fun (dx, dy) -> x + dx, y + dy)
+        |> Array.filter (fun p -> Set.contains p openSpace)
+
+    let rec oxygen edges remaining cnt =
+        let next = edges |> Array.collect (adjacent remaining) |> Array.distinct
+        let remaining = (edges, remaining) ||> Array.foldBack Set.remove
+        if Set.count remaining = 0 then cnt
+        else
+            oxygen next remaining (cnt + 1)
+
+    oxygen [|target|] (Set.ofSeq fullmap) 0
     

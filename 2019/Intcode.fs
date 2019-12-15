@@ -18,6 +18,12 @@ with
     member o.clear() = 
         o.input.Clear()
         o.output.Clear()
+        
+let memFrom (array: string[]) =
+    Array.indexed array 
+    |> Array.map (fun (k, v) -> int64 k, int64 v) 
+    |> dict 
+    |> Dictionary<int64, int64>
 
 let private opcodes = Map.ofList [
     99L, (fun ip rb _ _ _ _ -> // halt
@@ -62,12 +68,6 @@ let private opcodes = Map.ofList [
     9L, (fun ip rb v1 _ _ _ -> // alter relative base
         ip + 2L, rb + v1(), Running)
     ]
-
-let memFrom (array: obj[]) =
-    Array.indexed array 
-    |> Array.map (fun (k, v) -> int64 k, (string >> int64) v) 
-    |> dict 
-    |> Dictionary<int64, int64>
     
 let run ip rb (memory: Dictionary<int64, int64>) (io: IO) =
 

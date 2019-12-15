@@ -37,7 +37,7 @@ The BOOST program will ask for a single input; run it in test mode by providing 
 
 Once your Intcode computer is fully functional, the BOOST program should report no malfunctioning opcodes when run in test mode; it should only output a single value, the BOOST keycode. What BOOST keycode does it produce?
 
-Your puzzle answer was 3638931938.
+Your puzzle answer was `3638931938`.
 
 ## Part Two
 
@@ -49,4 +49,4 @@ The program runs in sensor boost mode by providing the input instruction the val
 
 Run the BOOST program in sensor boost mode. What are the coordinates of the distress signal?
 
-Your puzzle answer was 86025.
+Your puzzle answer was `86025`.

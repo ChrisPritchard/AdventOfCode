@@ -2,7 +2,7 @@
 
 open System.Collections.Generic
 
-let bfs<'T when 'T : equality> (isGoal: 'T -> bool) (edges: 'T -> seq<'T>) (start: 'T) =
+let run<'T when 'T : equality> (isGoal: 'T -> bool) (edges: 'T -> seq<'T>) (start: 'T) =
     let queue = Queue<'T>()
     let discovered = HashSet<'T>()
     let parents = Dictionary<'T, 'T>()

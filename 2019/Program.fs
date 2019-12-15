@@ -17,10 +17,10 @@ let main _ =
     
     //printfn ""
     
-    //time 13 1 Day13.part1
-    //time 13 2 Day13.part2
+    time 13 1 Day13.part1
+    time 13 2 Day13.part2
     
-    //printfn ""
+    printfn ""
 
     //time 12 1 Day12.part1
     //time 12 2 Day12.part2
@@ -52,10 +52,10 @@ let main _ =
 
     //printfn ""
     
-    time 6 1 Day06.part1
-    time 6 2 Day06.part2
+    //time 6 1 Day06.part1
+    //time 6 2 Day06.part2
 
-    printfn ""
+    //printfn ""
     
     //time 5 1 Day05.part1
     //time 5 2 Day05.part2

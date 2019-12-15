@@ -45,23 +45,35 @@ let part1 () =
                 (x, y + 1), 2L
                 (x - 1, y), 3L
                 (x + 1, y), 4L
-            ] |> List.filter (fun (t, _) -> Map.containsKey t map |> not)
-        if List.length dirs = 0 then
+            ]
+        let options = dirs |> List.filter (fun (t, _) -> Map.containsKey t map |> not)
+
+        let backtrack () =
             match path with
             | last::rem ->
                 let nextMap = Map.add (x, y) '#' map
-                //printfn "back tracked to %A" last
-                runner last ip rb mem nextMap rem
+                io.write (dirs |> List.find (fst >> (=) last) |> snd)
+                let _, ip, rb, mem = Intcode.run ip rb mem io
+                io.read () |> ignore
+                last, ip, rb, mem, nextMap, rem, None
             | _ -> failwith "no path"
-        else
-            let (nextPos, ip, rb, mem, nextMap, _, result) =
-                (((x, y), ip, rb, mem, map, false, None), dirs)
-                ||> List.fold tryDirection
-            //printfn "stepped to %A" nextPos
-            match result with
-            | Some n -> n
-            | None ->
-                runner nextPos ip rb mem nextMap ((x, y)::path)
+
+        let pos, ip, rb, mem, map, path, result = 
+            if List.length options = 0 then
+                backtrack ()
+            else
+                let (nextPos, ip, rb, mem, nextMap, _, result) =
+                    (((x, y), ip, rb, mem, map, false, None), options)
+                    ||> List.fold tryDirection
+                if nextPos = (x, y) then
+                    backtrack ()
+                else
+                    nextPos, ip, rb, mem, nextMap, ((x, y)::path), result
+
+        match result with
+        | Some n -> n
+        | None ->
+            runner pos ip rb mem map path
 
     let startMap = Map.empty.Add ((0, 0), '.')
     runner (0, 0) 0L 0L mem startMap []

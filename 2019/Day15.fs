@@ -47,6 +47,16 @@ let part1 () =
     BFS.run (fun a -> a.state = 2L) (fun a -> edges a visited |> Seq.ofList) start
     |> Option.defaultValue [] |> fun l -> List.length l - 1
 
+(*
+To explain part 2, which might look a bit odd:
+
+First, a BFS is used with no possible goal (fun _ -> false), to fully explore the maze (it will keep exploring until it runs out of options).
+This is combined with a hashset that gets populated as the BFS explores edges, producing a complete map of open space.
+Finally, a simple oxygen function recursively fills the open space starting at the target, counting how long this takes.
+
+I've left in some of the console drawing / diagnostic code that can demonstrate how this looks (used to debug an off by 1 error).
+*)
+
 let part2 () =
 
     let mem = Intcode.memFrom input

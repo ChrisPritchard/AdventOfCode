@@ -13,10 +13,9 @@ let part1 () =
         [|0..input.Length - 1|] 
         |> Array.map (fun i ->
             let pattern = 
-                Array.init (input.Length + 1) (fun j -> 
-                    let p = (j / (i + 1)) % basePattern.Length
+                Array.init input.Length (fun j -> 
+                    let p = ((j + 1) / (i + 1)) % basePattern.Length
                     basePattern.[p])
-                |> Array.skip 1
             let total = Array.map2 (*) input pattern |> Array.sum
             abs (total % 10))
 
@@ -30,5 +29,9 @@ let part1 () =
     runner ti 100
 
 let part2 () =
-
+        
+    let tic = input |> Seq.toArray |> Array.map (string >> int)
+    let ti = Array.init 10000 (fun _ -> Array.copy tic) |> Array.collect id
+      
+    //runner ti 100
     0

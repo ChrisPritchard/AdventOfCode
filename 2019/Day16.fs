@@ -7,16 +7,18 @@ let input = File.ReadAllText "./inputs/day16.txt"
 
 let part1 () =
 
-    let basePattern = [|0; 1; 0; -1|]
-
     let run (input: int[]) =
         [|0..input.Length - 1|] 
         |> Array.map (fun i ->
-            let pattern = 
-                Array.init input.Length (fun j -> 
-                    let p = ((j + 1) / (i + 1)) % basePattern.Length
-                    basePattern.[p])
-            let total = Array.map2 (*) input pattern |> Array.sum
+            let total = 
+                Array.skip i input 
+                |> Array.chunkBySize (i + 1) 
+                |> Array.mapi (fun i a -> 
+                    match i % 4 with
+                    | 0 -> Array.sum a
+                    | 2 -> -1 * Array.sum a
+                    | _ -> 0)
+                |> Array.sum
             abs (total % 10))
 
     let rec runner current count =

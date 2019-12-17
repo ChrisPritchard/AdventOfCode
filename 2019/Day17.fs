@@ -56,7 +56,7 @@ let part1 () =
 let part2 () =
 
     let start = (3, 0, '^')
-    let goal = (24, 34)
+    let goal = (34, 24)
 
     let edges (x, y, currentDir) =
         let options = 
@@ -93,11 +93,13 @@ let part2 () =
         ||> List.fold (fun (acc, cnt, lstDir) (x, y, dir) ->
             if dir = lstDir then
                 acc, cnt + 1, lstDir
+            elif cnt <> 0 then
+                (change lstDir dir)::(cnt + 1 |> string)::acc, 0, dir
             else
-                (change lstDir dir)::(cnt |> string)::acc, 0, dir)
+                (change lstDir dir)::acc, 1, dir)
     let final =
-        if cnt > 0 then ((cnt |> string)::path)
-        else path
+        if cnt > 0 then List.rev ((cnt |> string)::path)
+        else List.rev path
 
 
     // calculate full path

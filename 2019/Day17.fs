@@ -24,10 +24,10 @@ let map = mapper [] []
 
 let part1 () =
 
-    //for y = 0 to map.Length - 1 do
-    //    for x = 0 to map.[y].Length - 1 do
-    //        printf "%c" map.[y].[x]
-    //    printfn ""
+    for y = 0 to map.Length - 1 do
+        for x = 0 to map.[y].Length - 1 do
+            printf "%c" map.[y].[x]
+        printfn ""
 
     let intersection x y =  
         if map.[y].[x] <> '#' then None
@@ -98,13 +98,13 @@ let part2 () =
             else
                 (change lstDir dir)::acc, 1, dir)
     let final =
-        if cnt > 0 then List.rev ((cnt |> string)::path)
+        if cnt > 0 then List.rev ((cnt + 1 |> string)::path)
         else List.rev path
         |> String.concat ""
 
     let triples (s: string) =
         let options = 
-            [1..20]
+            [5..20]
             |> Seq.collect (fun n -> Seq.windowed n s |> Seq.map asString)
             |> Seq.distinct
             |> Seq.toArray

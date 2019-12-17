@@ -24,10 +24,10 @@ let map = mapper [] []
 
 let part1 () =
 
-    for y = 0 to map.Length - 1 do
-        for x = 0 to map.[y].Length - 1 do
-            printf "%c" map.[y].[x]
-        printfn ""
+    //for y = 0 to map.Length - 1 do
+    //    for x = 0 to map.[y].Length - 1 do
+    //        printf "%c" map.[y].[x]
+    //    printfn ""
 
     let intersection x y =  
         if map.[y].[x] <> '#' then None
@@ -100,13 +100,49 @@ let part2 () =
     let final =
         if cnt > 0 then List.rev ((cnt |> string)::path)
         else List.rev path
+        |> String.concat ""
 
 
-    // calculate full path
-        // find start and end
-        // bfs to get path
-            // returns n and turns
-            // on intersections goes straight
-    // group by runs
+    let findSub (s: string) =
+        [2..20]
+        |> Seq.collect (fun n ->
+            Seq.windowed n s
+            |> Seq.map asString
+            |> Seq.groupBy id
+            |> Seq.filter (fun (_, g) -> Seq.length g > 1)
+            |> Seq.map fst)
+        |> Seq.toArray
 
+    let triples (s: string) options =
+        options
+        |> Array.choose (fun o ->
+            let rest = splits [o] s
+            let result = 
+                Seq.groupBy id rest
+                |> Seq.map fst
+                |> Seq.filter (fun s -> s.Length <= 20)
+                |> Seq.toArray
+            if result.Length = 2 then
+                Some <| Array.sortByDescending Seq.length [|o;result.[0];result.[1]|]
+            else
+                None)
+        |> Array.sortByDescending (fun a -> a.[2].Length)
+
+    let test1 = findSub final
+    let test2 = triples final test1
+
+    let routes (s: string) tokens =
+        let a = tokens.[0]
+        let b = tokens.[1]
+        let c = tokens.[2]
+
+        let path = 
+            splits [a] s
+            |> Array.map (fun between ->
+                if between = b then [|b|]
+                elif between = c then [|c|]
+                elif between.StartsWith b then [|b;c|]
+                elif between.StartsWith c then [|c;b|]
+                else
+                    splits [b] between)
     0

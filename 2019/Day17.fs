@@ -5,26 +5,29 @@ open System.IO
 
 let input = (File.ReadAllText ("./inputs/day17.txt")).Split ','
 
+let mem = Intcode.memFrom input
+let io = Intcode.IO.create ()
+Intcode.run 0L 0L mem io |> ignore
+
+let rec mapper acc line = 
+    let canRead, next = io.read ()
+    if not canRead then List.rev acc |> List.toArray
+    else
+        if next = 10L then
+            let line = List.rev line |> List.toArray
+            let acc = if line.Length > 0 then line::acc else acc
+            mapper acc []
+        else
+            mapper acc (char next::line)
+            
+let map = mapper [] []
+
 let part1 () =
 
-    let mem = Intcode.memFrom input
-    let io = Intcode.IO.create ()
-    Intcode.run 0L 0L mem io |> ignore
-
-    let rec mapper acc line = 
-        let canRead, next = io.read ()
-        if not canRead then List.rev acc |> List.toArray
-        else
-            if next = 10L then
-                let line = List.rev line |> List.toArray
-                let acc = if line.Length > 0 then line::acc else acc
-                mapper acc []
-            elif next = 46L then
-                mapper acc ('.'::line)
-            else
-                mapper acc ('#'::line)
-
-    let map = mapper [] []
+    //for y = 0 to map.Length - 1 do
+    //    for x = 0 to map.[y].Length - 1 do
+    //        printf "%c" map.[y].[x]
+    //    printfn ""
 
     let intersection x y =  
         if map.[y].[x] <> '#' then None
@@ -51,5 +54,12 @@ let part1 () =
     } |> Seq.sum
 
 let part2 () =
+
+    // calculate full path
+        // find start and end
+        // bfs to get path
+            // returns n and turns
+            // on intersections goes straight
+    // group by runs
 
     0

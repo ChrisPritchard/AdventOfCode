@@ -55,37 +55,50 @@ let part1 () =
 
 let part2 () =
 
-    let start = (3, 0)
+    let start = (3, 0, '^')
     let goal = (24, 34)
 
-    let edges ((x, y), (lx, ly)) =
+    let edges (x, y, currentDir) =
         let options = 
             [
-                -1, 0
-                1, 0
-                0, -1
-                0, 1
+                -1, 0, '<'
+                1, 0, '>'
+                0, -1, '^'
+                0, 1, 'v'
             ] 
-            |> Seq.map (fun (dx, dy) -> x + dx, y + dy)
-            |> Seq.filter (fun (x, y) -> x >= 0 && y >= 0 && x < map.[0].Length && y < map.Length)
-            |> Seq.filter (fun (x, y) -> map.[y].[x] = '#' && (x, y) <> (lx, ly))
+            |> Seq.map (fun (dx, dy, dir) -> x + dx, y + dy, dir)
+            |> Seq.filter (fun (x, y, _) -> x >= 0 && y >= 0 && x < map.[0].Length && y < map.Length)
+            |> Seq.filter (fun (x, y, _) -> map.[y].[x] = '#')
             |> Seq.toArray
         let straight = 
-            Array.tryFind (fun (x, y) -> x = lx || y = ly) options
+            Array.tryFind (fun (_, _, dir) -> dir = currentDir) options
         seq {
             match straight with
-            | Some o -> yield o, (x, y)
+            | Some o -> yield o
             | None ->
-                yield! options |> Seq.map (fun o -> o, (x, y))
+                yield! options
         }
 
-    let isGoal ((x, y), _) = (x, y) = goal
+    let isGoal (x, y, _) = (x, y) = goal
 
-    let fullPath = BFS.run isGoal edges (start, start) |> Option.defaultValue []
-    let translated = 
-        ((['R'], 0), fullPath.[1..]) 
-        ||> List.fold (fun (acc, cnt) ((x, y), (lx, ly)) ->
-            if lx = x || ly = y)
+    let change lastDir dir =
+        match lastDir, dir with
+        | '^', '>' | '>', 'v' | 'v', '<' | '<', '^' -> "R"
+        | '^', '<' | '<', 'v' | 'v', '>' | '>', '^' -> "L"
+        | _ -> failwithf "unexpected: %c %c" lastDir dir
+
+    let fullPath = BFS.run isGoal edges start |> Option.defaultValue []
+    let (path, cnt, _) = 
+        (([], 0, '^'), fullPath.[1..]) 
+        ||> List.fold (fun (acc, cnt, lstDir) (x, y, dir) ->
+            if dir = lstDir then
+                acc, cnt + 1, lstDir
+            else
+                (change lstDir dir)::(cnt |> string)::acc, 0, dir)
+    let final =
+        if cnt > 0 then ((cnt |> string)::path)
+        else path
+
 
     // calculate full path
         // find start and end

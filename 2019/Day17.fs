@@ -3,7 +3,7 @@
 open Common
 open System.IO
 
-let input = File.ReadAllText "./inputs/day16.txt"
+let input = File.ReadAllText "./inputs/day17.txt"
 
 let part1 () =
 

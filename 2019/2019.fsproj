@@ -23,6 +23,7 @@
     <None Include="descriptions\day14.md" />
     <None Include="descriptions\day15.md" />
     <None Include="descriptions\day16.md" />
+    <None Include="descriptions\day17.md" />
   </ItemGroup>
 
   <ItemGroup>

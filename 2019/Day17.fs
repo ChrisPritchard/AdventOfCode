@@ -102,47 +102,38 @@ let part2 () =
         else List.rev path
         |> String.concat ""
 
-
-    let findSub (s: string) =
-        [2..20]
-        |> Seq.collect (fun n ->
-            Seq.windowed n s
-            |> Seq.map asString
-            |> Seq.groupBy id
-            |> Seq.filter (fun (_, g) -> Seq.length g > 1)
-            |> Seq.map fst)
-        |> Seq.toArray
-
-    let triples (s: string) options =
+    let triples (s: string) =
+        let options = 
+            [1..20]
+            |> Seq.collect (fun n -> Seq.windowed n s |> Seq.map asString)
+            |> Seq.distinct
+            |> Seq.toArray
         options
         |> Array.choose (fun o ->
-            let rest = splits [o] s
-            let result = 
-                Seq.groupBy id rest
-                |> Seq.map fst
-                |> Seq.filter (fun s -> s.Length <= 20)
-                |> Seq.toArray
-            if result.Length = 2 then
-                Some <| Array.sortByDescending Seq.length [|o;result.[0];result.[1]|]
+            let rest = splits [o] s |> Array.distinct
+            if rest.Length = 2 then
+                if rest |> Array.forall (fun s -> s.Length <= 20) then
+                    Some <| Array.sortByDescending Seq.length [|o;rest.[0];rest.[1]|]
+                else
+                    None
             else
                 None)
         |> Array.sortByDescending (fun a -> a.[2].Length)
 
-    let test1 = findSub final
-    let test2 = triples final test1
+    let candidates = triples final
 
-    let routes (s: string) tokens =
-        let a = tokens.[0]
-        let b = tokens.[1]
-        let c = tokens.[2]
+    let routes (s: string) (a, b, c) =
+        let options = [
+            replace a "A" s |> replace b "B" |> replace c "C"
+            replace b "B" s |> replace c "C" |> replace a "A"
+            replace c "C" s |> replace a "A" |> replace b "B"
+            replace a "A" s |> replace c "C" |> replace a "A"
+            replace b "B" s |> replace a "A" |> replace c "C"
+            replace c "C" s |> replace b "B" |> replace a "A"
+            ]
+        List.minBy Seq.length options
 
-        let path = 
-            splits [a] s
-            |> Array.map (fun between ->
-                if between = b then [|b|]
-                elif between = c then [|c|]
-                elif between.StartsWith b then [|b;c|]
-                elif between.StartsWith c then [|c;b|]
-                else
-                    splits [b] between)
+    let test3 = 
+        candidates |> Array.map (fun t -> routes final (t.[0], t.[1], t.[2]))
+        
     0

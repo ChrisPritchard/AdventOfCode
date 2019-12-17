@@ -19,6 +19,9 @@ let contains (t: string) (s: string) =
 let index (t:string) (s:string) =
     s.IndexOf t
 
+let replace (t:string) (o: string) (s:string) =
+    s.Replace (t, o)
+
 let lines s =
     split "\r\n" s
 

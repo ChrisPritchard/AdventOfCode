@@ -7,6 +7,21 @@ open System.Collections.Generic
 
 let input = File.ReadAllLines ("./inputs/day18.txt")
 
+(*
+I needed to get some ideas for this one. Since you need to find the optimum path, this is basically the travelling salesman problem. 
+A bfs/dfs based solution would run forever on non-trivial inputs, like one of the samples and of course the input data.
+
+Looking around on reddit, I was able to figure out two key optimisations:
+
+- First, the path between two keys can be treated as a single static value: it doesnt change, as long as you track the keys for doors in between.
+    This allows all these paths to be precomputed which speeds things up.
+- Second, for any given position and collected key set, track the optimal step count to reach that point. 
+    If when processing you find a state has been reached before with better time, you can stop immediately.
+
+The latter was probably the critical insight. That plus ditching recursion for mutable collections resulted in a ~6 second runtime.
+This could (definitely) be improved with micro optimisations, but I'm happy.
+*)
+
 let paths (start: char, startPos: int * int) others (map: char [][]) =
     let edges (x, y) =
         [ 0, -1; 0, 1; 1, 0; -1, 0 ]
@@ -80,6 +95,13 @@ let part1 () =
             processNext visited acc current
 
     globalMin
+
+(*
+Part 2 required no hints, as with a bit of hackery its just part 1 again with a slightly different state variable:
+Rather than tracking the current key, I track a tuple of the current four keys. Again it finishes in roughly 5-6 seconds.
+
+I did make a mistake where I misrote the replacement code, mangling the map and causing an essentually infinite brute force again, but that was solved quickly :)
+*)
 
 let part2 () =
 

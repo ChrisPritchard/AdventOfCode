@@ -24,10 +24,10 @@ let map = mapper [] []
 
 let part1 () =
 
-    for y = 0 to map.Length - 1 do
-        for x = 0 to map.[y].Length - 1 do
-            printf "%c" map.[y].[x]
-        printfn ""
+    //for y = 0 to map.Length - 1 do
+    //    for x = 0 to map.[y].Length - 1 do
+    //        printf "%c" map.[y].[x]
+    //    printfn ""
 
     let intersection x y =  
         if map.[y].[x] <> '#' then None
@@ -100,40 +100,39 @@ let part2 () =
     let final =
         if cnt > 0 then List.rev ((cnt + 1 |> string)::path)
         else List.rev path
-        |> String.concat ""
+        |> List.toArray
 
-    let triples (s: string) =
-        let options = 
-            [5..20]
-            |> Seq.collect (fun n -> Seq.windowed n s |> Seq.map asString)
+    let triples (s: string []) =
+        let tokens = 
+            [5..10]
+            |> Seq.collect (fun n -> Array.windowed n s)
             |> Seq.distinct
             |> Seq.toArray
-        options
-        |> Array.choose (fun o ->
-            let rest = splits [o] s |> Array.distinct
-            if rest.Length = 2 then
-                if rest |> Array.forall (fun s -> s.Length <= 20) then
-                    Some <| Array.sortByDescending Seq.length [|o;rest.[0];rest.[1]|]
-                else
-                    None
-            else
-                None)
-        |> Array.sortByDescending (fun a -> a.[2].Length)
+        seq {
+            for a in tokens do
+                for b in tokens do
+                    for c in tokens do
+                        if a <> b && b <> c && c <> a then
+                            let A, B, C = String.concat "" a, String.concat "" b, String.concat "" c
+                            let S = String.concat "" s
+                            if replace A "" S |> replace B "" |> replace C "" = "" then
+                                yield (a, b, c)
+        } |> Seq.head
 
-    let candidates = triples final
+    let (a, b, c) = triples final
+    let mainRoutine = 
+        replace (String.concat "" a) "A," (String.concat "" final) 
+        |> replace (String.concat "" b) "B," 
+        |> replace (String.concat "" c) "C," 
+        |> fun s -> s.Trim ',' + "\n"
+    let A = String.concat "," a + "\n"
+    let B = String.concat "," b + "\n"
+    let C = String.concat "," c + "\n"
 
-    let routes (s: string) (a, b, c) =
-        let options = [
-            replace a "A" s |> replace b "B" |> replace c "C"
-            replace b "B" s |> replace c "C" |> replace a "A"
-            replace c "C" s |> replace a "A" |> replace b "B"
-            replace a "A" s |> replace c "C" |> replace a "A"
-            replace b "B" s |> replace a "A" |> replace c "C"
-            replace c "C" s |> replace b "B" |> replace a "A"
-            ]
-        List.minBy Seq.length options
+    let mem = Intcode.memFrom input
+    mem.[0L] <- 2L
+    let io = Intcode.IO.create ()
+    String.concat "" [mainRoutine;A;B;C;"n\n"] |> Seq.iter (fun c -> int64 c |> io.write)
+    Intcode.run 0L 0L mem io |> ignore
 
-    let test3 = 
-        candidates |> Array.map (fun t -> routes final (t.[0], t.[1], t.[2]))
-        
-    0
+    io.output |> Seq.toArray |> Array.last |> string

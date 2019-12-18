@@ -7,15 +7,20 @@ let main _ =
     printfn "==================="
     printfn ""
     
-    time 17 1 Day17.part1
-    time 17 2 Day17.part2
+    time 18 1 Day18.part1
+    time 18 2 Day18.part2
     
     printfn ""
     
-    time 16 1 Day16.part1
-    time 16 2 Day16.part2
+    //time 17 1 Day17.part1
+    //time 17 2 Day17.part2
     
-    printfn ""
+    //printfn ""
+    
+    //time 16 1 Day16.part1
+    //time 16 2 Day16.part2
+    
+    //printfn ""
 
     //time 15 1 Day15.part1
     //time 15 2 Day15.part2

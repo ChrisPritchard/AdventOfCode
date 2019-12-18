@@ -11,6 +11,7 @@ let map = input |> Array.map (fun s -> s.ToCharArray ())
 let start = 
     [0..map.Length - 1] 
     |> List.pick (fun y -> map.[y] |> Array.tryFindIndex (fun c -> c = '@') |> Option.map (fun x -> x, y))
+let keys = map |> Array.collect (fun line -> line |> Array.filter (fun c -> Char.IsLetter c && Char.IsLower c))
 
 let part1 () =
 
@@ -22,22 +23,22 @@ let part1 () =
             let tile = map.[oy].[ox]
             tile <> '#' && (not (Char.IsLetter tile) || Char.IsLower tile || Set.contains (Char.ToLower tile) visited))
 
-    let isGoal visited (x, y) =
-        let tile = map.[y].[x]
-        Char.IsLetter tile
-        && Char.IsLower tile
-        && not (Set.contains tile visited)
-
-    let rec runner cnt visited start =
-        let search = BFS.run (isGoal visited) (edges visited) start
-        match search with
-        | None -> cnt
-        | Some path ->
+    let rec runner cnt visited start targets =
+        targets 
+        |> Array.filter (fun tile -> not (Set.contains tile visited))
+        |> Array.choose (fun tile -> 
+            BFS.run (fun (x, y) -> map.[y].[x] = tile) (edges visited) start)
+        |> Array.map (fun path ->
             let (fx, fy) = List.last path
             let tile = map.[fy].[fx]
-            runner (cnt + path.Length - 1) (Set.add tile visited) (fx, fy)
+            cnt + path.Length - 1, Set.add tile visited, (fx, fy))
+        |> Array.map (fun (cnt, visited, start) ->
+            if Set.count visited = targets.Length then cnt
+            else
+                runner cnt visited start targets)
+        |> Array.min
 
-    runner 0 Set.empty start
+    runner 0 Set.empty start keys
 
 let part2 () =
 

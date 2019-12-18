@@ -47,13 +47,32 @@ let part1 () =
                 path 
                 |> List.map (fun (x, y) -> map.[y].[x]) 
                 |> List.filter Char.IsUpper |> List.toArray
+                |> Array.map Char.ToLower
             //let others = path |> List.map (fun (x, y) -> map.[y].[x]) |> List.filter Char.Lower
-            (start, goal), (path.Length - 1, blocks))
+            goal, (path.Length - 1, Set.ofArray blocks))
+        |> Array.sortBy (snd >> fst)
         
     let startOptions = paths ('@', start) keys
-    let keyPairs = keys |> Array.collect (fun key -> paths key keys)
+    let keyPairs = keys |> Array.map (fun (key, keyPos) -> key, paths (key, keyPos) keys) |> Map.ofArray
+    let map = Map.add '@' startOptions keyPairs
 
-    0
+    let finalStates = Dictionary<(Set<char> * char), int>()
+    let target = keys |> Array.map fst |> Set.ofArray
+    let queue = Queue<Set<char> * int * char>([Set.empty, 0, '@'])
+
+    while queue.Count > 0 do
+        let (visited, acc, current) = queue.Dequeue ()
+        if not (finalStates.ContainsKey (visited, current)) || finalStates.[(visited, current)] > acc then
+            finalStates.[(visited, current)] <- acc
+            if visited.Count < keys.Length then
+                map.[current] 
+                |> Array.filter (fun (key, (_, blocks)) -> 
+                    not (Set.contains key visited) && Set.isEmpty (Set.difference blocks visited))
+                |> Array.iter (fun (key, (cnt, _)) -> 
+                    let toEnqueue = (Set.add key visited), (acc + cnt), key
+                    queue.Enqueue toEnqueue)
+
+    finalStates |> Seq.choose (fun o -> if fst o.Key = target then Some o.Value else None) |> Seq.min
 
 let part2 () =
 

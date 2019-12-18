@@ -22,12 +22,6 @@ let keys =
 
 let part1 () =
 
-    // new approach:
-    // for each key, calculate distance to all other keys and start
-        // when calculating distance, also add up blocked doors
-        // also incidental keys collected?
-    // with this cache, then do a search to find shortest path?
-
     let paths (start: char, startPos: int * int) others =
         let edges (x, y) =
             [ 0, -1; 0, 1; 1, 0; -1, 0 ]
@@ -40,16 +34,20 @@ let part1 () =
         |> Array.choose (fun (goal, goalPos) ->
             if goal = start then None
             else 
-                BFS.run ((=) goalPos) edges startPos 
-                |> Option.map (fun path -> goal, path))
-        |> Array.map (fun (goal, path) ->
-            let blocks = 
-                path 
-                |> List.map (fun (x, y) -> map.[y].[x]) 
-                |> List.filter Char.IsUpper |> List.toArray
-                |> Array.map Char.ToLower
-            //let others = path |> List.map (fun (x, y) -> map.[y].[x]) |> List.filter Char.Lower
-            goal, (path.Length - 1, Set.ofArray blocks))
+                BFS.run ((=) goalPos) edges startPos
+                |> Option.map (fun path -> path, goal))
+        |> Array.map (fun (path, goal) ->
+            let (newKeys, requiredKeys) = 
+                ((Set.empty, Set.empty), path)
+                ||> List.fold (fun (newKeys, requiredKeys) (x, y) ->
+                    let tile = map.[y].[x]
+                    if Char.IsLower tile then
+                        Set.add tile newKeys, requiredKeys
+                    elif Char.IsUpper tile && not (Set.contains (Char.ToLower tile) newKeys) then
+                        newKeys, Set.add (Char.ToLower tile) requiredKeys
+                    else
+                        newKeys, requiredKeys)
+            goal, (path.Length - 1, (newKeys, requiredKeys)))
         |> Array.sortBy (snd >> fst)
         
     let startOptions = paths ('@', start) keys
@@ -60,17 +58,21 @@ let part1 () =
     let target = keys |> Array.map fst |> Set.ofArray
     let queue = Queue<Set<char> * int * char>([Set.empty, 0, '@'])
 
+    let processNext visited acc current = 
+        finalStates.[(visited, current)] <- acc
+        if visited.Count < keys.Length then
+            map.[current] 
+            |> Array.filter (fun (key, (_, (_, requiredKeys))) -> 
+                not (Set.contains key visited) && Set.isEmpty (Set.difference requiredKeys visited))
+            |> Array.iter (fun (key, (cnt, (newKeys, _))) -> 
+                let newVisited = (visited, newKeys) ||> Set.foldBack Set.add
+                let toEnqueue = newVisited, (acc + cnt), key
+                queue.Enqueue toEnqueue)
+
     while queue.Count > 0 do
         let (visited, acc, current) = queue.Dequeue ()
         if not (finalStates.ContainsKey (visited, current)) || finalStates.[(visited, current)] > acc then
-            finalStates.[(visited, current)] <- acc
-            if visited.Count < keys.Length then
-                map.[current] 
-                |> Array.filter (fun (key, (_, blocks)) -> 
-                    not (Set.contains key visited) && Set.isEmpty (Set.difference blocks visited))
-                |> Array.iter (fun (key, (cnt, _)) -> 
-                    let toEnqueue = (Set.add key visited), (acc + cnt), key
-                    queue.Enqueue toEnqueue)
+            processNext visited acc current
 
     finalStates |> Seq.choose (fun o -> if fst o.Key = target then Some o.Value else None) |> Seq.min
 

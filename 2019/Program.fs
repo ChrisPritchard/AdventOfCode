@@ -6,11 +6,16 @@ let main _ =
     printfn "ADVENT OF CODE 2019"
     printfn "==================="
     printfn ""
-
-    time 19 1 Day19.part1
-    time 19 2 Day19.part2
-
+    
+    time 20 1 Day20.part1
+    time 20 2 Day20.part2
+    
     printfn ""
+
+    //time 19 1 Day19.part1
+    //time 19 2 Day19.part2
+
+    //printfn ""
     
     //time 18 1 Day18.part1
     //time 18 2 Day18.part2

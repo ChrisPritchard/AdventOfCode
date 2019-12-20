@@ -66,8 +66,8 @@ let part1 () =
 let part2 () =
 
     let portalKind (x, y) =
-        if x = 2 || y = 2 || y = map.Length - 3 || x = map.[0].Length - 3 then -1
-        else 1
+        if x = 2 || y = 2 || y = map.Length - 3 || x = map.[0].Length - 3 then 1
+        else -1
 
     let atLevel level (x, y) =
         x, y, level

@@ -20,21 +20,23 @@ let portal x y =
         if not (List.forall (fun (x, y) -> valid x y && Char.IsUpper map.[y].[x]) points) then
             None
         else
-            List.map (fun (x, y) -> map.[y].[x]) points |> asString |> Some)
+            List.map (fun (x, y) -> map.[y].[x]) points |> Seq.sort |> asString |> Some)
 
 let portals = 
     seq {
         for y = 0 to map.Length - 1 do
             for x = 0 to map.[y].Length - 1 do
-                match portal x y with
-                | Some key -> yield key, (x, y)
-                | None -> ()
+                if map.[y].[x] = '.' then
+                    match portal x y with
+                    | Some name -> yield (x, y), name
+                    | _ -> ()
     } |> Map.ofSeq
-let havePortals = 
-    portals 
-    |> Map.toSeq 
-    |> Seq.map (fun o -> snd o, fst o) 
-    |> Map.ofSeq
+
+let findPortal name =
+    Map.findKey (fun _ -> (=) name) portals
+
+let findExit name ignore =
+    Map.tryFindKey (fun pos other -> other = name && pos <> ignore) portals
 
 let adjacent x y =
     [
@@ -43,23 +45,22 @@ let adjacent x y =
 
 let part1 () =
 
-    let start = portals.["AA"]
-    let isGoal (x, y) = 
-        portals.["ZZ"] = (x, y)
+    let start = findPortal "AA"
+    let goal = findPortal "ZZ"
+
     let edges (x, y) =
         let normal = 
             adjacent x y |> Seq.filter (fun (x, y) -> map.[y].[x] = '.')
-        if not (Map.containsKey (x, y) havePortals) then
+        if not (Map.containsKey (x, y) portals) then
             normal
-        else 
-            let portal = havePortals.[x, y]
-            let exit = portal |> Seq.rev |> asString
-            if Map.containsKey exit portals then
-                Seq.append normal [portals.[exit]]
-            else
-                normal
+        else
+            let portal = portals.[x, y]
+            match findExit portal (x, y) with
+            | Some other ->
+                Seq.append normal [other]
+            | None -> normal
         
-    let path = BFS.run isGoal edges start |> Option.defaultValue []
+    let path = BFS.run ((=) goal) edges start |> Option.defaultValue []
     path.Length - 1
 
 let part2 () =

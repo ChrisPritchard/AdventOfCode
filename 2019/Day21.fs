@@ -18,22 +18,16 @@ let part1 () =
 
     let instructions = [|
         "NOT A J"
+        "NOT B T"
+        "OR T J"
+        "NOT C T"
+        "OR T J"
         "AND D J"
-
-        //"NOT A J"
-        //"NOT B T"
-        //"AND T J"
-        //"NOT C T"
-        //"AND T J"
-        //"AND D J"
         "WALK"
         |]
 
     let result = run instructions
-    if result.Length = 0 then string result.[0]
-    else
-        result |> Array.iter (int >> char >> printf "%c")
-        ""
+    Array.last result |> string
 
 let part2 () =
 

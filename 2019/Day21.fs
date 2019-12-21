@@ -31,23 +31,23 @@ let part1 () =
 
 let part2 () =
 
-    let instructions = [|
-        "NOT A J"
+    let instructions = 
+        [|
+        "NOT A J" // jump if any of the next three tiles are pits, and the landing is free
         "NOT B T"
         "OR T J"
         "NOT C T"
         "OR T J"
-
         "AND D J"
 
-        "AND H J"
-        "OR E J"
-        "AND I J"
+        "AND E T" // but, if the next tile is a pit after landing and there isnt a further landing
+        "OR H T"  // dont jump
+        "AND T J" // (this check is inverted: next tile isn't a pit or a landing is available)
 
         "RUN"
         |]
 
     let result = run instructions
-    //Array.last result |> string
-    result |> Array.iter (char >> printf "%c")
-    0
+    Array.last result |> string
+    //result |> Array.iter (char >> printf "%c")
+    //0

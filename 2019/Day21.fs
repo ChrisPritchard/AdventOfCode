@@ -16,7 +16,10 @@ let part1 () =
         Intcode.run 0L 0L mem io |> ignore
         io.output |> Seq.toArray
 
-    let result = run [|"WALK"|]
+    // if next open and not four ahead open jump
+    // else if two ahead open
+
+    let result = run [|"NOT A J";"WALK"|]
     result |> Array.iter (int >> char >> printf "%c")
     0
 

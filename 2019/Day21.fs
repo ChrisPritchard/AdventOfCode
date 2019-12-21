@@ -16,12 +16,24 @@ let part1 () =
         Intcode.run 0L 0L mem io |> ignore
         io.output |> Seq.toArray
 
-    // if next open and not four ahead open jump
-    // else if two ahead open
+    let instructions = [|
+        "NOT A J"
+        "AND D J"
 
-    let result = run [|"NOT A J";"WALK"|]
-    result |> Array.iter (int >> char >> printf "%c")
-    0
+        //"NOT A J"
+        //"NOT B T"
+        //"AND T J"
+        //"NOT C T"
+        //"AND T J"
+        //"AND D J"
+        "WALK"
+        |]
+
+    let result = run instructions
+    if result.Length = 0 then string result.[0]
+    else
+        result |> Array.iter (int >> char >> printf "%c")
+        ""
 
 let part2 () =
 

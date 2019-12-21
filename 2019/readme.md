@@ -5,6 +5,7 @@ My solutions for [Advent of Code, 2019](https://adventofcode.com/2019). I did th
 ```
       -------Part 1--------   -------Part 2--------
 Day       Time  Rank  Score       Time  Rank  Score
+ 21   02:24:17   988      0   17:13:49  2291      0
  20   13:11:28  2285      0   16:47:04  1851      0
  19   00:05:06   202      0   00:54:47   412      0
  18   15:28:36  1407      0   17:30:30  1134      0 // needed a quick hint to get past travelling salesman difficulty

@@ -45,15 +45,13 @@ let part1 () =
     //([|0..9|], input) ||> Array.fold apply
 
 let part2 () =
-
-    let applyIncrement increment index totalLength inReverse =
-        if index = 0L then 0L
-        elif not inReverse then
-            (index * increment) % totalLength
-        else
-            (index * -increment) % totalLength + totalLength
     
-    let applyCut cut index totalLength =
+    let reverseIncrement totalLength index increment =
+        if index = 0L then 0L
+        else (index * -increment) % totalLength + totalLength
+
+    let reverseCut totalLength index cut =
+        let cut = -cut
         if cut >= 0L then
             if cut <= index then index - cut
             else totalLength - (cut - index)
@@ -61,28 +59,32 @@ let part2 () =
             let point = totalLength + cut
             if point <= index then index - point
             else abs cut + index
-    
-    let apply totalLength inReverse index =
-        function
+
+    let originalIndex totalLength index expression =
+        match expression with
         | "deal into new stack" -> totalLength - 1L - index
         | s when s.StartsWith "deal with increment " ->
             let increment = s.Substring "deal with increment ".Length |> int64
-            applyIncrement increment index totalLength inReverse
+            reverseIncrement totalLength index increment
         | s when s.StartsWith "cut " ->
             let cut = s.Substring "cut ".Length |> int64
-            if inReverse then applyCut -cut index totalLength
-            else applyCut cut index totalLength
-        | s -> failwithf "'%s' didn't match a handler" s
+            reverseCut totalLength index cut
+        | _ -> failwithf "'%s' didn't match a handler" expression
     
     let totalCards = 119315717514047L
     let iterations = 101741582076661L
 
     //(2019L, input) ||> Array.fold (apply 10007L)
-    //(4684L, Array.rev input) ||> Array.fold (apply 10007L false)
+    (4684L, Array.rev input) ||> Array.fold (originalIndex 10007L)
 
-    [|0; 7; 4; 1; 8; 5; 2; 9; 6; 3|]
-    |> Array.mapi (fun i _ -> applyIncrement 3L (int64 i) 10L true)
+    //[|0; 7; 4; 1; 8; 5; 2; 9; 6; 3|]
+    //|> Array.mapi (fun i _ -> applyIncrement 3L (int64 i) 10L true)
 
+    //[|3; 4; 5; 6; 7; 8; 9; 0; 1; 2|]
+    //|> Array.mapi (fun i _ -> reverseCut 10L (int64 i) 3L)
+
+    //[|6; 7; 8; 9; 0; 1; 2; 3; 4; 5|]
+    //|> Array.mapi (fun i _ -> reverseCut 10L (int64 i) -4L)
 
     //let test = [|
     //    "deal into new stack"

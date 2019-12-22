@@ -46,9 +46,14 @@ let part1 () =
 
 let part2 () =
 
-    let applyIncrement increment index totalLength =
+    let applyIncrement increment index totalLength inReverse =
         if index = 0L then 0L
-        else (index * increment) % totalLength
+        elif not inReverse then
+            (index * increment) % totalLength
+        elif index < increment then
+            totalLength + (index - increment)
+        else 
+            index / increment
     
     let applyCut cut index totalLength =
         if cut >= 0L then
@@ -59,22 +64,26 @@ let part2 () =
             if point <= index then index - point
             else abs cut + index
     
-    let apply totalLength index =
+    let apply totalLength inReverse index =
         function
         | "deal into new stack" -> totalLength - 1L - index
         | s when s.StartsWith "deal with increment " ->
             let increment = s.Substring "deal with increment ".Length |> int64
-            applyIncrement increment index totalLength
+            applyIncrement increment index totalLength inReverse
         | s when s.StartsWith "cut " ->
             let cut = s.Substring "cut ".Length |> int64
-            applyCut cut index totalLength
+            if inReverse then applyCut -cut index totalLength
+            else applyCut cut index totalLength
         | s -> failwithf "'%s' didn't match a handler" s
     
     let totalCards = 119315717514047L
     let iterations = 101741582076661L
 
     //(2019L, input) ||> Array.fold (apply 10007L)
-    (4684L, Array.rev input) ||> Array.fold (apply 10007L)
+    //(4684L, Array.rev input) ||> Array.fold (apply 10007L false)
+
+    [|0; 7; 4; 1; 8; 5; 2; 9; 6; 3|]
+    |> Array.mapi (fun i _ -> applyIncrement 3L (int64 i) 10L true)
 
     //let test = [|
     //    "deal into new stack"

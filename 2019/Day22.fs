@@ -50,10 +50,8 @@ let part2 () =
         if index = 0L then 0L
         elif not inReverse then
             (index * increment) % totalLength
-        elif index < increment then
-            totalLength + (index - increment)
-        else 
-            index / increment
+        else
+            (index * -increment) % totalLength + totalLength
     
     let applyCut cut index totalLength =
         if cut >= 0L then
@@ -84,6 +82,7 @@ let part2 () =
 
     [|0; 7; 4; 1; 8; 5; 2; 9; 6; 3|]
     |> Array.mapi (fun i _ -> applyIncrement 3L (int64 i) 10L true)
+
 
     //let test = [|
     //    "deal into new stack"

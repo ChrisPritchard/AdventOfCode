@@ -5,6 +5,7 @@ My solutions for [Advent of Code, 2019](https://adventofcode.com/2019). I did th
 ```
       -------Part 1--------   -------Part 2--------
 Day       Time  Rank  Score       Time  Rank  Score
+ 22   00:48:05   672      0   22:58:57  1519      0 // part 1 easy, part 2 impossible. I copied a solution and still dont understand it
  21   02:24:17   988      0   17:13:49  2291      0
  20   13:11:28  2285      0   16:47:04  1851      0
  19   00:05:06   202      0   00:54:47   412      0

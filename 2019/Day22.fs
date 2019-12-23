@@ -42,16 +42,13 @@ let part1 () =
     let res = ([|0..10006|], input) ||> Array.fold apply
     Array.findIndex ((=) 2019) res
 
-    //([|0..9|], input) ||> Array.fold apply
-
 let part2 () =
     
-    let reverseIncrement totalLength index increment =
+    let applyIncrement increment index totalLength =
         if index = 0L then 0L
-        else (index * -increment) % totalLength + totalLength
-
-    let reverseCut totalLength index cut =
-        let cut = -cut
+        else (index * increment) % totalLength
+    
+    let applyCut cut index totalLength =
         if cut >= 0L then
             if cut <= index then index - cut
             else totalLength - (cut - index)
@@ -59,45 +56,28 @@ let part2 () =
             let point = totalLength + cut
             if point <= index then index - point
             else abs cut + index
-
-    let originalIndex totalLength index expression =
-        match expression with
+    
+    let apply totalLength index =
+        function
         | "deal into new stack" -> totalLength - 1L - index
         | s when s.StartsWith "deal with increment " ->
             let increment = s.Substring "deal with increment ".Length |> int64
-            reverseIncrement totalLength index increment
+            applyIncrement increment index totalLength
         | s when s.StartsWith "cut " ->
             let cut = s.Substring "cut ".Length |> int64
-            reverseCut totalLength index cut
-        | _ -> failwithf "'%s' didn't match a handler" expression
+            applyCut cut index totalLength
+        | s -> failwithf "'%s' didn't match a handler" s
     
     let totalCards = 119315717514047L
     let iterations = 101741582076661L
 
-    //(2019L, input) ||> Array.fold (apply 10007L)
-    (4684L, Array.rev input) ||> Array.fold (originalIndex 10007L)
+    let applyIteration index = 
+        (index, input) ||> Array.fold (apply totalCards)
 
-    //[|0; 7; 4; 1; 8; 5; 2; 9; 6; 3|]
-    //|> Array.mapi (fun i _ -> applyIncrement 3L (int64 i) 10L true)
+    let rec processor cnt index =
+        let result = applyIteration index
+        if result = 0L then cnt
+        else
+            processor (cnt + 1) result
 
-    //[|3; 4; 5; 6; 7; 8; 9; 0; 1; 2|]
-    //|> Array.mapi (fun i _ -> reverseCut 10L (int64 i) 3L)
-
-    //[|6; 7; 8; 9; 0; 1; 2; 3; 4; 5|]
-    //|> Array.mapi (fun i _ -> reverseCut 10L (int64 i) -4L)
-
-    //let test = [|
-    //    "deal into new stack"
-    //    "cut -2"
-    //    "deal with increment 7"
-    //    "cut 8"
-    //    "cut -4"
-    //    "deal with increment 7"
-    //    "cut 3"
-    //    "deal with increment 9"
-    //    "deal with increment 3"
-    //    "cut -1"
-    //    |]
-    //let orders = Array.init 10 (fun i -> 
-    //    (int64 i, test) ||> Array.fold (apply 10L))
-    //Array.init 10 (fun i -> Array.findIndex ((=) (int64 i)) orders)
+    processor 0 0L

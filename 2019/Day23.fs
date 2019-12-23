@@ -53,4 +53,38 @@ let part1 () =
 
 let part2 () =
 
-    0
+    let computers = Array.init 50 (int64 >> Computer)
+    let messages = Array.init 50 (fun i -> int64 i, List<int64 * int64>()) |> Map.ofArray
+    let mutable resets = []
+
+    let rec runAll natMessage isIdle =
+        let mutable sendToNat = natMessage
+        let mutable idle = true
+
+        for computer in computers do
+
+            let received = 
+                if isIdle && computer.Address = 0L then
+                    resets <- natMessage::resets
+                    [|natMessage|]
+                else
+                    let res = messages.[computer.Address] |> Seq.toArray
+                    messages.[computer.Address].Clear() |> ignore
+                    res
+            if not (Array.isEmpty received) then idle <- false
+
+            let sent = computer.run received
+            if not (Array.isEmpty sent) then idle <- false
+
+            for (address, (x, y)) in sent do
+                if address = 255L then 
+                    sendToNat <- x, y
+                elif Map.containsKey address messages then 
+                    messages.[address].Add (x, y)
+
+        match resets with
+        | (_,y1)::(_,y2)::_ when y1 = y2 -> y1
+        | _ ->
+            runAll sendToNat idle
+
+    runAll (0L, 0L) false |> string

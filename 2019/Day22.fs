@@ -65,6 +65,7 @@ let part2 () =
     let reverseCut cut totalLength index =
         (index + cut + totalLength) % totalLength
 
+    // implementation works as long as m (which is typically the deck length) is prime
     let modinv (a, m) =
         bigint.ModPow(a, m - bigint 2, m)
 
@@ -81,6 +82,11 @@ let part2 () =
             let cut = s.Substring "cut ".Length |> bigint.Parse
             reverseCut cut totalLength index
         | s -> failwithf "'%s' didn't match a handler" s
+
+    // below code (except for pow, the implementation of f and the 
+    // sprinkled 'bigint's) is taken directly from the python comment
+    
+    let pow = bigint.ModPow
         
     let D = bigint 119315717514047L
     let n = bigint 101741582076661L
@@ -94,5 +100,4 @@ let part2 () =
     let A = (Y-Z) * modinv(X-Y+D, D) % D
     let B = (Y-A*X) % D
 
-    let pow = bigint.ModPow
     (pow(A, n, D)*X + (pow(A, n, D)-bigint 1) * modinv(A-bigint 1, D) * B) % D

@@ -49,6 +49,10 @@ as it uses some advanced math concepts that I at least, certainly do not know.
 In lieu of trying to learn advanced calculus and linear algebra, I settled for providing an implementation of the algorithm
 demonstrated in this reddit comment: https://www.reddit.com/r/adventofcode/comments/ee0rqi/2019_day_22_solutions/fbnifwk/
 
+One minor difference from the above implementation is that, given that modinv is only being used on primes (the deck size is
+prime), I can use BigInts modpow function instead of the borrowed code the comment used. This solved some bugs from when I
+initially tried to use the comment's referenced implementation.
+
 The reversing of the index was something I was working on (though I didn't know about mod inverse and so failed), but the 
 linear/congruent/whatsits are beyond me.
 *)
@@ -56,47 +60,39 @@ linear/congruent/whatsits are beyond me.
 let part2 () =
 
     let reverseStack totalLength index =
-        totalLength - 1L - index
+        totalLength - bigint 1 - index
 
     let reverseCut cut totalLength index =
         (index + cut + totalLength) % totalLength
 
-    let modInverse a m =
-        let rec egcd a b =
-            if a = 0L then (b, 0L, 1L)
-            else 
-                let g, y, x = egcd (b % a) a
-                (g, x - (b / a) * y, y)
-
-        let g, x, _ = egcd a m
-        if g <> 1L then failwith "modular inverse does not exist"
-        else x % m
+    let modinv (a, m) =
+        bigint.ModPow(a, m - bigint 2, m)
 
     let reverseIncrement increment totalLength index =
-        modInverse increment totalLength * index % totalLength
+        modinv (increment, totalLength) * index % totalLength
 
     let reverseApply totalLength index =
         function
         | "deal into new stack" -> reverseStack totalLength index
         | s when s.StartsWith "deal with increment " ->
-            let increment = s.Substring "deal with increment ".Length |> int64
+            let increment = s.Substring "deal with increment ".Length |> bigint.Parse
             reverseIncrement increment totalLength index
         | s when s.StartsWith "cut " ->
-            let cut = s.Substring "cut ".Length |> int64
+            let cut = s.Substring "cut ".Length |> bigint.Parse
             reverseCut cut totalLength index
         | s -> failwithf "'%s' didn't match a handler" s
         
-    let D = 119315717514047L
-    let n = 101741582076661L
+    let D = bigint 119315717514047L
+    let n = bigint 101741582076661L
 
-    let reverse index = 
+    let f index = 
         (index, Array.rev input) ||> Array.fold (reverseApply D)
 
-    let X = 2020L
-    let Y = reverse X
-    let Z = reverse Y
-    let A = (Y - Z) * (modInverse ((X - Y) + D) D) % D
-    let B = (Y - (A*X)) % D
+    let X = bigint 2020
+    let Y = f(X)
+    let Z = f(Y)
+    let A = (Y-Z) * modinv(X-Y+D, D) % D
+    let B = (Y-A*X) % D
 
-    let pow x y z = int64 (float x ** float y) % z
-    ((pow A n D)*X + ((pow A n D)-1L) * (modInverse (A-1L) D) * B) % D
+    let pow = bigint.ModPow
+    (pow(A, n, D)*X + (pow(A, n, D)-bigint 1) * modinv(A-bigint 1, D) * B) % D

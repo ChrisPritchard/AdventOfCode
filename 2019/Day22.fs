@@ -86,7 +86,17 @@ let part2 () =
             reverseCut cut totalLength index
         | s -> failwithf "'%s' didn't match a handler" s
         
-    let totalCards = 119315717514047L
-    let iterations = 101741582076661L
+    let D = 119315717514047L
+    let n = 101741582076661L
 
-    (4684L, Array.rev input) ||> Array.fold (reverseApply 10007L)
+    let reverse index = 
+        (index, Array.rev input) ||> Array.fold (reverseApply D)
+
+    let X = 2020L
+    let Y = reverse X
+    let Z = reverse Y
+    let A = (Y - Z) * (modInverse ((X - Y) + D) D) % D
+    let B = (Y - (A*X)) % D
+
+    let pow x y z = int64 (float x ** float y) % z
+    ((pow A n D)*X + ((pow A n D)-1L) * (modInverse (A-1L) D) * B) % D

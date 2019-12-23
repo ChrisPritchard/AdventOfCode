@@ -42,42 +42,51 @@ let part1 () =
     let res = ([|0..10006|], input) ||> Array.fold apply
     Array.findIndex ((=) 2019) res
 
+(*
+For part 2, after experimenting for a day, I gave up and checked Reddit. This one was a struggle for many people,
+as it uses some advanced math concepts that I at least, certainly do not know.
+
+In lieu of trying to learn advanced calculus and linear algebra, I settled for providing an implementation of the algorithm
+demonstrated in this reddit comment: https://www.reddit.com/r/adventofcode/comments/ee0rqi/2019_day_22_solutions/fbnifwk/
+
+The reversing of the index was something I was working on (though I didn't know about mod inverse and so failed), but the 
+linear/congruent/whatsits are beyond me.
+*)
+
 let part2 () =
-    
-    let applyIncrement increment index totalLength =
-        if index = 0L then 0L
-        else (index * increment) % totalLength
-    
-    let applyCut cut index totalLength =
-        if cut >= 0L then
-            if cut <= index then index - cut
-            else totalLength - (cut - index)
-        else
-            let point = totalLength + cut
-            if point <= index then index - point
-            else abs cut + index
-    
-    let apply totalLength index =
+
+    let reverseStack totalLength index =
+        totalLength - 1L - index
+
+    let reverseCut cut totalLength index =
+        (index + cut + totalLength) % totalLength
+
+    let modInverse a m =
+        let rec egcd a b =
+            if a = 0L then (b, 0L, 1L)
+            else 
+                let g, y, x = egcd (b % a) a
+                (g, x - (b / a) * y, y)
+
+        let g, x, _ = egcd a m
+        if g <> 1L then failwith "modular inverse does not exist"
+        else x % m
+
+    let reverseIncrement increment totalLength index =
+        modInverse increment totalLength * index % totalLength
+
+    let reverseApply totalLength index =
         function
-        | "deal into new stack" -> totalLength - 1L - index
+        | "deal into new stack" -> reverseStack totalLength index
         | s when s.StartsWith "deal with increment " ->
             let increment = s.Substring "deal with increment ".Length |> int64
-            applyIncrement increment index totalLength
+            reverseIncrement increment totalLength index
         | s when s.StartsWith "cut " ->
             let cut = s.Substring "cut ".Length |> int64
-            applyCut cut index totalLength
+            reverseCut cut totalLength index
         | s -> failwithf "'%s' didn't match a handler" s
-    
+        
     let totalCards = 119315717514047L
     let iterations = 101741582076661L
 
-    let applyIteration index = 
-        (index, input) ||> Array.fold (apply totalCards)
-
-    let rec processor cnt index =
-        let result = applyIteration index
-        if result = 0L then cnt
-        else
-            processor (cnt + 1) result
-
-    processor 0 0L
+    (4684L, Array.rev input) ||> Array.fold (reverseApply 10007L)

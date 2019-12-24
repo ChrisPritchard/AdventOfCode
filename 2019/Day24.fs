@@ -89,7 +89,7 @@ let part2 () =
             ([], Map.toArray expandedMap) 
             ||> Array.fold (fun changes (point, state) ->
                 let bugs, _ = bugs expandedMap point 
-                if state = '#' && bugs = 1 then 
+                if state = '#' then 
                     if bugs = 1 then
                         changes // no change
                     else
@@ -109,11 +109,27 @@ let part2 () =
         |> Array.collect (fun (y, line) ->
             line |> Array.indexed |> Array.map (fun (x, cell) -> (x, y, 0), cell))
         |> Map.ofArray
+
+    let print map =
+        System.Console.Clear ()
+        System.Console.CursorTop <- 0
+        System.Console.CursorLeft <- 0
+        Map.toArray map
+        |> Array.groupBy (fun ((_,_,l), _) -> l)
+        |> Array.iter (fun (level, tiles) ->
+            printfn "Level %i" level
+            tiles
+            |> Array.sortBy (fun ((x,y,_), _) -> y, x)
+            |> Array.iter (fun ((x,_,_), s) -> if x = 4 then printfn "%c" s else printf "%c" s)
+            printfn "")
+        System.Console.ReadKey true
     
     let rec totalAfter minutes map =
         if minutes = 0 then 
             map |> Map.toArray |> Array.filter (snd >> (=) '#') |> Array.length
         else
-            totalAfter (minutes - 1) (minute map)
+            //print map |> ignore
+            let next = minute map
+            totalAfter (minutes - 1) next
 
     totalAfter 10 start

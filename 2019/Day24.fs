@@ -80,21 +80,28 @@ let part2 () =
             else cnt, Map.add point '.' map)
 
     let minute map =
-        let changes, expandedMap =
-            (([], map), Map.toArray map) 
-            ||> Array.fold (fun (changes, map) (point, state) ->
-                let bugs, newMap = bugs map point
+        let expandedMap = 
+            (map, Map.toArray map) 
+            ||> Array.fold (fun map (point, _) ->
+                bugs map point |> snd)
+            
+        let changes =
+            ([], Map.toArray expandedMap) 
+            ||> Array.fold (fun changes (point, state) ->
+                let bugs, _ = bugs expandedMap point 
                 if state = '#' && bugs = 1 then 
                     if bugs = 1 then
-                        changes, newMap // no change
+                        changes // no change
                     else
-                        (point, '.')::changes, newMap
+                        (point, '.')::changes
                 else 
                     if bugs = 1 || bugs = 2 then
-                        (point, '#')::changes, newMap
+                        (point, '#')::changes
                     else
-                        changes, newMap)
-        (expandedMap, changes) ||> List.fold (fun map (point, state) -> Map.add point state map)
+                        changes)
+
+        (expandedMap, changes) 
+        ||> List.fold (fun map (point, state) -> Map.add point state map)
     
     let start = 
         input 

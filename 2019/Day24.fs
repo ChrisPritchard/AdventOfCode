@@ -77,7 +77,10 @@ let part2 () =
         ||> Array.fold (fun (cnt, map) point ->
             if Map.containsKey point map && map.[point] = '#' 
             then cnt + 1, map
-            else cnt, Map.add point '.' map)
+            else
+                let (x, y, _) = point
+                if (x, y) = (2, 2) || x < 0 || x > 4 || y < 0 || y > 4 then System.Diagnostics.Debugger.Break ()
+                cnt, Map.add point '.' map)
 
     let minute map =
         let expandedMap = 
@@ -103,33 +106,52 @@ let part2 () =
         (expandedMap, changes) 
         ||> List.fold (fun map (point, state) -> Map.add point state map)
     
-    let start = 
+    let start scan = 
         input 
         |> Array.indexed 
         |> Array.collect (fun (y, line) ->
             line |> Array.indexed |> Array.map (fun (x, cell) -> (x, y, 0), cell))
         |> Map.ofArray
+        |> Map.remove (2, 2, 0)
 
-    let print map =
-        System.Console.Clear ()
-        System.Console.CursorTop <- 0
-        System.Console.CursorLeft <- 0
-        Map.toArray map
-        |> Array.groupBy (fun ((_,_,l), _) -> l)
-        |> Array.iter (fun (level, tiles) ->
-            printfn "Level %i" level
-            tiles
-            |> Array.sortBy (fun ((x,y,_), _) -> y, x)
-            |> Array.iter (fun ((x,_,_), s) -> if x = 4 then printfn "%c" s else printf "%c" s)
-            printfn "")
-        System.Console.ReadKey true
+    //let print map =
+    //    System.Console.Clear ()
+    //    System.Console.CursorTop <- 0
+    //    System.Console.CursorLeft <- 0
+    //    Map.toArray map
+    //    |> Array.groupBy (fun ((_,_,l), _) -> l)
+    //    |> Array.sortBy fst
+    //    |> Array.iter (fun (level, tiles) ->
+    //        printfn "Level %i" level
+    //        let levelMap = tiles |> Map.ofArray
+    //        for y = 0 to 4 do
+    //            for x = 0 to 4 do
+    //                if Map.containsKey (x, y, level) levelMap then
+    //                    printf "%c" levelMap.[x, y, level]
+    //                else
+    //                    printf "."
+    //            printfn ""
+    //        printfn "")
+    //    System.Console.ReadKey true
     
     let rec totalAfter minutes map =
         if minutes = 0 then 
+            //print map |> ignore
             map |> Map.toArray |> Array.filter (snd >> (=) '#') |> Array.length
         else
             //print map |> ignore
             let next = minute map
             totalAfter (minutes - 1) next
 
-    totalAfter 10 start
+    //let test = [|
+    //    "....#".ToCharArray ()
+    //    "#..#.".ToCharArray ()
+    //    "#.?##".ToCharArray ()
+    //    "..#..".ToCharArray ()
+    //    "#....".ToCharArray ()
+    //    |]
+
+    let minutes, start = 200, start input
+    //let minutes, start = 10, start test
+    //print start |> ignore
+    totalAfter minutes start

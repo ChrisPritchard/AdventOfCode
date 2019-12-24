@@ -45,4 +45,68 @@ let part1 () =
 
 let part2 () =
 
-    0
+    let adjacent (ox, oy, l) =
+        let borders (x, y) = 
+            if x = -1 then
+                [|1, 2, l-1|]
+            elif x = 5 then
+                [|3, 2, l-1|]
+            elif y = -1 then
+                [|2, 1, l-1|]
+            elif y = 5 then 
+                [|2, 3, l-1|]
+            elif (x, y) <> (2, 2) then 
+                [|x, y, l|]
+            else
+                [|
+                    (1, 2), [| for y = 0 to 4 do yield 0, y, l + 1 |]
+                    (3, 2), [| for y = 0 to 4 do yield 4, y, l + 1 |]
+                    (2, 1), [| for x = 0 to 4 do yield x, 0, l + 1 |]
+                    (2, 3), [| for x = 0 to 4 do yield x, 4, l + 1 |]
+                |] |> Map.ofArray |> Map.find (ox, oy)
+        [| 
+            ox - 1, oy
+            ox + 1, oy
+            ox, oy - 1
+            ox, oy + 1
+        |] |> Array.collect borders
+
+    let bugs map (x, y, l) =
+        let adjacent = adjacent (x, y, l)
+        ((0, map), adjacent) 
+        ||> Array.fold (fun (cnt, map) point ->
+            if Map.containsKey point map && map.[point] = '#' 
+            then cnt + 1, map
+            else cnt, Map.add point '.' map)
+
+    let minute map =
+        let changes, expandedMap =
+            (([], map), Map.toArray map) 
+            ||> Array.fold (fun (changes, map) (point, state) ->
+                let bugs, newMap = bugs map point
+                if state = '#' && bugs = 1 then 
+                    if bugs = 1 then
+                        changes, newMap // no change
+                    else
+                        (point, '.')::changes, newMap
+                else 
+                    if bugs = 1 || bugs = 2 then
+                        (point, '#')::changes, newMap
+                    else
+                        changes, newMap)
+        (expandedMap, changes) ||> List.fold (fun map (point, state) -> Map.add point state map)
+    
+    let start = 
+        input 
+        |> Array.indexed 
+        |> Array.collect (fun (y, line) ->
+            line |> Array.indexed |> Array.map (fun (x, cell) -> (x, y, 0), cell))
+        |> Map.ofArray
+    
+    let rec totalAfter minutes map =
+        if minutes = 0 then 
+            map |> Map.toArray |> Array.filter (snd >> (=) '#') |> Array.length
+        else
+            totalAfter (minutes - 1) (minute map)
+
+    totalAfter 10 start

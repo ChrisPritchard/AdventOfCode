@@ -5,6 +5,7 @@ My solutions for [Advent of Code, 2019](https://adventofcode.com/2019). I did th
 ```
       -------Part 1--------   -------Part 2--------
 Day       Time  Rank  Score       Time  Rank  Score
+ 25   02:26:05   736      0   02:28:12   559      0
  24   02:03:48  1144      0   16:11:42  2063      0
  23   00:45:48   546      0   01:04:13   504      0
  22   00:48:05   672      0   22:58:57  1519      0 // part 1 easy, part 2 impossible. I copied a solution and still dont understand it
@@ -30,3 +31,11 @@ Day       Time  Rank  Score       Time  Rank  Score
   2   00:14:09   907      0   00:19:40   607      0
   1   00:02:56   507      0   00:06:04   259      0
 ```
+
+Overall, 2019 was a lot of fun. The intcode programs in particular were truly ingenious - how, I ask, did he manage to make such elaborate programs to run on a VM he got us to make? The problem data didn't even seem that big!
+
+Of all the days, I only needed help on four of them, and of those four, only one required more than a hint towards the right direction. Day 22 was the hardest, because its second part required math I didn't understand. My solution for it was just a copy of someone else's python :(
+
+Every other day though I did myself. The few I required hints for, I made sure I understood the solution and implemented it in my own way before solving. Very happy overall :)
+
+Onward to 2020!

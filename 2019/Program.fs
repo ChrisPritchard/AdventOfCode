@@ -8,7 +8,6 @@ let main _ =
     printfn ""
     
     time 25 1 Day25.part1
-    time 25 2 Day25.part2
     
     printfn ""
     

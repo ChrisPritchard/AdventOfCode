@@ -14,4 +14,6 @@ let part2 () =
     input 
     |> Array.pick (fun a ->
         input |> Array.tryPick (fun b ->
-            input |> Array.tryPick (fun c -> if a + b + c = 2020 then Some (a * b * c) else None)))
+            if a + b >= 2020 then None
+            else
+                input |> Array.tryPick (fun c -> if a + b + c = 2020 then Some (a * b * c) else None)))

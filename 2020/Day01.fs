@@ -9,9 +9,11 @@ let part1 () =
 
 let part2 () =
 
-    let rec processFuel acc v = 
-        let res = floor (v / 3.) - 2.
-        if res <= 0. then acc
-        else processFuel (acc + res) res
+    0
 
-    input |> Array.sumBy (float >> processFuel 0.) |> int
+    // let rec processFuel acc v = 
+    //     let res = floor (v / 3.) - 2.
+    //     if res <= 0. then acc
+    //     else processFuel (acc + res) res
+
+    // input |> Array.sumBy (float >> processFuel 0.) |> int

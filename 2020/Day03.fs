@@ -5,7 +5,7 @@ open System.IO
 let input = 
     File.ReadAllLines ("./inputs/day03.txt")
     |> Array.map (fun s ->
-        s |> Seq.map (fun c -> c <> '.') |> Seq.toArray)
+        s |> Seq.map ((<>) '.') |> Seq.toArray)
         
 let path px py =
     let length = Array.length input.[0]
@@ -13,8 +13,8 @@ let path px py =
     let rec counter x y c =
         if y >= lines then c
         else
-            let line = input.[y]
-            counter (x + px) (y + py) (if line.[x % length] then c + 1 else c)
+            let count = if input.[y].[x % length] then c + 1 else c
+            counter (x + px) (y + py) count
     counter 0 0 0
         
 let part1 () =

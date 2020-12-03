@@ -6,19 +6,28 @@ open Common
 let input = 
     File.ReadAllLines ("./inputs/day03.txt")
     |> Array.map (fun s ->
-        let parts = split "- :" s
-        (int parts.[0], int parts.[1], char parts.[2], parts.[3]))
+        s |> Seq.map (fun c -> c <> '.') |> Seq.toArray)
+        
+let path px py =
+    let mutable x = 0
+    let mutable y = 0
+    let mutable count = 0
+    let length = Array.length (input.[0])
+    while y < (Array.length input) do
+        let line = input.[y]
+        if line.[x % length] then count <- count + 1
+        x <- x + px
+        y <- y + py
+    count
 
 let part1 () =
-    input 
-    |> Array.filter (fun (n1, n2, c, s) ->
-        let count = s |> Seq.filter ((=) c) |> Seq.length
-        count >= n1 && count <= n2)
-    |> Array.length
+    path 3 1
 
 let part2 () =
-    input 
-    |> Array.filter (fun (n1, n2, c, s) ->
-        let dict = s |> Array.ofSeq
-        (dict.[n1 - 1] = c) <> (dict.[n2 - 1] = c))
-    |> Array.length
+    [
+        path 1 1
+        path 3 1
+        path 5 1
+        path 7 1
+        path 1 2
+     ] |> List.reduce (*)

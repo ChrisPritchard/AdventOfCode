@@ -43,8 +43,12 @@ let dist2 (x1, y1) (x2, y2) =
 let dist3 (x1, y1, z1) (x2, y2, z2) =
     sqrt ((x2 - x1) ** 2. + (y2 - y1) ** 2. + (z2 - z1) ** 2.)
 
-let time day part func =
+let time func = 
     let timer = Stopwatch.StartNew();    
     let result = func ()
     timer.Stop()
-    printfn "day%i part%i: %A (elapsed: %i ms)" day part result timer.ElapsedMilliseconds
+    result, timer.ElapsedMilliseconds
+
+let timeForDay day part func =
+    let res, elapsed = time func
+    printfn "day%i part%i: %A (elapsed: %i ms)" day part res elapsed

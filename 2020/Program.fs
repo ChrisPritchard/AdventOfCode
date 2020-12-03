@@ -1,5 +1,3 @@
-// Learn more about F# at http://docs.microsoft.com/dotnet/fsharp
-
 open Common
 
 
@@ -23,4 +21,4 @@ let main argv =
         0
     ) |> fun (_, el) -> printfn "total time elapsed: %d ms" el
 
-    0 // return an integer exit code
+    0

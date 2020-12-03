@@ -1,7 +1,6 @@
 module Day01
 
 open System.IO
-open System.Collections
 
 let input = File.ReadAllLines ("./inputs/day01.txt") |> Array.map int
 

@@ -27,5 +27,4 @@ let part2 () =
         path 5 1
         path 7 1
         path 1 2
-     ] |> List.reduce (*)
-     
+    ] |> List.reduce (*)

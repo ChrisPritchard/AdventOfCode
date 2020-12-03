@@ -17,7 +17,6 @@ let path px py =
             counter (x + px) (y + py) (if line.[x % length] then c + 1 else c)
     counter 0 0 0
         
-
 let part1 () =
     path 3 1
 
@@ -29,3 +28,4 @@ let part2 () =
         path 7 1
         path 1 2
      ] |> List.reduce (*)
+     

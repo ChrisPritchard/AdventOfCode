@@ -4,6 +4,9 @@ open System
 open System.Security.Cryptography
 open System.Diagnostics
 
+let splitOn (split: string) (s: string) =
+    s.Split ([|split|], StringSplitOptions.RemoveEmptyEntries)
+
 let split (chars: string) (s: string) = 
     s.Split (Seq.toArray chars, StringSplitOptions.RemoveEmptyEntries)
 

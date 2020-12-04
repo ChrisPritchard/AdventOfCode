@@ -29,31 +29,21 @@ let tryParseInt (s: string) =
     with :? FormatException -> 
         None
 
+let inRange min max v =
+    match tryParseInt v with
+    | Some v -> v >= min && v <= max
+    | None -> false
+
 let rules = 
     [|
-        "byr", fun v -> 
-            match tryParseInt v with
-            | Some v -> v >= 1920 && v <= 2002
-            | None -> false
-        "iyr", fun v -> 
-            match tryParseInt v with
-            | Some v -> v >= 2010 && v <= 2020
-            | None -> false
-        "eyr", fun v -> 
-            match tryParseInt v with
-            | Some v -> v >= 2020 && int v <= 2030
-            | None -> false
+        "byr", inRange 1920 2002
+        "iyr", inRange 2010 2020
+        "eyr", inRange 2020 2030
         "hgt", fun v -> 
             if v.EndsWith("cm") then
-                let v = v.Replace("cm", "")
-                match tryParseInt v with
-                | Some v -> v >= 150 && int v <= 193
-                | None -> false
+                v.Replace("cm", "") |> inRange 150 193
             elif v.EndsWith("in") then
-                let v = v.Replace("in", "")
-                match tryParseInt v with
-                | Some v -> v >= 59 && int v <= 76
-                | None -> false
+                v.Replace("in", "") |> inRange 59 76
             else
                 false
         "hcl", fun v -> 

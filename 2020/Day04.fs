@@ -5,15 +5,22 @@ open System.IO
 open Common
 
 let input = 
-    (File.ReadAllText ("./inputs/day04.txt")).Split([|"\r\n\r\n"|], StringSplitOptions.RemoveEmptyEntries)
-    |> Array.map (fun p -> p |> split "\r\n: " |> Array.chunkBySize 2 |> Array.map (fun a -> a.[0], a.[1]) |> Map.ofArray)
+    (File.ReadAllText ("./inputs/day04.txt"))
+    |> splitOn "\r\n\r\n"
+    |> Array.map (fun p -> 
+        split "\r\n: " p 
+        |> Array.chunkBySize 2 
+        |> Array.map (fun a -> a.[0], a.[1]) 
+        |> Map.ofArray)
         
 let required = [|"byr"; "iyr"; "eyr"; "hgt"; "hcl"; "ecl"; "pid"|]
-let optional = "cid"
 
 let part1 () =
     input 
-    |> Array.filter (fun p -> required |> Array.forall (fun k -> Map.containsKey k p))
+    |> Array.filter (fun passport -> 
+        required 
+        |> Array.forall (fun key -> 
+            Map.containsKey key passport))
     |> Array.length
 
 let tryParseInt (s: string) = 
@@ -22,22 +29,21 @@ let tryParseInt (s: string) =
     with :? FormatException -> 
         None
 
-
 let rules = 
     [|
-        "byr", fun (v : string) -> 
+        "byr", fun v -> 
             match tryParseInt v with
             | Some v -> v >= 1920 && v <= 2002
             | None -> false
-        "iyr", fun (v : string) -> 
+        "iyr", fun v -> 
             match tryParseInt v with
             | Some v -> v >= 2010 && v <= 2020
             | None -> false
-        "eyr", fun (v : string) -> 
+        "eyr", fun v -> 
             match tryParseInt v with
             | Some v -> v >= 2020 && int v <= 2030
             | None -> false
-        "hgt", fun (v : string) -> 
+        "hgt", fun v -> 
             if v.EndsWith("cm") then
                 let v = v.Replace("cm", "")
                 match tryParseInt v with
@@ -50,20 +56,18 @@ let rules =
                 | None -> false
             else
                 false
-        "hcl", fun (v : string) -> 
+        "hcl", fun v -> 
             v.StartsWith("#") && v.Length = 7 && (split "abcdef0123456789" v.[1..]).Length = 0
-        "ecl", fun (v: string) ->
+        "ecl", fun v ->
             Array.contains v [|"amb"; "blu"; "brn"; "gry"; "grn"; "hzl"; "oth"|]
-        "pid", fun (v : string) -> 
+        "pid", fun v -> 
             v.Length = 9 && (split "0123456789" v).Length = 0
     |]
 
 let part2 () =
     input 
-    |> Array.filter (fun p -> rules |> Array.forall (fun (k, r) -> 
-            if not (Map.containsKey k p) then false
-            else 
-                let v = r p.[k]
-                if not v then printfn "%s with value %s failed" k p.[k]
-                v))
+    |> Array.filter (fun passport -> 
+        rules 
+        |> Array.forall (fun (key, rule) -> 
+            Map.containsKey key passport && rule passport.[key]))
     |> Array.length

@@ -41,11 +41,9 @@ let part2 () =
         |> Array.map boardingPass
         |> Array.groupBy (fst >> fst)
         |> Array.sortBy fst
-    let length = Array.length allRows
     let (row, seats) = 
         allRows 
         |> Array.skip 1 
-        |> Array.take (length - 2) 
         |> Array.find (fun (_, seats) -> Array.length seats <> 8)
     let seatMap = Map.ofArray seats
     [0..7] |> List.pick (fun i -> 

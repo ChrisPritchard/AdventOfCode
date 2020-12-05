@@ -31,6 +31,10 @@ let part1 () =
     |> Array.maxBy snd
     |> snd
 
+// probably a faster way to do this
+// the double sort (groupby and sort) is probably whats causing the cost
+// its only 10-20 ms but still
+
 let part2 () =
     let allRows =
         input

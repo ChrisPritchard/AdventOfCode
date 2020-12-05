@@ -1,7 +1,26 @@
 module Day05
 
+open Common
 open System.IO
+open System
 
+let boardingPass (line) =
+    line 
+    |> Seq.map (function 'F' | 'L' -> '0' | _ -> '1') |> asString
+    |> fun s -> Convert.ToInt32(s, 2)
+
+let input = 
+    File.ReadAllLines ("./inputs/day05.txt")
+    |> Array.map boardingPass
+
+let part1 () = input |> Array.max
+
+let part2 () =
+    let all = input |> Set.ofArray
+    let inset i = Set.contains i all
+    [0..1024] |> List.find (fun i -> not (inset i) && inset (i - 1) && inset (i + 1))
+
+(*
 let boardingPass (line: string) =
 
     let rowIns = line.[0..6] |> Seq.map ((=) 'F') |> Seq.toList
@@ -37,3 +56,4 @@ let part2 () =
     let seatMap = Map.ofArray seats
     [0..7] |> List.pick (fun i -> 
         if not (Map.containsKey (row, i) seatMap) then Some (row * 8 + i) else None)
+*)

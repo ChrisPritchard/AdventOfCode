@@ -33,7 +33,7 @@ let part2 () =
     let (row, seats) =
         input
         |> Array.groupBy (fst >> fst)
-        |> Array.find (fun (_, seats) -> Array.length seats = 7)
+        |> Array.find (fun (_, seats) -> Array.length seats = 7) // makes an assumption that first/last rows are missing more than one seat
     let seatMap = Map.ofArray seats
     [0..7] |> List.pick (fun i -> 
         if not (Map.containsKey (row, i) seatMap) then Some (row * 8 + i) else None)

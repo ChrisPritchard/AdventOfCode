@@ -2,9 +2,6 @@ module Day05
 
 open System.IO
 
-let input = 
-    File.ReadAllLines ("./inputs/day05.txt")
-
 let boardingPass (line: string) =
 
     let rowIns = line.[0..6] |> Seq.map ((=) 'F') |> Seq.toList
@@ -23,26 +20,20 @@ let boardingPass (line: string) =
     let col = processor colIns 0 7
     (row, col), row * 8 + col
 
+let input = 
+    File.ReadAllLines ("./inputs/day05.txt")
+    |> Array.map boardingPass
+
 let part1 () =
     input
-    |> Array.map boardingPass
     |> Array.maxBy snd
     |> snd
 
-// probably a faster way to do this
-// the double sort (groupby and sort) is probably whats causing the cost
-// its only 10-20 ms but still
-
 let part2 () =
-    let allRows =
+    let (row, seats) =
         input
-        |> Array.map boardingPass
         |> Array.groupBy (fst >> fst)
-        |> Array.sortBy fst
-    let (row, seats) = 
-        allRows 
-        |> Array.skip 1 
-        |> Array.find (fun (_, seats) -> Array.length seats <> 8)
+        |> Array.find (fun (_, seats) -> Array.length seats = 7)
     let seatMap = Map.ofArray seats
     [0..7] |> List.pick (fun i -> 
         if not (Map.containsKey (row, i) seatMap) then Some (row * 8 + i) else None)

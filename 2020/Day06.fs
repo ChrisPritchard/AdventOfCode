@@ -1,6 +1,7 @@
 module Day06
 
 open Common
+open System
 open System.IO
 
 let input = 
@@ -8,10 +9,10 @@ let input =
     |> splitOn "\r\n\r\n"
 
 let part1 () = 
-    input |> Array.sumBy (fun g -> g |> Seq.filter (fun c -> System.Char.IsLetter(c)) |> Seq.distinct |> Seq.length)
+    input |> Array.sumBy (Seq.filter Char.IsLetter >> Seq.distinct >> Seq.length)
 
 let part2 () =
     input |> Array.sumBy (fun g -> 
-        let allc = g |> Seq.filter (fun c -> System.Char.IsLetter(c)) |> Seq.distinct
-        let rows = g |> split "\r\n" |> Array.map (Set.ofSeq)
+        let allc = g |> Seq.filter Char.IsLetter |> Seq.distinct
+        let rows = g |> split "\r\n" |> Array.map Set.ofSeq
         allc |> Seq.filter (fun c -> rows |> Array.forall (Set.contains c)) |> Seq.length)

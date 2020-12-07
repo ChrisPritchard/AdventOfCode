@@ -4,19 +4,19 @@ open Common
 open System.IO
 open System
 
-let boardingPass (line) =
-    line 
-    |> Seq.map (function 'F' | 'L' -> '0' | _ -> '1') |> asString
-    |> fun s -> Convert.ToInt32(s, 2)
+let input = File.ReadAllLines ("./inputs/day05.txt")
 
-let input = 
-    File.ReadAllLines ("./inputs/day05.txt")
-    |> Array.map boardingPass
+let processed () = 
+    let boardingPass (line) =
+        line 
+        |> Seq.map (function 'F' | 'L' -> '0' | _ -> '1') |> asString
+        |> fun s -> Convert.ToInt32(s, 2)
+    Array.map boardingPass input
 
-let part1 () = input |> Array.max
+let part1 () = processed () |> Array.max
 
 let part2 () =
-    let all = input |> Set.ofArray
+    let all = processed () |> Set.ofArray
     let inset i = Set.contains i all
     [0..1024] |> List.find (fun i -> not (inset i) && inset (i - 1) && inset (i + 1))
 

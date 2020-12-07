@@ -6,7 +6,7 @@ open System.IO
 
 let input = 
     File.ReadAllText("./inputs/day06.txt")
-    |> splitOn "\r\n\r\n"
+    |> splitOn (newline + newline)
 
 let part1 () = 
     input |> Array.sumBy (Seq.filter Char.IsLetter >> Seq.distinct >> Seq.length)

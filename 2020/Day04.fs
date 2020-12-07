@@ -6,7 +6,7 @@ open Common
 
 let input = 
     (File.ReadAllText ("./inputs/day04.txt"))
-    |> splitOn "\r\n\r\n"
+    |> splitOn (newline + newline)
     |> Array.map (fun p -> 
         split "\r\n: " p 
         |> Array.chunkBySize 2 

@@ -55,3 +55,5 @@ let time func =
 let timeForDay day part func =
     let res, elapsed = time func
     printfn "day%i part%i: %A (elapsed: %i ms)" day part res elapsed
+
+let newline = Environment.NewLine

@@ -3,8 +3,10 @@ module Day07
 open Common
 open System.IO
 
-let input = 
-    File.ReadAllLines("./inputs/day07.txt")
+let input = File.ReadAllLines("./inputs/day07.txt")
+    
+let processed () = 
+    input
     |> Array.map (fun l -> 
         let bits = l |> splits [|" "; "contain"; "bags"; "bag"; "."; ","|]
         let types = 
@@ -15,7 +17,7 @@ let input =
 
 let part1 () = 
     let parentMap = 
-        input 
+        processed () 
         |> Array.collect (fun (parent, children) -> 
             children |> Array.map (fun (child, _) -> child, parent))
         |> Array.groupBy fst
@@ -33,13 +35,12 @@ let part1 () =
         else
             let soFar = Array.fold (fun s b -> Set.add b s) soFar next
             collector soFar next
-            
+
     collector Set.empty [|"shiny gold"|]
-    |> Set.count
-        
+    |> Set.count        
 
 let part2 () =
-    let ruleIndex = Map.ofArray input
+    let ruleIndex = processed () |> Map.ofArray
     let rec collector bagType =
         ruleIndex.[bagType]
         |> Array.sumBy (fun (subType, c) -> c + c * (collector subType))

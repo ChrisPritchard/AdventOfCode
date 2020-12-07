@@ -4,13 +4,15 @@ open System.IO
 
 let input = File.ReadAllLines ("./inputs/day01.txt") |> Array.map int
 
+let processed () = Array.map int input
+
 let part1 () =
-    input 
+    processed () 
     |> Array.pick (fun a ->
         input |> Array.tryPick (fun b -> if a + b = 2020 then Some (a * b) else None))
 
 let part2 () =
-    input 
+    processed () 
     |> Array.pick (fun a ->
         input |> Array.tryPick (fun b ->
             if a + b >= 2020 then None

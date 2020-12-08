@@ -39,6 +39,20 @@ let part1 () =
     collector Set.empty [|"shiny gold"|]
     |> Set.count        
 
+(*
+// much more concise, but 10x slower approach to the above
+let part1 () = 
+    let processed = 
+        processed () 
+        |> Array.map (fun (bag, children) -> 
+            bag, children |> Array.map fst)
+        |> Map.ofArray
+    let rec hasTarget bag =
+        Array.contains "shiny gold" processed.[bag] 
+        || Array.exists hasTarget processed.[bag]
+    processed |> Map.filter (fun bag _ -> hasTarget bag) |> Map.count
+*)
+
 let part2 () =
     let ruleIndex = processed () |> Map.ofArray
     let rec collector bagType =

@@ -30,6 +30,9 @@ let main argv =
         timeForDay 7 1 Day07.part1
         timeForDay 7 2 Day07.part2
 
+        timeForDay 8 1 Day08.part1
+        timeForDay 8 2 Day08.part2
+
         0
     ) |> fun (_, el) -> printfn "total time elapsed: %d ms" el
 

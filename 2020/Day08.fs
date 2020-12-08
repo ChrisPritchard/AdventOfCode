@@ -45,5 +45,5 @@ let part2 () =
             | _, n -> 
                 processor (ip + 1) acc visited true
                 |> Option.orElse (processor (ip + n) acc visited false)
-    processor 0 0 Set.empty true
+    processor 0 0 Set.empty true |> Option.get
     

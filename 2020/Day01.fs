@@ -2,7 +2,7 @@ module Day01
 
 open System.IO
 
-let input = File.ReadAllLines ("./inputs/day01.txt") |> Array.map int
+let input = File.ReadAllLines "./inputs/day01.txt" |> Array.map int
 
 let processed () = Array.map int input
 

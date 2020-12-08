@@ -2,7 +2,7 @@ module Day03
 
 open System.IO
 
-let input = File.ReadAllLines ("./inputs/day03.txt")
+let input = File.ReadAllLines "./inputs/day03.txt"
     
 let processed () =
     input

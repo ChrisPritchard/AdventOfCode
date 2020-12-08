@@ -4,7 +4,7 @@ open Common
 open System.IO
 open System
 
-let input = File.ReadAllLines ("./inputs/day05.txt")
+let input = File.ReadAllLines "./inputs/day05.txt"
 
 let processed () = 
     let boardingPass (line) =

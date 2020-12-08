@@ -4,7 +4,7 @@ open System
 open System.IO
 open Common
 
-let input = File.ReadAllText ("./inputs/day04.txt")
+let input = File.ReadAllText "./inputs/day04.txt"
         
 let processed () =
     input

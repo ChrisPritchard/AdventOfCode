@@ -4,7 +4,7 @@ open Common
 open System
 open System.IO
 
-let input = File.ReadAllText("./inputs/day06.txt")
+let input = File.ReadAllText "./inputs/day06.txt"
 
 let processed () = splitOn (newline + newline) input
 

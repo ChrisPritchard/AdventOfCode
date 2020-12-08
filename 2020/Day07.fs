@@ -16,42 +16,18 @@ let processed () =
         bits.[0] + " " + bits.[1], types)
 
 let part1 () = 
-    let parentMap = 
-        processed () 
-        |> Array.collect (fun (parent, children) -> 
-            children |> Array.map (fun (child, _) -> child, parent))
-        |> Array.groupBy fst
-        |> Array.map (fun (bag, parents) ->
-            let parents = parents |> Array.map snd |> Array.distinct
-            bag, parents)
-        |> Map.ofArray
-
-    let rec collector soFar current =
+    let map = processed () |> Array.map (fun (b, c) -> b, c |> Array.map fst |> Set.ofArray)
+    let rec collector soFar toFind =
         let next = 
-            current 
-            |> Array.collect (fun b -> Map.tryFind b parentMap |> Option.defaultValue Array.empty)
-            |> Array.distinct |> Array.filter (fun b -> not (Set.contains b soFar))
-        if Array.isEmpty next then soFar
-        else
-            let soFar = Array.fold (fun s b -> Set.add b s) soFar next
+            map 
+            |> Array.choose (fun (b, c) -> if (Set.intersect toFind c).Count > 0 then Some b else None)
+            |> Set.ofArray
+        if Set.isEmpty next then soFar 
+        else 
+            let soFar = Set.union soFar next
             collector soFar next
-
-    collector Set.empty [|"shiny gold"|]
-    |> Set.count        
-
-(*
-// much more concise, but 10x slower approach to the above
-let part1 () = 
-    let processed = 
-        processed () 
-        |> Array.map (fun (bag, children) -> 
-            bag, children |> Array.map fst)
-        |> Map.ofArray
-    let rec hasTarget bag =
-        Array.contains "shiny gold" processed.[bag] 
-        || Array.exists hasTarget processed.[bag]
-    processed |> Map.filter (fun bag _ -> hasTarget bag) |> Map.count
-*)
+    let start = Set.empty.Add "shiny gold"
+    (collector Set.empty start).Count
 
 let part2 () =
     let ruleIndex = processed () |> Map.ofArray

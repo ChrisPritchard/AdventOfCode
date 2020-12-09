@@ -10,21 +10,17 @@ let processed () =
 
 let part1 () =
     let processed = processed ()
-    let check n preamble =
-        let source = processed.[n-preamble-1..n-1] |> Array.indexed
-        let valid = 
-            source
-            |> Array.collect (fun (i, n) ->
-                source 
-                |> Array.except ([|i, n|]) 
-                |> Array.map (fun (_, n2) -> n + n2))
-            |> Array.distinct
-        Array.contains processed.[n] valid
-
     let preamble = 25
-    [|preamble..Array.length processed|]
-    |> Array.pick (fun index ->
-        if check index preamble then None else Some processed.[index])
+    let rec finder soFar l i =
+        let n = processed.[i]
+        if i < preamble then
+            finder (Set.add n soFar) (n::l) (i + 1)
+        else
+            if List.forall (fun o -> not (Set.contains (n - o) soFar)) l then
+                n
+            else
+                finder (Set.add n soFar) (n::l) (i + 1)
+    finder Set.empty [] 0
 
 let part2 () =
     let target = part1 ()

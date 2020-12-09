@@ -11,16 +11,21 @@ let processed () =
 let part1 () =
     let processed = processed ()
     let preamble = 25
-    let rec finder soFar l i =
+    let soFar = Array.create preamble 0L
+    let rec finder i =
         let n = processed.[i]
         if i < preamble then
-            finder (Set.add n soFar) (n::l) (i + 1)
+            soFar.[i % preamble] <- n
+            finder (i + 1)
         else
-            if List.forall (fun o -> not (Set.contains (n - o) soFar)) l then 
+            let anyValid = 
+                soFar |> Array.exists (fun o -> Array.contains (n - o) soFar)
+            if not anyValid then 
                 n
             else 
-                finder (Set.add n soFar) (n::l) (i + 1)
-    finder Set.empty [] 0
+                soFar.[i % preamble] <- n
+                finder (i + 1)
+    finder 0
 
 let part2 () =
     let target = part1 ()

@@ -16,9 +16,9 @@ let part1 () =
         if i < preamble then
             finder (Set.add n soFar) (n::l) (i + 1)
         else
-            if List.forall (fun o -> not (Set.contains (n - o) soFar)) l then
+            if List.forall (fun o -> not (Set.contains (n - o) soFar)) l then 
                 n
-            else
+            else 
                 finder (Set.add n soFar) (n::l) (i + 1)
     finder Set.empty [] 0
 
@@ -33,7 +33,8 @@ let part2 () =
         else
             let min = if min = -1L || n < min then n else min
             let max = if max = -1L || n > max then n else max
-            if res = target then min + max
-            else
+            if res = target then 
+                min + max
+            else 
                 finder start (i + 1) res min max
     finder 0 0 0L -1L -1L

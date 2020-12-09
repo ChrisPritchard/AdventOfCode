@@ -11,21 +11,17 @@ let processed () =
 let part1 () =
     let processed = processed ()
     let preamble = 25
-    let soFar = Array.create preamble 0L
-    let rec finder i =
+    let rec finder soFar i =
         let n = processed.[i]
         if i < preamble then
-            soFar.[i % preamble] <- n
-            finder (i + 1)
+            finder (Map.add (i % preamble) n soFar) (i + 1)
         else
-            let anyValid = 
-                soFar |> Array.exists (fun o -> Array.contains (n - o) soFar)
+            let anyValid = soFar |> Map.exists (fun _ o -> Map.exists (fun _ v -> v = (n - o)) soFar)
             if not anyValid then 
                 n
             else 
-                soFar.[i % preamble] <- n
-                finder (i + 1)
-    finder 0
+                finder (Map.add (i % preamble) n soFar) (i + 1)
+    finder Map.empty 0
 
 let part2 () =
     let target = part1 ()

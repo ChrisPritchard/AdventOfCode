@@ -37,7 +37,7 @@ let part1 () =
 // this is done via a sum of the points it can reach, and *their* prior caclulated sum
 // which means you need to start at the end - whose value is 1, as it can reach the end 1 way
 // walk back: point n-1 can reach the end 1 way. point n-2 if its less or equal to 3 can reach the end direct or via n-1, so its val is 2
-// point n-3 can reach the end if its 3 or less direct, via n-1 or via n-2, so 1+1+2
+// point n-3 can reach the end if its 3 or less direct, via n-1 or via n-2, so 1+1+2 (2 because the sum at n-2 is 2, so if it reaches n-2 there are still two ways to get to the end)
 // and so on until you get to the start
 
 let part2 () =

@@ -1,8 +1,6 @@
 module Day10
 
-open System
 open System.IO
-open Common
 
 let input = File.ReadAllLines "./inputs/day10.txt"
 

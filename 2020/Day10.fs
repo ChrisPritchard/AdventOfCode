@@ -44,7 +44,6 @@ let part2 () =
         if i < 0 then
             Map.find 0 sums
         else
-            let n = a.[i]
             let sum =
                 [i+1..i+3] 
                 |> List.sumBy (fun j -> 

@@ -30,6 +30,5 @@ let part2 () =
         |> Array.windowed 2
         |> Array.map (fun a -> string (a.[1] - a.[0]))
         |> String.concat ""
-    let runs = processed |> split "3" |> Array.map String.length
-    let res = (1L, runs) ||> Array.fold (fun acc n -> acc * pown 2L (n - 1))
-    runs
+    processed
+    |> splitOn "11"

@@ -12,9 +12,9 @@ let aval y x (a: char [][]) =
 
 let cardinals = 
     [|
-        -1,-1;-1,0;-1,1;
-        0,-1;0,1;
-        1,-1;1,0;1,1;
+        -1,-1; -1,0; -1,1;
+         0,-1;        0,1;
+         1,-1;  1,0;  1,1;
     |]
 
 let part1 () =
@@ -38,14 +38,16 @@ let part1 () =
     let start = processed ()
     iter start
 
+let range = [|1..100|]
+
 let part2 () =
     let state y x c a =
         let occupied = 
             cardinals 
             |> Array.filter (fun (dy, dx) -> 
                 let v = 
-                    Seq.initInfinite ((+) 1)
-                    |> Seq.pick (fun n ->
+                    range
+                    |> Array.pick (fun n ->
                         let v = aval (y + n * dy) (x + n * dx) a
                         if v = ' ' || v <> '.' then Some v else None)
                 v = '#') 

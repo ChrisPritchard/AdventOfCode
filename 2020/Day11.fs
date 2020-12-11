@@ -18,7 +18,7 @@ let cardinals =
     |]
 
 let part1 () =
-    let state a y x c =
+    let state y x c a =
         let occupied = 
             cardinals 
             |> Array.filter (fun (dy, dx) -> aval (y + dy) (x + dx) a = '#') 
@@ -29,7 +29,7 @@ let part1 () =
         | c, _ -> c
 
     let rec iter a =
-        let n = a |> Array.mapi (fun y -> Array.mapi (state a y))
+        let n = Array.mapi (fun y line -> Array.mapi (fun x c -> state y x c a) line) a
         if n = a then 
             n |> Seq.collect id |> Seq.filter ((=) '#') |> Seq.length
         else
@@ -41,7 +41,7 @@ let part1 () =
 let range = [|1..100|]
 
 let part2 () =
-    let state a y x c =
+    let state y x c a =
         let occupied = 
             cardinals 
             |> Array.filter (fun (dy, dx) -> 
@@ -58,7 +58,7 @@ let part2 () =
         | c, _ -> c
 
     let rec iter a =
-        let n = a |> Array.mapi (fun y -> Array.mapi (state a y))
+        let n = Array.mapi (fun y line -> Array.mapi (fun x c -> state y x c a) line) a
         //n |> Array.map Common.asString |> String.concat Common.newline |> printfn "%s%s" Common.newline
         //System.Threading.Thread.Sleep 1000 // <- and ^ this code will print out the map then wait, for debugging
         if n = a then 

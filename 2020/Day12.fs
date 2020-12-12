@@ -2,14 +2,17 @@ module Day12
 
 open System
 open System.IO
-open SDL
-open System.Runtime.InteropServices
 
 let input = File.ReadAllLines "./inputs/day12.txt"
 
 let processed () = 
     input
     |> Array.map (fun l -> l.[0], float l.[1..])
+
+let atAngle degrees dist =
+     let dy = dist * Math.Sin (float degrees * Math.PI/180.)
+     let dx = dist * Math.Cos (float degrees * Math.PI/180.)
+     dx, dy
 
 let part1 () =
     let (x, y, _) =
@@ -23,10 +26,38 @@ let part1 () =
             | 'E' -> x + m, y, d
             | 'W' -> x - m, y, d
             | _ -> 
-                let dy = m * Math.Sin (float d * Math.PI/180.)
-                let dx = m * Math.Cos (float d * Math.PI/180.)
+                let dx, dy = atAngle d m
                 x + dx, y + dy, d)
     int (abs x + abs y)
+
+let part2 () =
+    let (x, y, _, _) =
+        ((0., 0., 10., -1.), processed ())
+        ||> Array.fold (fun (sx, sy, x, y) (i, m) ->
+            match i with
+            | 'N' -> sx, sy, x, y - m
+            | 'S' -> sx, sy, x, y + m
+            | 'E' -> sx, sy, x + m, y
+            | 'W' -> sx, sy, x - m, y
+            | 'L' -> 
+                let d = (Math.Atan2 (y, x) * (180./Math.PI)) - m
+                let x, y = atAngle d (Math.Sqrt (x ** 2. + y ** 2.))
+                sx, sy, x, y
+            | 'R' -> 
+                let d = (Math.Atan2 (y, x) * (180./Math.PI)) + m
+                let x, y = atAngle d (Math.Sqrt (x ** 2. + y ** 2.))
+                sx, sy, x, y
+            | _ -> 
+                sx + m * x, sy + m * y, x, y)
+    int (abs x + abs y)
+
+// initially I got the wrong answer for part 2, and as part of debugging, I rendered the waypoint
+// using SDL2, as below:
+
+(*
+
+open SDL
+open System.Runtime.InteropServices
 
 let part2 () =
 
@@ -62,7 +93,8 @@ let part2 () =
                 | 'E' -> sx, sy, x + m, y
                 | 'W' -> sx, sy, x - m, y
                 | 'L' -> 
-                    let d1 = Math.Atan (y/x) * (180./Math.PI)
+                    let d1 = Math.Atan2 (y, x) * (180./Math.PI)
+                    //let d1 = if d1 < 0. then 180. + d1 else d1
                     let d2 = d1 - m
                     printfn "%f -> %f" d1 d2
                     let m = Math.Sqrt (x ** 2. + y ** 2.)
@@ -70,7 +102,8 @@ let part2 () =
                     let x = m * Math.Cos (float d2 * Math.PI/180.)
                     sx, sy, x, y
                 | 'R' -> 
-                    let d1 = Math.Atan (y/x) * (180./Math.PI)
+                    let d1 = Math.Atan2 (y, x) * (180./Math.PI)
+                    //let d1 = if d1 < 0. then 180. + d1 else d1
                     let d2 = d1 + m
                     printfn "%f -> %f" d1 d2
                     let m = Math.Sqrt (x ** 2. + y ** 2.)
@@ -90,4 +123,5 @@ let part2 () =
             SDL_RenderPresent(renderer) |> ignore
             System.Threading.Thread.Sleep 3000
             sx, sy, x, y)
-    int (abs x + abs y)
+    int (abs x + abs y)    
+*)

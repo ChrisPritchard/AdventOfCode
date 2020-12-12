@@ -31,6 +31,8 @@ let part1 () =
     int (abs x + abs y)
 
 let part2 () =
+    let angleAt x y = Math.Atan2 (y, x) * (180./Math.PI)
+    let h o a = Math.Sqrt (o ** 2. + a ** 2.)
     let (x, y, _, _) =
         ((0., 0., 10., -1.), processed ())
         ||> Array.fold (fun (sx, sy, x, y) (i, m) ->
@@ -40,12 +42,12 @@ let part2 () =
             | 'E' -> sx, sy, x + m, y
             | 'W' -> sx, sy, x - m, y
             | 'L' -> 
-                let d = (Math.Atan2 (y, x) * (180./Math.PI)) - m
-                let x, y = atAngle d (Math.Sqrt (x ** 2. + y ** 2.))
+                let d = angleAt x y - m
+                let x, y = atAngle d (h x y)
                 sx, sy, x, y
             | 'R' -> 
-                let d = (Math.Atan2 (y, x) * (180./Math.PI)) + m
-                let x, y = atAngle d (Math.Sqrt (x ** 2. + y ** 2.))
+                let d = angleAt x y + m
+                let x, y = atAngle d (h x y)
                 sx, sy, x, y
             | _ -> 
                 sx + m * x, sy + m * y, x, y)

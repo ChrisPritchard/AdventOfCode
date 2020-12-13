@@ -50,4 +50,11 @@ let part2 () =
             let prod = prod * id
             searcher min prod rest
 
+    // prod is the product of ids found so far; 
+    // by adding this to a given minValue candidate, that 
+    //   candidate will still satisfy all the prior ids tests up to this point
+    // so we keep adding it, until we find a candidate that satisfies the current id,
+    //   multiply prod by that id now we need to preserve *this* calculation, and move on
+    // the math doesn't quite sit with me right yet, but i understand the edges :)
+
     searcher 0UL 1UL indexed

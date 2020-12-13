@@ -25,6 +25,9 @@ let part1 () =
     |> fun (id, time) -> (time - earliest) * id
     
 // technique from LizTheGrey again: https://www.twitch.tv/videos/835702252
+// based on the idea that, given all the numbers are prime, you can 'preserve' 
+// an earlier calulated modulus with offset via multiplying by the last product
+// i dont know... magic maths. should look up the euclidian theorem
 
 let part2 () =
     let _, ids = processed()

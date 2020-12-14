@@ -25,9 +25,14 @@ let part1 () =
     |> fun (id, time) -> (time - earliest) * id
     
 // technique from LizTheGrey again: https://www.twitch.tv/videos/835702252
-// based on the idea that, given all the numbers are prime, you can 'preserve' 
-// an earlier calulated modulus with offset via multiplying by the last product
-// i dont know... magic maths. should look up the euclidian theorem
+// for a given id, and offset, you find a sample where sample + offset % id = 0
+// once you have that number, the first key insight is adding the id value to it, however many times, will result in the same result
+// e.g. 8 % 7 = 1, (8+7) % 7 = 1, (8+ (7*100)) % 7 = 1
+// the second key inside is that this 'adding seven' could be multiplied by the next id, once you find the sample for that id:
+//   e.g. say 7 is the first number, 13 is the second, the product for the third is 91. from the first insight above, adding 7 thirteen times 
+//   will result in the same mod 1. if for the 13 id the result is mod 2, adding 13 seven times will still be mod 2
+// so by making the 'step' while we search for the next number + offset to get mod 0 (see the first line of this desc) the product of all prior ids
+//   we ensure that our number, when found, will still satisfy all the constraints we have tested for so far
 
 let part2 () =
     let _, ids = processed()
@@ -49,12 +54,5 @@ let part2 () =
             let min = nextMin min index id prod
             let prod = prod * id
             searcher min prod rest
-
-    // prod is the product of ids found so far; 
-    // by adding this to a given minValue candidate, that 
-    //   candidate will still satisfy all the prior ids tests up to this point
-    // so we keep adding it, until we find a candidate that satisfies the current id,
-    //   multiply prod by that id now we need to preserve *this* calculation, and move on
-    // the math doesn't quite sit with me right yet, but i understand the edges :)
 
     searcher 0UL 1UL indexed

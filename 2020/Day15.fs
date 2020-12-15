@@ -20,7 +20,7 @@ let part1 () =
 
 let part2 () = 
     let nums = processed ()
-    let acc = Dictionary<int, int>()
+    let acc = Dictionary<int, int>(5000000) // initial capacity doubles speed
     for (k, v) in nums |> Array.take (nums.Length - 1) |> Array.mapi (fun i n -> n, (i+1)) do
         acc.Add(k, v)
     let rec memory i last =

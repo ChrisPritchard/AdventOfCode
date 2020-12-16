@@ -32,24 +32,23 @@ let part1 () =
 
 let part2 () =
     let rules, yours, others = processed ()
-    
+
     let toTest =
         others 
         |> Array.filter (fun line -> 
             line |> Array.forall (fun v -> 
                 rules |> Array.exists (fun r -> valid v r)))
         |> Array.append [|yours|]
+    
+    let ruleName (r, _, _, _, _) = r
+    let range = [|0..yours.Length-1|]
 
     let ruleChecks =
         rules 
-        |> Array.map (fun (r, n1, m1, n2, m2) -> 
-            let indices = 
-                [|0..yours.Length-1|] 
-                |> Array.filter (fun i -> 
-                    toTest 
-                    |> Array.forall (fun v -> 
-                        valid v.[i] (r, n1, m1, n2, m2)))
-            r, indices)
+        |> Array.map (fun r -> 
+            let indices = Array.filter (fun i -> 
+                toTest |> Array.forall (fun v -> valid v.[i] r)) range
+            ruleName r, indices)
         |> Array.sortBy (fun (_, c) -> Array.length c)
         |> List.ofArray
 

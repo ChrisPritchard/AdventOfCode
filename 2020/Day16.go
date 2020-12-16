@@ -138,6 +138,7 @@ func part2(rules []rule, yours []int, others [][]int) uint64 {
 				for i := range r.indices {
 					index = i
 					ruleIndex[index] = r.name
+					break
 				}
 			}
 		}

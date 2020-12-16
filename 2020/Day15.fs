@@ -25,8 +25,6 @@ let part2 () =
     for (k, v) in nums |> Array.take (nums.Length - 1) |> Array.mapi (fun i n -> n, (i+1)) do
         acc.[k] <- v
     let rec memory i last =
-        if last >= acc.Length then 
-            printfn "%A" last
         let next = if acc.[last] <> 0 then i - 1 - acc.[last] else 0
         acc.[last] <- i - 1
         if i = 30000000 then next else memory (i + 1) next

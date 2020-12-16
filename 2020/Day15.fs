@@ -15,9 +15,9 @@ let part1 () =
         if i = 2020 then next else memory (i + 1) next (Map.add last (i - 1) acc)
     memory (nums.Length + 1) (nums.[nums.Length - 1]) acc
 
-// in the below swapping the immutable map for a mutable dictionary improves runtime from 60s to about 2s
-// startomg the dictionary with an appropriate capacity (~4 mil) shaves off 400-600 ms
-// using an array big enough of o(1) lookups by index (~30 mil) drops it to ~600 ms
+// swapping the immutable map in the above for a mutable dictionary improves runtime from 60s to about 2s in part 2
+// starting the dictionary with an appropriate capacity (~4 mil) drops it to 1-1.8 seconds
+// using an array big enough (~30 mil, allowing for o(1) lookups and assignments) drops it to ~600 ms
 
 let part2 () = 
     let nums = processed ()

@@ -32,12 +32,16 @@ let part1 () =
         |> Array.collect id
         |> Map.ofArray
 
-    let adjacent (x, y, z) =
+    let cardinals = 
         [|-1..1|] |> Array.collect (fun dx -> 
             [|-1..1|] |> Array.collect (fun dy ->
                 [|-1..1|] 
-                |> Array.filter (fun dz -> not (dx = 0 && dy = 0 && dz = 0)) 
-                |> Array.map (fun dz -> x + dx, y + dy, z + dz)))
+                |> Array.filter (fun dz -> not (dx = 0 && dy = 0 && dz = 0))
+                |> Array.map (fun dz -> dx, dy, dz)))
+
+    let adjacent (x, y, z) =
+        cardinals
+        |> Array.map (fun (dx, dy, dz) -> x + dx, y + dy, z + dz)
 
     let result =
         (processed, [0..5])
@@ -52,13 +56,17 @@ let part2 () =
         |> Array.collect id
         |> Map.ofArray
 
-    let adjacent (x, y, z, w) =
+    let cardinals =
         [|-1..1|] |> Array.collect (fun dx -> 
             [|-1..1|] |> Array.collect (fun dy ->
                 [|-1..1|] |> Array.collect (fun dz ->
                     [|-1..1|] 
                     |> Array.filter (fun dw -> not (dx = 0 && dy = 0 && dz = 0 && dw = 0)) 
-                    |> Array.map (fun dw -> x + dx, y + dy, z + dz, w + dw))))
+                    |> Array.map (fun dw -> dx, dy, dz, dw))))
+
+    let adjacent (x, y, z, w) =
+        cardinals 
+        |> Array.map (fun (dx, dy, dz, dw) -> x + dx, y + dy, z + dz, w + dw)
 
     let result =
         (processed, [0..5])

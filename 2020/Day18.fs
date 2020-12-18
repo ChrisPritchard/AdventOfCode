@@ -12,26 +12,25 @@ let asInt (n: char) = uint64 n - 48UL
 
 let part1 () =
     let rec processor acc op rem =
-        match rem, op with
-        | [], _ -> acc, []
-        | ')'::rem, _ -> acc, rem
-        | '+'::rem, _ -> processor acc '+' rem
-        | '*'::rem, _ -> processor acc '*' rem
-        | '('::rem, '+' -> 
+        match rem with
+        | [] -> acc, []
+        | ')'::rem -> acc, rem
+        | '+'::rem -> processor acc '+' rem
+        | '*'::rem -> processor acc '*' rem
+        | '('::rem ->
             let res, rem = processor 0UL ' ' rem
-            processor (acc + res) ' '  rem
-        | '('::rem, '*' -> 
-            let res, rem = processor 0UL ' ' rem
-            processor (acc * res) ' ' rem
-        | '('::rem, _ -> 
-            let res, rem = processor 0UL ' ' rem
-            processor res ' ' rem
-        | n::rem, '+' when Char.IsDigit n -> processor (acc + asInt n) ' ' rem
-        | n::rem, '*' when Char.IsDigit n -> processor (acc * asInt n) ' ' rem
-        | n::rem, _ when Char.IsDigit n -> processor (asInt n) ' ' rem
-        | n::rem, _ -> failwith (sprintf "unexpected input: %A" n)
+            match op with
+            | '+' -> processor (acc + res) ' ' rem
+            | '*' -> processor (acc * res) ' ' rem
+            | _ -> processor res ' ' rem
+        | n::rem when Char.IsDigit n -> 
+            match op with
+            | '+' -> processor (acc + asInt n) ' ' rem
+            | '*' -> processor (acc * asInt n) ' ' rem
+            | _ -> processor (asInt n) ' ' rem
+        | _ -> failwithf "unexpected state: %A" rem
     processed ()
-    |> Array.sumBy (fun line -> processor 0UL ' ' line |> fst)
+    |> Array.sumBy (processor 0UL ' ' >> fst)
    
 let part2 () = 
     0

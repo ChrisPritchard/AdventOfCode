@@ -27,17 +27,19 @@ let processed () =
 
 let part1 () =
     let rules, samples = processed ()
-    let target = rules.[0]
-    let rec gather acc rule =
+    let rec gather rule =
         rule |> Array.collect (fun opt ->
-            opt |> Array.collect (fun r ->
+            ([|""|], opt)
+            ||> Array.fold (fun acc r ->
                 match r with
-                | Char c -> [|acc + string c|]
-                | Rule r -> gather acc rules.[r]))
+                | Char c -> 
+                    acc |> Array.map (fun s -> s + string c)
+                | Rule r -> 
+                    let next = gather rules.[r]
+                    acc |> Array.collect (fun o -> next |> Array.map (fun s -> o + s))))
     let candidates = 
-        gather "" target
+        gather rules.[0]
         |> Set.ofArray
-    printfn "%A" candidates
     samples |> Array.filter (fun s -> Set.contains s candidates) |> Array.length
 
 let part2 () = 

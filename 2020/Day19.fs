@@ -27,20 +27,19 @@ let processed () =
 
 let part1 () =
     let rules, samples = processed ()
-    let rec gather rule =
-        rule |> Array.collect (fun opt ->
-            ([|""|], opt)
-            ||> Array.fold (fun acc r ->
-                match r with
-                | Char c -> 
-                    acc |> Array.map (fun s -> s + string c)
-                | Rule r -> 
-                    let next = gather rules.[r]
-                    acc |> Array.collect (fun o -> next |> Array.map (fun s -> o + s))))
-    let candidates = 
-        gather rules.[0]
-        |> Set.ofArray
-    samples |> Array.filter (fun s -> Set.contains s candidates) |> Array.length
+    let test s =
+        let rec valid (ss: string) rule =
+            rule 
+            |> Array.collect (fun opt ->
+                ([|ss|], opt)
+                ||> Array.fold (fun acc r ->
+                    match r with
+                    | Char c -> 
+                        acc |> Array.choose (fun s -> if s.[0] = c then Some s.[1..] else None)
+                    | Rule r ->
+                        acc |> Array.collect (fun s -> valid s rules.[r])))
+        valid s rules.[0] |> Array.contains ""
+    samples |> Array.filter test |> Array.length
 
 let part2 () = 
     0

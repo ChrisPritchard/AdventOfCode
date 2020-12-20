@@ -7,6 +7,14 @@ let input = File.ReadAllText "./inputs/day20.txt"
 
 let dim = 10 // assume 10*10 squares
 
+let edges (grid: char [][]) = 
+    [|
+        [|0..dim-1|] |> Array.map (fun x -> grid.[0].[x]) |> asString, (-1, 0)
+        [|0..dim-1|] |> Array.map (fun x -> grid.[dim-1].[x]) |> asString, (1, 0)
+        [|0..dim-1|] |> Array.map (fun y -> grid.[y].[0]) |> asString, (0, -1)
+        [|0..dim-1|] |> Array.map (fun y -> grid.[y].[dim-1]) |> asString, (0, 1)
+    |]
+
 let connections () =
     let connections = 
         input
@@ -19,12 +27,10 @@ let connections () =
                 |> Array.tail
                 |> Array.map Seq.toArray
             let edges = 
-                [|
-                    [|0..dim-1|] |> Array.map (fun x -> grid.[0].[x]) |> asString
-                    [|0..dim-1|] |> Array.map (fun x -> grid.[dim-1].[x]) |> asString
-                    [|0..dim-1|] |> Array.map (fun y -> grid.[y].[0]) |> asString
-                    [|0..dim-1|] |> Array.map (fun y -> grid.[y].[dim-1]) |> asString
-                |] |> Array.collect (fun s -> [|s;Seq.rev s |> asString|]) |> Set.ofArray
+                edges grid 
+                |> Array.collect (fun (s, _) -> 
+                    [|s;Seq.rev s |> asString|]) 
+                |> Set.ofArray
             n, grid, edges)
     connections
     |> Array.map (fun (n, grid, edges) ->
@@ -52,6 +58,16 @@ let arranged connections =
         |> Array.map (fun y ->
             [|0..dim-1|] |> Array.map (fun x ->
                 grid.[dim-1-x].[y]))
+
+    let connect grid1 grid2 =
+        // find edge of grid2 that connects to edge of grid 1
+        // if no edge is found, flip grid1 and try again
+        // once an edge is found the rel position of grid 2 is find
+        // rotate grid2 until its edge lines up with the grid1 edge
+        // e.g. if grid1's edge is right, and grid2's edge is up,
+        //   then grid2 needs to be rotated three times and flipped (i think)
+
+        Some (grid2, (0,0))
     
     // let _, grid, _ = Array.head connections
     // printfn "%A" grid

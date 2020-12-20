@@ -7,13 +7,10 @@ let input = File.ReadAllText "./inputs/day20.txt"
 
 let dim = 10 // assume 10*10 squares
 
-let edges (grid: char [][]) = 
-    [|
-        [|0..dim-1|] |> Array.map (fun x -> grid.[0].[x]) |> asString, (-1, 0)
-        [|0..dim-1|] |> Array.map (fun x -> grid.[dim-1].[x]) |> asString, (1, 0)
-        [|0..dim-1|] |> Array.map (fun y -> grid.[y].[0]) |> asString, (0, -1)
-        [|0..dim-1|] |> Array.map (fun y -> grid.[y].[dim-1]) |> asString, (0, 1)
-    |]
+let left (grid: char [][]) = [|0..dim-1|] |> Array.map (fun y -> grid.[y].[0]) |> asString
+let right (grid: char [][]) = [|0..dim-1|] |> Array.map (fun y -> grid.[y].[dim-1]) |> asString
+let up (grid: char [][]) = [|0..dim-1|] |> Array.map (fun x -> grid.[0].[x]) |> asString
+let down (grid: char [][]) = [|0..dim-1|] |> Array.map (fun x -> grid.[dim-1].[x]) |> asString
 
 let connections () =
     let connections = 
@@ -27,9 +24,8 @@ let connections () =
                 |> Array.tail
                 |> Array.map Seq.toArray
             let edges = 
-                edges grid 
-                |> Array.collect (fun (s, _) -> 
-                    [|s;Seq.rev s |> asString|]) 
+                [| left grid; right grid; up grid; down grid |] 
+                |> Array.collect (fun s -> [|s;Seq.rev s |> asString|]) 
                 |> Set.ofArray
             n, grid, edges)
     connections
@@ -60,14 +56,23 @@ let arranged connections =
                 grid.[dim-1-x].[y]))
 
     let connect grid1 grid2 =
-        // find edge of grid2 that connects to edge of grid 1
-        // if no edge is found, flip grid1 and try again
-        // once an edge is found the rel position of grid 2 is find
-        // rotate grid2 until its edge lines up with the grid1 edge
-        // e.g. if grid1's edge is right, and grid2's edge is up,
-        //   then grid2 needs to be rotated three times and flipped (i think)
-
-        Some (grid2, (0,0))
+        let grid2vers = 
+            [| 
+                grid2; rotate grid2; rotate (rotate grid2); rotate (rotate (rotate grid2))
+                flip grid2; rotate (flip grid2); rotate (rotate (flip grid2)); rotate (rotate (rotate (flip grid2)))
+            |]
+        [|
+            up grid1, (0, -1)
+            right grid1, (1, 0)
+            down grid1, (0, 1)
+            left grid1, (-1, 0)
+        |] |> Array.pick (fun (edge, dir) ->
+            let op = 
+                if dir = (0, -1) then down
+                elif dir = (1, 0) then left
+                elif dir = (0, 1) then up
+                else right
+            grid2vers |> Array.tryFind (fun o -> op o = edge) |> Option.bind (fun g -> Some (g, dir)))
     
     // let _, grid, _ = Array.head connections
     // printfn "%A" grid

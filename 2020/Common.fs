@@ -25,4 +25,10 @@ let time func =
 
 let timeForDay day part func =
     let res, elapsed = time func
-    printfn $"day{day} part{part}: {res} (elapsed: {elapsed} ms)"
+    match box res with
+    | :? int64 as o ->
+        printfn "day%d part%d: %d (elapsed: %d ms)" day part o elapsed
+    | :? uint64 as o ->
+        printfn "day%d part%d: %d (elapsed: %d ms)" day part o elapsed
+    | _ ->
+        printfn "day%d part%d: %A (elapsed: %d ms)" day part res elapsed

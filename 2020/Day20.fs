@@ -43,12 +43,14 @@ let part1 () =
     |> Array.reduce (*)
 
 let flip grid = 
+    let dim = Array.length grid
     grid
     |> Array.map (fun (line: char []) ->
         [|0..dim-1|]
         |> Array.map (fun i -> line.[dim-1-i]))
 
 let rotate (grid: char [][]) =
+    let dim = Array.length grid
     [|0..dim-1|]
     |> Array.map (fun y ->
         [|0..dim-1|] |> Array.map (fun x ->

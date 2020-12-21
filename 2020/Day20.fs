@@ -74,14 +74,19 @@ let arranged connections =
                 else right
             grid2vers |> Array.tryFind (fun o -> op o = edge) |> Option.bind (fun g -> Some (g, dir)))
     
+    let index = connections |> Array.map (fun (n, g, e) -> n, (g, e)) |> Map.ofArray
+    0
+
+    // next strat:
+    // start with one point in place
+    // for each edge: find rotation/flip to fit with existing
+        // given a position, and a index
+        // rotate/flip until it matches adjacent (only needs to match one?)
+
     // let _, grid, _ = Array.head connections
     // printfn "%A" grid
     // printfn "%A" <| rotate grid
 
-    // create a map of x, y grid
-    // start with first, at 0,0
-    // for each edge, find relx,rely and orientation
-    // if no edges match, then flip grid and try again
     0
 
 let part2 () =

@@ -69,8 +69,11 @@ let main argv =
         // timeForDay 20 1 Day20.part1
         // timeForDay 20 2 Day20.part2
 
-        timeForDay 21 1 Day21.part1
-        timeForDay 21 2 Day21.part2
+        // timeForDay 21 1 Day21.part1
+        // timeForDay 21 2 Day21.part2
+
+        timeForDay 22 1 Day22.part1
+        timeForDay 22 2 Day22.part2
 
         0
     ) |> fun (_, el) -> printfn "total time elapsed: %d ms" el

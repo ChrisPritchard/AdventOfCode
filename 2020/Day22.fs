@@ -12,33 +12,24 @@ let processed () =
         player 
         |> splitOn newline 
         |> Array.tail 
-        |> Array.map int)
-    |> fun a -> List.ofArray a.[0], List.ofArray a.[1]
+        |> String.concat "")
+    |> fun a -> a.[0], a.[1]
 
 let part1 () =
     let player1, player2 = processed ()
-    let rec playGame p1p p1s p2p p2s =
-        match p1p, p2p with
-        | p1, [] ->
-            (p1 @ p1s) |> List.rev |> List.indexed |> List.sumBy (fun (i, c) -> (i+1) * c)
-        | [], p2 ->
-            (p2 @ p2s) |> List.rev |> List.indexed |> List.sumBy (fun (i, c) -> (i+1) * c)
-        | p1c::p1rem, p2c::p2rem ->
-            let p1s, p2s =
+    let rec playGame p1 p2 =
+        match p1, p2 with
+        | o, "" | "", o ->
+            o |> Seq.rev |> Seq.indexed |> Seq.sumBy (fun (i, c) -> (i+1) * (int c - 41))
+        | p1, p2 ->
+            let p1c, p2c = string p1.[0], string p2.[0]
+            let p1, p2 =
                 if p1c > p2c then
-                    p1s @ [p1c;p2c], p2s
+                    p1 + p1c + p2c, p2.[1..]
                 else
-                    p1s, p2s @ [p2c;p1c]
-            let p1p, p1s =
-                match p1rem with
-                | [] -> p1s, []
-                | _ -> p1rem, p1s
-            let p2p, p2s = 
-                match p2rem with
-                | [] -> p2s, []
-                | _ -> p2rem, p2s
-            playGame p1p p1s p2p p2s
-    playGame player1 [] player2 []
+                    p1.[1..], p2 + p2c + p1c
+            playGame p1 p2
+    playGame player1 player2
 
     // remove head of both
     // append to sub of winner

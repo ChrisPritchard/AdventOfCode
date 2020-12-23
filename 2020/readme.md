@@ -15,5 +15,6 @@ Here are the days of note:
 - [Day 15](./Day15.fs): 60 seconds for part 2, then 2 seconds, then 1 second, then 600 ms via severe optimisation efforts
 - [Day 16](./Day16.fs): a fun problem. I solved it in Go too, [here](./Day16.go), just to see how hard it would be without set methods (basically the same, if more verbose)
 - [Day 20](./Day20.fs): probably the hardest 'logic' puzzle. Solved part 1 easily, but part 2 took another day of intermittent theorising and rewrites before I got a 5 second solution
+- [Day 23](./Day23.fs): first time I struggled to understand the problem in part 1: my first solution eventually worked, but wasn't really ideal and the approach (splitting and concatting arrays) twisted my thinking enough that it took a while before I could get the right result. Refactoring it allowed it to be efficient enough for the vastly extended part 2, so ultimately the day was not too hard.
 
 Where I needed help this year (two problems, 10 and 13) I got them from lizthegrey's stream :) 

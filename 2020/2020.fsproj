@@ -34,6 +34,7 @@
     <Compile Include="Day22.fs" />
     <Compile Include="Day23.fs" />
     <Compile Include="Day24.fs" />
+    <Compile Include="Day25.fs" />
     <Compile Include="Program.fs" />
     <None Include="SDL2.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

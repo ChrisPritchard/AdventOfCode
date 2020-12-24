@@ -23,4 +23,30 @@ let part1 () =
     |> Set.count
 
 let part2 () =
-    0
+    let cardinals = [|
+        (1,-1,0); (0,-1,1); (-1,0,1); (-1,1,0); (0,1,-1); (1,0,-1)
+    |]
+    let adjacent (x, y, z) =
+        cardinals |> Array.map (fun (dx, dy, dz) -> x + dx, y + dy, z + dz)
+    let state p current =
+        let isBlack = Set.contains p current
+        let areBlack = adjacent p |> Array.filter (fun o -> Set.contains o current) |> Array.length
+        (isBlack && areBlack <> 0 && areBlack <= 2)
+        || (not isBlack && areBlack = 2)
+
+    let start = 
+        (Set.empty, processed ())
+        ||> Array.fold (fun acc tile -> 
+            if Set.contains tile acc then Set.remove tile acc else Set.add tile acc)
+    
+    let runDay current =
+        let toTest = 
+            current 
+            |> Set.toArray 
+            |> Array.collect (fun o -> Array.append [|o|] (adjacent o))
+            |> Array.distinct
+        toTest |> Array.filter (fun p -> state p current) |> Set.ofArray
+
+    (start, [1..100])
+    ||> List.fold (fun current _ -> runDay current)
+    |> Set.count

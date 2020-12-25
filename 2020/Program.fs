@@ -81,7 +81,8 @@ let main argv =
         // timeForDay 24 1 Day24.part1
         // timeForDay 24 2 Day24.part2
 
-        timeForDay 25 1 Day25.christmasDay
+        let res, elapsed = time Day25.christmasDay
+        printfn "christmas day: %A (elapsed: %d ms)" res elapsed
 
         0
     ) |> fun (_, el) -> printfn "total time elapsed: %d ms" el

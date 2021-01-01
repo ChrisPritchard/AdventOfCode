@@ -13,6 +13,7 @@ let up (grid: char [][]) = [|0..dim-1|] |> Array.map (fun x -> grid.[0].[x]) |> 
 let down (grid: char [][]) = [|0..dim-1|] |> Array.map (fun x -> grid.[dim-1].[x]) |> asString
 
 let connections () =
+    let newline = if input.Contains("\r\n") then "\r\n" else "\n"
     let connections = 
         input
         |> splitOn (newline + newline)

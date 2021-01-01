@@ -6,6 +6,7 @@ open System.IO
 let input = File.ReadAllText "./inputs/day22.txt"
 
 let processed () =
+    let newline = if input.Contains("\r\n") then "\r\n" else "\n"
     input 
     |> splitOn (newline + newline) 
     |> Array.map (fun player -> 

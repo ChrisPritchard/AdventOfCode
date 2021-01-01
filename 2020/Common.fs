@@ -3,8 +3,6 @@
 open System
 open System.Diagnostics
 
-let newline = Environment.NewLine
-
 let splitOn (split: string) (s: string) =
     s.Split ([|split|], StringSplitOptions.RemoveEmptyEntries)
 
@@ -30,5 +28,7 @@ let timeForDay day part func =
         printfn "day%d part%d: %d (elapsed: %d ms)" day part o elapsed
     | :? uint64 as o ->
         printfn "day%d part%d: %d (elapsed: %d ms)" day part o elapsed
+    | :? string as o ->
+        printfn "day%d part%d: %s (elapsed: %d ms)" day part o elapsed
     | _ ->
         printfn "day%d part%d: %A (elapsed: %d ms)" day part res elapsed

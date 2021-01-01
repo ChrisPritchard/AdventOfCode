@@ -18,6 +18,7 @@ let processLine s =
     int parts.[0], options
 
 let processed () = 
+    let newline = if input.Contains("\r\n") then "\r\n" else "\n"
     let parts = input |> splitOn (newline+newline)
     let rules = 
         parts.[0] 

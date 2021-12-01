@@ -1,6 +1,8 @@
 ﻿module Common
 
 open System
+open System.IO
+open System.Reflection
 open System.Diagnostics
 
 let splitOn (split: string) (s: string) =
@@ -14,6 +16,12 @@ let splits (strings: seq<string>) (s: string) =
 
 let asString (chars: seq<char>) =
     String(Seq.toArray chars)
+
+// expects files to be in the format 2021.[filename]
+let readEmbedded file =
+    use s: Stream = Assembly.GetEntryAssembly().GetManifestResourceStream ("2021." + file)
+    use r = new StreamReader(s)
+    r.ReadToEnd() |> split "\r\n"
 
 let time func = 
     let timer = Stopwatch.StartNew();    

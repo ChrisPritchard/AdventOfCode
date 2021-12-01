@@ -27,16 +27,17 @@ let time func =
     let timer = Stopwatch.StartNew();    
     let result = func ()
     timer.Stop()
-    result, timer.ElapsedMilliseconds
+    let milliseconds = (float timer.ElapsedTicks) / (float Stopwatch.Frequency)
+    result, milliseconds*1000.0
 
 let timeForDay day part func =
     let res, elapsed = time func
     match box res with
     | :? int64 as o ->
-        printfn "day%d part%d: %d (elapsed: %d ms)" day part o elapsed
+        printfn "day%d part%d: %d (elapsed: %f ms)" day part o elapsed
     | :? uint64 as o ->
-        printfn "day%d part%d: %d (elapsed: %d ms)" day part o elapsed
+        printfn "day%d part%d: %d (elapsed: %f ms)" day part o elapsed
     | :? string as o ->
-        printfn "day%d part%d: %s (elapsed: %d ms)" day part o elapsed
+        printfn "day%d part%d: %s (elapsed: %f ms)" day part o elapsed
     | _ ->
-        printfn "day%d part%d: %A (elapsed: %d ms)" day part res elapsed
+        printfn "day%d part%d: %A (elapsed: %f ms)" day part res elapsed

@@ -8,9 +8,15 @@ let main argv =
     printfn "==================="
     printfn ""
     
+    let mutable total = 0.0
+    
     Day01.init()
-    timeForDay 1 1 Day01.part1
-    timeForDay 1 2 Day01.part2
+    
+    total <- total + timeForDay 1 1 Day01.part1
+    total <- total + timeForDay 1 2 Day01.part2
 
     printfn ""
+    printfn "total time elapsed: %f ms" total
+    printfn ""
+
     0

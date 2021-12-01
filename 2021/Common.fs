@@ -41,3 +41,4 @@ let timeForDay day part func =
         printfn "day%d part%d: %s (elapsed: %f ms)" day part o elapsed
     | _ ->
         printfn "day%d part%d: %A (elapsed: %f ms)" day part res elapsed
+    elapsed

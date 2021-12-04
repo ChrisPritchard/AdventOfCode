@@ -9,21 +9,23 @@ let init () =
     processed |> Array.length |> ignore
 
 let part1 () =
-    let rates = 
-        processed 
-        |> Array.collect (fun s -> s.ToCharArray() |> Array.indexed)
-        |> Array.groupBy fst
-        |> Array.map 
-            (fun (_, chars) -> 
-                chars |> Array.countBy (snd) |> Map.ofArray)
-        |> Array.fold 
-            (fun (gamma, epsilon) counts -> 
-                if counts['0'] > counts['1'] then 
-                    gamma + "0", epsilon + "1" 
-                else 
-                    gamma + "1", epsilon + "0")
-            ("", "")
-    Convert.ToInt32 (fst rates, 2) * Convert.ToInt32 (snd rates, 2)
+    let rowlen = processed[0].Length
+    let counter = Array.zeroCreate rowlen
+    for p in processed do
+        for i = 0 to rowlen - 1 do
+            if p[i] = '1' then
+                counter[i] <- counter[i] + 1
+    let mutable gamma = 0
+    let mutable epsilon = 0
+    let mid = processed.Length / 2
+    for i = 0 to rowlen - 1 do
+        if counter[i] >= mid then
+            gamma <- gamma*2 + 1
+            epsilon <- epsilon*2
+        else
+            gamma <- gamma*2
+            epsilon <- epsilon*2 + 1
+    gamma * epsilon
 
 let part2 () =
     let rates index (numbers: string[]) = 

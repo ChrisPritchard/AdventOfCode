@@ -11,6 +11,7 @@ let init () =
 let ends (s: string) =
     let parts = split ", ->" s |> Array.map int
     parts[0],parts[1],parts[2],parts[3]
+    
 let asPoints (x1,y1,x2,y2) =
     let dx = if x1 < x2 then 1 else -1
     let dy = if y1 < y2 then 1 else -1

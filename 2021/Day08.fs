@@ -30,39 +30,45 @@ let part2 () =
     ]    
 
     let translate mappings =
+
+        let asChars (s: string) = s.ToCharArray()
+        let asSet = asChars >> Set.ofArray 
         
-        let sorted = Array.sortBy String.length mappings |> Array.map (fun s -> s.ToCharArray() |> Set.ofArray)
+        let sorted = Array.sortBy String.length mappings |> Array.map asSet
+
         let cORf = sorted[0]
         let a = Set.difference sorted[1] cORf
         let bORd = Set.difference sorted[2] cORf
         let fives = sorted[3..5]
         let (b,g) = 
-            let target = fives |> Array.find (fun o -> Set.isSubset cORf o)
+            let target = Array.find (Set.isSubset cORf) fives
             let d = Set.difference bORd target
             let g = Set.difference target (Set.unionMany [a; cORf; bORd])
             d, g
         let d = Set.difference bORd b
         let (c,f) =
             let sub = Set.unionMany [a; b; d; g]
-            let target = fives |> Array.find (fun o -> Set.isSubset sub o)
+            let target = Array.find (Set.isSubset sub) fives
             let f = Set.difference target sub
             let c = Set.difference cORf f
             c, f
         let e = Set.difference sorted[9] (Set.unionMany [a; b; c; d; f; g])
 
+        let gv = Set.toArray >> Array.head
         let translator = Map.ofList [
-            (Set.toArray a)[0], 'a'
-            (Set.toArray b)[0], 'b'
-            (Set.toArray c)[0], 'c'
-            (Set.toArray d)[0], 'd'
-            (Set.toArray e)[0], 'e'
-            (Set.toArray f)[0], 'f'
-            (Set.toArray g)[0], 'g'
+            gv a, 'a'
+            gv b, 'b'
+            gv c, 'c'
+            gv d, 'd'
+            gv e, 'e'
+            gv f, 'f'
+            gv g, 'g'
         ]
+
         mappings 
         |> Array.map (fun s -> 
             let translated = 
-                s.ToCharArray() 
+                asChars s
                 |> Array.map (fun c -> translator[c])
                 |> Set.ofArray
             let number = characters[translated]
@@ -76,5 +82,4 @@ let part2 () =
         |> asString
         |> int
 
-    processed
-    |> Array.sumBy decode
+    Array.sumBy decode processed

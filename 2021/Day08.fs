@@ -15,6 +15,7 @@ let part1 () =
     |> Array.sumBy (fun (l, c) -> if l = 2 || l = 4 || l = 3 || l = 7 then c else 0)
 
 let part2 () =
+
     let characters = Map.ofList [
         Set.ofList ['a';'b';'c';'e';'f';'g'], '0'
         Set.ofList ['c';'f'], '1'
@@ -29,6 +30,7 @@ let part2 () =
     ]    
 
     let translate mappings =
+        
         let sorted = Array.sortBy String.length mappings |> Array.map (fun s -> s.ToCharArray() |> Set.ofArray)
         let cORf = sorted[0]
         let a = Set.difference sorted[1] cORf
@@ -47,6 +49,7 @@ let part2 () =
             let c = Set.difference cORf f
             c, f
         let e = Set.difference sorted[9] (Set.unionMany [a; b; c; d; f; g])
+
         let translator = Map.ofList [
             (Set.toArray a)[0], 'a'
             (Set.toArray b)[0], 'b'

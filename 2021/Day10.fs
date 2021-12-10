@@ -8,11 +8,6 @@ let processed = readEmbedded "day10"
 let init () =
     processed |> Array.length |> ignore
 
-type Res = 
-    | Closed
-    | Continue of char list
-    | Result of char
-
 let beg c = Array.contains c [|'(';'[';'<';'{'|]
 let opp = Map.ofArray [|')','(';']','[';'}','{';'>','<'|]
 

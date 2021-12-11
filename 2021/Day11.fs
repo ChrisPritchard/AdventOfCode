@@ -50,4 +50,38 @@ let part1 () =
     flashes
 
 let part2 () =
-    0
+    let octi = processed |> Array.map (fun s -> s |> Seq.map (fun c -> int c - int '0') |> Array.ofSeq)
+    let oct y x = octi[y][x]
+    let bump y x = octi[y][x] <- oct y x + 1
+
+    let mutable keepGoing = true
+    let mutable step = 0
+    while keepGoing do
+        step <- step + 1
+
+        for (y, x) in positions do
+            bump y x
+
+        let mutable flashesFound = true
+        while flashesFound do
+            flashesFound <- false
+            for (y, x) in positions do
+                if oct y x = 10 then
+                    bump y x
+                    flashesFound <- true
+                    for ny, nx in neighbours[y,x] do
+                        if oct ny nx < 10 then
+                            bump ny nx
+
+        let mutable flashes = 0
+        for (y, x) in positions do
+            if oct y x > 9 then
+                flashes <- flashes + 1
+                octi[y][x] <- 0
+        
+        if flashes = positions.Length then
+            keepGoing <- false
+
+    step
+
+    

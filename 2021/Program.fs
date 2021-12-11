@@ -64,6 +64,11 @@ let main argv =
         
     total <- total + timeForDay 11 1 Day11.part1
     total <- total + timeForDay 11 2 Day11.part2
+    
+    Day12.init()
+        
+    total <- total + timeForDay 12 1 Day12.part1
+    total <- total + timeForDay 12 2 Day12.part2
 
     printfn ""
     printfn "total time elapsed: %f ms" total

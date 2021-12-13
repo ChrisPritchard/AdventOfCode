@@ -17,17 +17,33 @@ let processed =
 let init () =
     snd processed |> Array.length |> ignore
 
-let part1 () =
-    let (fold_axis, fold_point) = (snd processed)[0]
+let apply_rule current (fold_axis, fold_point) =
     if fold_axis = "y" then
-        let (top, bottom) = fst processed |> Set.partition (fun (_, y) -> y > fold_point)
-        let result = Set.union top (bottom |> Set.map (fun (x, y) -> x, fold_point - (y - fold_point)))
-        Set.count result
+        let (top, bottom) = current |> Set.partition (fun (_, y) -> y < fold_point)
+        Set.union top (bottom |> Set.map (fun (x, y) -> x, fold_point - (y - fold_point)))
     else
-        let (left, right) = fst processed |> Set.partition (fun (x, _) -> x > fold_point)
-        let result = Set.union left (right |> Set.map (fun (x, y) -> fold_point - (x - fold_point), y))
-        Set.count result
+        let (left, right) = current |> Set.partition (fun (x, _) -> x < fold_point)
+        Set.union left (right |> Set.map (fun (x, y) -> fold_point - (x - fold_point), y))
+
+let part1 () =
+    apply_rule (fst processed) ((snd processed)[0]) |> Set.count
 
 let part2 () =
-    0
-    
+    let rules = snd processed
+    let result = rules |> Array.fold apply_rule (fst processed)    
+
+    let (lines, width) = 
+        rules 
+        |> Array.fold (fun (l, w) (axis, value) -> 
+            if axis = "y" && value < l then value, w 
+            else if axis = "x" && value < w then l, value 
+            else l, w) (999, 999)
+    let readable =
+        [0..lines] 
+        |> List.map (fun y -> 
+            [0..width] 
+            |> List.map (fun x -> 
+                if Set.contains (x, y) result then '#' else ' ') 
+            |> asString) 
+        |> String.concat "\n"
+    "\n" + readable

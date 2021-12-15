@@ -8,36 +8,82 @@ let processed = readEmbedded "day15" |> Array.map (fun s -> s.ToCharArray() |> A
 let init () =
     processed |> Array.length |> ignore
 
-let nextTo (y, x) = 
-    [|0,-1;-1,0;1,0;0,1|] |> Array.map (fun (dy, dx) -> y + dy, x + dx)
+let height = processed.Length
+let width = processed[0].Length
 
 let part1 () =
-    let mutable Q = [|0..processed.Length - 1|] |> Array.collect (fun y -> [|0..processed[0].Length - 1|] |> Array.map (fun x -> y, x))
-
-    let mutable dist = Q |> Array.map (fun k -> k, Int32.MaxValue) |> Map.ofArray
-    let mutable prev = Map.empty
-
-    dist <- Map.add (0,0) 0 dist
+    let mutable edges = [|0, 0|]
+    let mutable dists = Map.empty |> Map.add (0,0) 0
+    let mutable visited = Set.empty
+    
     let mutable found = false
-    let target = processed.Length - 1, processed[0].Length - 1
+    let target = height - 1, width - 1
 
-    while Q.Length > 0 && not found do
-        let u = Array.minBy (fun o -> dist[o]) Q
-
-        if u = target then found <- true
+    let getRisk (y, x) = processed[y][x]
+    let nextTo (y, x) = 
+        [|0,-1;-1,0;1,0;0,1|] 
+        |> Array.map (fun (dy, dx) -> y + dy, x + dx) 
+        |> Array.filter (fun (y, x) -> y >= 0 && y < height && x >= 0 && x < width)
+    
+    while not found do
+        let next = edges |> Array.minBy (fun e -> dists[e])
+        if next = target then found <- true
         else
-            Q <- Array.except [|u|] Q
+            visited <- Set.add next visited
+            edges <- edges |> Array.except [|next|]
 
-            let neighbours = nextTo u |> Array.filter (fun p -> Array.contains p Q)
-            for v in neighbours do
-                let (y, x) = v
-                let alt = dist[u] + processed[y][x]
-                if alt < dist[v] then
-                    dist <- Map.add v alt dist
-                    prev <- Map.add v u prev
+            let neighbours = nextTo next |> Array.filter (fun p -> not (Set.contains p visited))
+            edges <- edges |> Array.append neighbours
 
-    dist[target]
+            for n in neighbours do
+                let alt = dists[next] + getRisk n
+                match Map.tryFind n dists with
+                | Some v when alt < v ->
+                    dists <- Map.add n alt dists
+                | None ->
+                    dists <- Map.add n alt dists
+                | _ -> ()
+
+    dists[target]
     
 let part2 () =
-    0
+    let mutable edges = [|0, 0|]
+    let mutable dists = Map.empty |> Map.add (0,0) 0
+    let mutable visited = Set.empty
+    
+    let mutable found = false
+    let target = height * 5 - 1, width * 5 - 1
+
+    let getRisk (y, x) = 
+        let raw = processed[y % height][x % width]
+        let my = y / height
+        let mx = x / width
+        let n = (raw + my + mx)
+        if n > 9 then n - 9
+        else n
+    let nextTo (y, x) = 
+        [|0,-1;-1,0;1,0;0,1|] 
+        |> Array.map (fun (dy, dx) -> y + dy, x + dx) 
+        |> Array.filter (fun (y, x) -> y >= 0 && y < height * 5 && x >= 0 && x < width * 5)
+    
+    while not found do
+        let next = edges |> Array.minBy (fun e -> dists[e])
+        if next = target then found <- true
+        else
+            visited <- Set.add next visited
+            edges <- edges |> Array.except [|next|]
+
+            let neighbours = nextTo next |> Array.filter (fun p -> not (Set.contains p visited))
+            edges <- edges |> Array.append neighbours
+
+            for n in neighbours do
+                let alt = dists[next] + getRisk n
+                match Map.tryFind n dists with
+                | Some v when alt < v ->
+                    dists <- Map.add n alt dists
+                | None ->
+                    dists <- Map.add n alt dists
+                | _ -> ()
+
+    dists[target]
     

@@ -11,6 +11,51 @@ let init () =
 let height = processed.Length
 let width = processed[0].Length
 
+type Heap(maxSize, comparer) =
+    let data = Array.zeroCreate maxSize
+    let mutable nextIndex = 0
+
+    member this.Enqueue item =
+        data[nextIndex] <- item
+
+        let mutable ci = nextIndex
+        while ci > 0 do
+            let pi = (ci - 1) / 2
+            if comparer data[ci] data[pi] >= 0 then ci <- -1 //break
+            else
+                let tmp = data[ci]
+                data[ci] <- data[pi]
+                data[pi] <- tmp
+                ci <- pi
+
+        nextIndex <- nextIndex + 1
+
+    member this.Dequeue () =
+        let mutable li = nextIndex - 1
+        let frontItem = data[0]
+        data[0] <- data[li]
+        nextIndex <- nextIndex - 1
+
+        li <- li - 1
+        let mutable pi = 0
+
+        let mutable finished = false
+        while not finished do
+            let mutable ci = pi * 2 + 1
+            if ci > li then finished <- true
+            else
+                let rc = ci + 1
+                if rc <= li && comparer data[rc] data[ci] < 0 then
+                    ci <- rc
+                if comparer data[pi] data[ci] <= 0 then finished <- true
+                else
+                    let tmp = data[pi]
+                    data[pi] <- data[ci]
+                    data[ci] <- tmp
+                    pi <- ci
+
+        frontItem
+
 let part1 () =
     
     let ty = height - 1
@@ -31,21 +76,21 @@ let part1 () =
     gScores[0][0] <- 0
     fScores[0][0] <- h[0][0]
 
-    let mutable openSet = [|0,0|]
+    let openSet = Heap(width * height, fun (x1, y1) (x2, y2) -> fScores[x1][y1] - fScores[x2][y2])
+    openSet.Enqueue (0, 0)
+
     let mutable found = false
     while not found do
-        let (cy, cx) = openSet[0]
+        let (cy, cx) = openSet.Dequeue()
         if (cy, cx) = (ty, tx) then
             found <- true
         else
-            openSet <- openSet[1..]
             for (ny, nx) in n[cy][cx] do
                 let tentative_gScore = gScores[cy][cx] + processed[ny][nx]
                 if tentative_gScore < gScores[ny][nx] then
                     gScores[ny][nx] <- tentative_gScore
                     fScores[ny][nx] <- tentative_gScore + h[ny][nx]
-                    if not (Array.contains (ny, nx) openSet) then
-                        openSet <- Array.append [|ny, nx|] openSet |> Array.sortBy (fun (ny, nx) -> fScores[ny][nx])
+                    openSet.Enqueue(ny, nx)
 
     gScores[ty][tx]
     
@@ -77,61 +122,20 @@ let part2 () =
     gScores[0][0] <- 0
     fScores[0][0] <- h[0][0]
 
-    let mutable openSet = [|0,0|]
+    let openSet = Heap(width * 5 * height * 5, fun (x1, y1) (x2, y2) -> fScores[x1][y1] - fScores[x2][y2])
+    openSet.Enqueue (0, 0)
+
     let mutable found = false
     while not found do
-        let (cy, cx) = openSet[0]
+        let (cy, cx) = openSet.Dequeue ()
         if (cy, cx) = (ty, tx) then
             found <- true
         else
-            openSet <- openSet[1..]
             for (ny, nx) in n[cy][cx] do
                 let tentative_gScore = gScores[cy][cx] + getRisk ny nx
                 if tentative_gScore < gScores[ny][nx] then
                     gScores[ny][nx] <- tentative_gScore
                     fScores[ny][nx] <- tentative_gScore + h[ny][nx]
-                    if not (Array.contains (ny, nx) openSet) then
-                        openSet <- Array.append [|ny, nx|] openSet |> Array.sortBy (fun (ny, nx) -> fScores[ny][nx])
+                    openSet.Enqueue(ny, nx)
 
     gScores[ty][tx]
-
-    // let mutable edges = [|0, 0|]
-    // let mutable dists = Map.empty |> Map.add (0,0) 0
-    // let mutable visited = Set.empty
-    
-    // let mutable found = false
-    // let target = height * 5 - 1, width * 5 - 1
-
-    // let getRisk (y, x) = 
-    //     let raw = processed[y % height][x % width]
-    //     let my = y / height
-    //     let mx = x / width
-    //     let n = (raw + my + mx)
-    //     if n > 9 then n - 9
-    //     else n
-    // let nextTo (y, x) = 
-    //     [|0,-1;-1,0;1,0;0,1|] 
-    //     |> Array.map (fun (dy, dx) -> y + dy, x + dx) 
-    //     |> Array.filter (fun (y, x) -> y >= 0 && y < height * 5 && x >= 0 && x < width * 5)
-    
-    // while not found do
-    //     let next = edges |> Array.minBy (fun e -> dists[e])
-    //     if next = target then found <- true
-    //     else
-    //         visited <- Set.add next visited
-    //         edges <- edges |> Array.except [|next|]
-
-    //         let neighbours = nextTo next |> Array.filter (fun p -> not (Set.contains p visited))
-    //         edges <- edges |> Array.append neighbours
-
-    //         for n in neighbours do
-    //             let alt = dists[next] + getRisk n
-    //             match Map.tryFind n dists with
-    //             | Some v when alt < v ->
-    //                 dists <- Map.add n alt dists
-    //             | None ->
-    //                 dists <- Map.add n alt dists
-    //             | _ -> ()
-
-    // dists[target]
-    

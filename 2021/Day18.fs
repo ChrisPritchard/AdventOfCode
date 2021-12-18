@@ -21,12 +21,14 @@ let add a b =
             if Char.IsDigit (res[j][0]) then
                 res[j] <- string (int res[j] + left)
                 found <- true
+            j <- j - 1
         j <- index + 5
         found <- false
         while j < res.Length && not found do
             if Char.IsDigit (res[j][0]) then
                 res[j] <- string (int res[j] + right)
                 found <- true
+            j <- j + 1
 
         res <- Array.concat [| res[0..index-1] ; [|"0"|] ; res[index+5..] |]
 
@@ -66,8 +68,8 @@ let add a b =
     res |> String.concat ""
 
 let part1 () =
-    //processed |> Array.reduce add
-    add "[[[[4,3],4],4],[7,[[8,4],9]]]" "[1,1]"
+    processed |> Array.reduce add
+    //add "[[[[4,3],4],4],[7,[[8,4],9]]]" "[1,1]"
 
 let part2 () =
     0

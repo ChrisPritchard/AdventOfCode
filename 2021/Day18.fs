@@ -67,9 +67,35 @@ let add a b =
             
     res |> String.concat ""
 
+let rec magnitude start (n: string) = 
+    let res = n.ToCharArray() |> Array.map string
+    let mutable i = start
+    let mutable left = -1
+    let mutable right = -1
+    let mutable finished = false
+    while i < res.Length && not finished do
+        match res[i] with
+        | "[" -> 
+            let v, ni = magnitude (i + 1) n
+            if left = -1 then left <- v
+            else right <- v
+            i <- ni - 1
+        | "]" ->
+            finished <- true
+        | c when Char.IsDigit c[0] ->
+            if left = -1 then left <- int c
+            else right <- int c
+        | _ -> ()
+        i <- i + 1
+    3 * left + 2 * right, i
+
 let part1 () =
-    processed |> Array.reduce add
-    //add "[[[[4,3],4],4],[7,[[8,4],9]]]" "[1,1]"
+    processed |> Array.reduce add |> magnitude 1 |> fst
 
 let part2 () =
-    0
+    processed 
+    |> Array.collect (fun a -> 
+        processed 
+        |> Array.except [|a|] 
+        |> Array.map (fun b -> add a b |> magnitude 1 |> fst)) 
+    |> Array.max

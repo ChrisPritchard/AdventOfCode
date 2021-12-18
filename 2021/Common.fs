@@ -17,6 +17,8 @@ let splits (strings: seq<string>) (s: string) =
 let asString (chars: seq<char>) =
     String(Seq.toArray chars)
 
+let asInt (c: char) = int c - int '0'
+
 // expects files to be in the format 2021.[filename]
 let readEmbedded file =
     use s: Stream = Assembly.GetEntryAssembly().GetManifestResourceStream ("2021." + file)

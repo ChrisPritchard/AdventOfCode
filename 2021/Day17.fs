@@ -34,7 +34,7 @@ let test (ivx, ivy) =
     step (0, 0) (ivx, ivy) 0
 
 let part1 () =
-    [|1..tx2|] |> Array.collect (fun x -> [|0..(tx2*2)|] |> Array.map (fun y -> test (x, y))) |> Array.choose id |> Array.max
+    [|1..300|] |> Array.collect (fun x -> [|-100..100|] |> Array.map (fun y -> test (x, y))) |> Array.choose id |> Array.max
 
 let part2 () =
-    [|1..tx2|] |> Array.collect (fun x -> [|-(tx2*2)..(tx2*2)|] |> Array.map (fun y -> test (x, y))) |> Array.choose id |> Array.length
+    [|1..300|] |> Array.collect (fun x -> [|-100..100|] |> Array.map (fun y -> test (x, y))) |> Array.choose id |> Array.length

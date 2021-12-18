@@ -23,7 +23,6 @@ let add a b =
             match n[i] with
             | '[' when level < 4 -> 
                 level <- level + 1
-
             | '[' when level = 4 -> 
 
                 let (left, right, nextStart) =
@@ -32,13 +31,15 @@ let add a b =
                     else if n[i+5] = ']' then int n[i+1..i+2], asInt n[i+4], 6
                     else int n[i+1..i+2], int n[i+4..i+5], 7
 
-                let mutable prev = n[0..(i-1)]
-                if lastRegular <> -1 then
-                    let lastN = asInt n[lastRegular]
-                    let newN = lastN + left
-                    prev <- n[0..(lastRegular - 1)] + string newN + n[(lastRegular+1)..(i-1)]
+                let prev = 
+                    if lastRegular <> -1 then
+                        let lastN = asInt n[lastRegular]
+                        let newN = lastN + left
+                        n[0..(lastRegular - 1)] + string newN + n[lastRegular+1..i-1]
+                    else
+                        n[0..i-1]
 
-                let mutable next = n[(i+nextStart)..]
+                let mutable next = n[i+nextStart..]
                 let mutable j = 0
                 while j < next.Length do
                     if Char.IsDigit next[j] then
@@ -59,6 +60,18 @@ let add a b =
 
             | ']' -> 
                 level <- level - 1
+            | c when Char.IsDigit c && lastRegular <> i - 1 -> 
+                lastRegular <- i
+
+            | _ -> () // ignore others
+
+            i <- i + 1
+
+        lastRegular <- -1
+        i <- 0
+
+        while i < n.Length && not reduced do
+            match n[i] with
             | c when Char.IsDigit c && lastRegular <> i - 1 -> 
                 lastRegular <- i
             | c when Char.IsDigit c ->

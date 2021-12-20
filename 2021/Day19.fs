@@ -41,8 +41,9 @@ let part1 () =
             s2 |> Array.map (fun point2 ->
                 Set.union point1 point2 |> Set.count))
 
-    overlaps distances[0] distances[1]
+    // overlaps distances[0] distances[1]
+    "not finished"
     
 
 let part2 () =
-    0
+    "not finished"

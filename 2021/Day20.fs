@@ -10,52 +10,74 @@ let init () =
 
 let algo = processed[0].ToCharArray()
 
-let index first (x, y) m =
-    let defaultChar = if not first && algo[0] = '#' then '1' else '0'
-    [|x-1, y-1; x, y-1; x+1, y-1; x-1, y; x,y; x+1, y; x-1, y+1; x, y+1; x+1, y+1|]
-    |> Array.map (fun p -> match Map.tryFind p m with Some '#' -> '1' | Some '.' -> '0' | _ -> defaultChar)
-    |> asString
-    |> fun s -> Convert.ToInt32(s, 2)
-
-let enhance first m = 
-    m |> Map.fold (fun c k _ -> Map.add k (algo[index first k m]) c) Map.empty
-
-// used for debugging
-// let render m = 
-//     let mutable res = "\n"
-//     let a = Map.toArray m
-//     let xrange = a |> Array.map (fst >> fst) |> Array.sort
-//     let yrange = a |> Array.map (fst >> snd) |> Array.sort
-//     for y in [yrange[0]..yrange[yrange.Length - 1]] do
-//         for x in [xrange[0]..xrange[xrange.Length - 1]] do
-//             match Map.tryFind (x, y) m with 
-//             | Some '#' -> res <- res + "#"
-//             | _ -> res <- res + "."
-//         res <- res + "\n"
-//     res
-
 let part1 () =
     
     let pic = 
-        let rowLen = processed[1].Length
-        let headerFooter = [|Array.create (rowLen + 4) '.' |> asString|]
-        Array.concat [|headerFooter; headerFooter; processed[1..]; headerFooter; headerFooter|]
-        |> Array.mapi (fun y s -> (".." + s + "..").ToCharArray() |> Array.mapi (fun x c -> (x, y), c))
-        |> Array.collect id
-        |> Map.ofArray
+        let start = processed[1..]
+        let m = Array2D.create (start.Length + 2) (start[0].Length + 2) '.'
+        for y in [0..start.Length - 1] do
+            for x in [0..start[0].Length - 1] do
+                m[y + 1, x + 1] <- start[y][x]
+        m
+
+    let tryGet defaultChar y x m =
+        try
+            Array2D.get m y x
+        with
+        | _ ->
+            defaultChar
+
+    let index defaultChar y x m =
+        [|x-1, y-1; x, y-1; x+1, y-1; x-1, y; x,y; x+1, y; x-1, y+1; x, y+1; x+1, y+1|]
+        |> Array.map (fun (x, y) -> if tryGet defaultChar y x m = '#' then '1' else '0')
+        |> asString
+        |> fun s -> Convert.ToInt32(s, 2)
+        
+    let enhance defaultChar m =
+        Array2D.init (Array2D.length1 m + 2) (Array2D.length2 m + 2) (fun y x -> algo[index defaultChar (y - 1) (x - 1) m])
   
-    pic |> enhance true |> enhance false |> Map.toArray |> Array.filter (fun (_,c) -> c = '#') |> Array.length
+    let altChar = if algo[0] = '#' then '#' else '.'
+    let result = [1..2] |> List.fold (fun m i -> enhance (if i % 2 = 1 then '.' else altChar) m) pic
+    let mutable count = 0
+    Array2D.iter (fun v -> if v = '#' then count <- count + 1) result
+    count
+    
+    // for debugging
+    // let mutable res = "\n"
+    // for y in [0..Array2D.length1 result - 1] do
+    //     for x in [0..Array2D.length2 result - 1] do
+    //         res <- res + string result[y,x]  
+    //     res <- res + "\n"
+    // res
 
 let part2 () =
     
     let pic = 
-        let rowLen = processed[1].Length
-        let headerFooter = Array.create 50 (Array.create (rowLen + 100) '.' |> asString)
-        let prefixPostfix = Array.create 50 '.' |> asString
-        Array.concat [|headerFooter; processed[1..]; headerFooter|]
-        |> Array.mapi (fun y s -> (prefixPostfix + s + prefixPostfix).ToCharArray() |> Array.mapi (fun x c -> (x, y), c))
-        |> Array.collect id
-        |> Map.ofArray
+        let start = processed[1..]
+        let m = Array2D.create (start.Length + 2) (start[0].Length + 2) '.'
+        for y in [0..start.Length - 1] do
+            for x in [0..start[0].Length - 1] do
+                m[y + 1, x + 1] <- start[y][x]
+        m
+
+    let tryGet defaultChar y x m =
+        try
+            Array2D.get m y x
+        with
+        | _ ->
+            defaultChar
+
+    let index defaultChar y x m =
+        [|x-1, y-1; x, y-1; x+1, y-1; x-1, y; x,y; x+1, y; x-1, y+1; x, y+1; x+1, y+1|]
+        |> Array.map (fun (x, y) -> if tryGet defaultChar y x m = '#' then '1' else '0')
+        |> asString
+        |> fun s -> Convert.ToInt32(s, 2)
+        
+    let enhance defaultChar m =
+        Array2D.init (Array2D.length1 m + 2) (Array2D.length2 m + 2) (fun y x -> algo[index defaultChar (y - 1) (x - 1) m])
   
-    [1..50] |> List.fold (fun m i -> enhance (i % 2 = 1) m) pic
-    |> Map.toArray |> Array.filter (fun (_,c) -> c = '#') |> Array.length
+    let altChar = if algo[0] = '#' then '#' else '.'
+    let result = [1..50] |> List.fold (fun m i -> enhance (if i % 2 = 1 then '.' else altChar) m) pic
+    let mutable count = 0
+    Array2D.iter (fun v -> if v = '#' then count <- count + 1) result
+    count

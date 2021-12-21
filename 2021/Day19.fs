@@ -8,6 +8,21 @@ let processed = readEmbedded "day19"
 let init () =
     processed |> Array.length |> ignore
 
+let scanners = 
+    processed 
+    |> Array.fold (fun (acc, current) (line: string) ->
+        match current with
+        | None -> acc, Some Array.empty
+        | Some l when line.StartsWith "---" -> Array.append acc [|l|], Some Array.empty
+        | Some l -> 
+            let points = line |> split "," |> Array.map int
+            acc, Some (Array.append l [|points[0], points[1], points[2]|])) 
+        (Array.empty, None)
+    |> fun (acc, current) -> 
+        match current with 
+        | None -> acc 
+        | Some c -> Array.append acc [|c|]
+
 let transforms = [|
         [|1, 0, 0; 0, 1, 0; 0, 0, 1|]
         [|1, 0, 0; 0, 0, -1; 0, 1, 0|]
@@ -46,39 +61,55 @@ let map (x, y, z) (m: (int * int * int)[]) =
     let (mx2, my2, mz2) = m[2]
     mx0 * x + my0 * y + mz0 * z, mx1 * x + my1 * y + mz1 * z, mx2 * x + my2 * y + mz2 * z
 
-let scanners = 
-    processed 
-    |> Array.fold (fun (acc, current) (line: string) ->
-        match current with
-        | None -> acc, Some Array.empty
-        | Some l when line.StartsWith "---" -> Array.append acc [|l|], Some Array.empty
-        | Some l -> 
-            let points = line |> split "," |> Array.map int
-            acc, Some (Array.append l [|points[0], points[1], points[2]|])) 
-        (Array.empty, None)
-    |> fun (acc, current) -> 
-        match current with 
-        | None -> acc 
-        | Some c -> Array.append acc [|c|]
+let allRotations (scanner: (int * int * int)[]) =
+    transforms |> Array.map (fun m -> scanner |> Array.map (fun p -> map p m))
+
+let add (x1, y1, z1) (x2, y2, z2) =
+    x1 + x2, y1 + y2, z1 + z2
+
+let sub (x1, y1, z1) (x2, y2, z2) =
+    x1 - x2, y1 - y2, z1 - z2
+
+let allDists scanner =
+    scanner |> Array.map (fun p -> p, scanner |> Array.map (fun o -> sub p o) |> Set.ofArray)
+
+let overlap withPoints scanner =
+    let baseOffsets = allDists withPoints
+    allRotations scanner
+    |> Array.tryPick (fun rot ->
+        let otherOffsets = allDists rot
+        let result = 
+            baseOffsets 
+            |> Array.choose (fun (p, o) -> 
+                otherOffsets 
+                |> Array.tryFind (fun (pp, oo) -> 
+                    let matches = Set.intersect o oo |> Set.count
+                    matches >= 10)
+                |> Option.map (fun (pp, _) -> p, pp))
+        if result.Length < 12 then None 
+        else 
+            let diff = 
+                let (p1, p2) = result[0] in sub p1 p2
+            let adjusted = rot |> Array.map (fun p -> add p diff)
+            baseOffsets |> Array.map fst |> Array.append adjusted |> Array.distinct |> Some)
 
 let part1 () =
-    let rotated = 
-        transforms
-        |> Array.map (fun m -> scanners[0] |> Array.map (fun p -> map p m))
-    rotated
+    let rec matchAll acc others = 
+        let (i, newAcc) = 
+            others 
+            |> Array.indexed 
+            |> Array.pick (fun (i, scanner) -> 
+                match overlap acc scanner with 
+                | Some newPoints -> 
+                    Some (i, newPoints)
+                | _ -> None)
+        if others.Length = 1 then
+            newAcc
+        else
+            matchAll newAcc (Array.removeAt i others)
+                
 
-    // take scanner 0 as target
-    // calculate change between each point
-    // to test overlap 1
-    // get all rotations of scanner 1
-    // calculate change between each point on each rotation
-    // for each change set, compare with change set on scanner 0
-    // that is, each point in change set compared with each point in scanner 0
-    // high union indicates same point
-
-    // if same points found, calculate offset between
-    // apply offset
-    // 12 points at least should overlap, and scanner 2 can be determined
+    matchAll scanners[0] scanners[1..] |> Array.length
 
 let part2 () =
     "not finished"

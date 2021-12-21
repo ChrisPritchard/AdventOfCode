@@ -91,25 +91,27 @@ let overlap withPoints scanner =
             let diff = 
                 let (p1, p2) = result[0] in sub p1 p2
             let adjusted = rot |> Array.map (fun p -> add p diff)
-            baseOffsets |> Array.map fst |> Array.append adjusted |> Array.distinct |> Some)
+            Some adjusted)
 
 let part1 () =
     let rec matchAll acc others = 
-        let (i, newAcc) = 
-            others 
-            |> Array.indexed 
-            |> Array.pick (fun (i, scanner) -> 
-                match overlap acc scanner with 
-                | Some newPoints -> 
-                    Some (i, newPoints)
-                | _ -> None)
+        let (i, found) = 
+            acc
+            |> Array.pick (fun acc ->
+                others
+                |> Array.indexed 
+                |> Array.tryPick (fun (i, scanner) -> 
+                    match overlap acc scanner with 
+                    | Some newPoints -> 
+                        Some (i, newPoints)
+                    | _ -> None))
         if others.Length = 1 then
-            newAcc
+            Array.append acc [|found|] |> Array.concat |> Array.distinct |> Array.length
         else
-            matchAll newAcc (Array.removeAt i others)
+            matchAll (Array.append acc [|found|]) (Array.removeAt i others)
                 
 
-    matchAll scanners[0] scanners[1..] |> Array.length
+    matchAll [|scanners[0]|] scanners[1..]
 
 let part2 () =
     "not finished"

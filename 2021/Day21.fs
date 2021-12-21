@@ -50,5 +50,12 @@ let part2 () =
                 // from 2: 7,8,9,10,11,12,3
                 // from 3: 9,10,11,12,13,4,5
             // after round 3...
-    
+
+    // another approach might be to calculate all possible positions from a given position
+    // 1: 4,5,6,7,8,9,10
+    // 2: 5,6,7,8,9,10,1
+    // 3: 6,7,8,9,10,1,2
+    // with this it can be calculated from whatever position, in how many possibilities they will have what score...
+    // 
+
     0

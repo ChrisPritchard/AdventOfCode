@@ -110,7 +110,6 @@ let part1 () =
         else
             matchAll (Array.append acc [|found|]) (Array.removeAt i others)
                 
-
     matchAll [|scanners[0]|] scanners[1..]
 
 let part2 () =

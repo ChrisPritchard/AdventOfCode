@@ -28,14 +28,12 @@ let part1 () =
         max -50 x1, min 50 x2, max -50 y1, min 50 y2, max -50 z1, min 50 z2
     
     let mutable count = 0
-    for i = [0..coords.Length - 1] do
+    for i in [0..coords.Length - 1] do
         let (on, coord) = coords[i]
         let coord = cap coord
         let sized = size coord
-        if on then
-            // go through previous 'on's and find intersections
-            // only add for size - intersection
-            // if there is an 
+        ()
+    0
 
 let part2 () =
     0

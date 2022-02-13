@@ -3,6 +3,8 @@ module Day19
 open Common
 open System
 
+// note: my solution for day 19 takes about six-eight minutes to run :(
+
 let processed = readEmbedded "day19"
 
 let init () =
@@ -91,26 +93,47 @@ let overlap withPoints scanner =
             let diff = 
                 let (p1, p2) = result[0] in sub p1 p2
             let adjusted = rot |> Array.map (fun p -> add p diff)
-            Some adjusted)
+            Some (adjusted, diff))
+
+let mutable part1Result: (int * int * int)[] option = None
 
 let part1 () =
-    let rec matchAll acc others = 
-        let (i, found) = 
+    let rec matchAll acc others scannersAcc = 
+        let (i, found, scanner) = 
             acc
             |> Array.pick (fun acc ->
                 others
                 |> Array.indexed 
                 |> Array.tryPick (fun (i, scanner) -> 
                     match overlap acc scanner with 
-                    | Some newPoints -> 
-                        Some (i, newPoints)
+                    | Some (newPoints, scanner) -> 
+                        Some (i, newPoints, scanner)
                     | _ -> None))
+        let scannersAcc = Array.append scannersAcc [|scanner|]
         if others.Length = 1 then
-            Array.append acc [|found|] |> Array.concat |> Array.distinct |> Array.length
+            Array.append acc [|found|] |> Array.concat |> Array.distinct, scannersAcc
         else
-            matchAll (Array.append acc [|found|]) (Array.removeAt i others)
+            matchAll (Array.append acc [|found|]) (Array.removeAt i others) scannersAcc
                 
-    matchAll [|scanners[0]|] scanners[1..]
+    let (points, allScanners) = matchAll [|scanners[0]|] scanners[1..] Array.empty
+    part1Result <- Some allScanners
+    Array.length points
 
 let part2 () =
-    "not finished"
+
+    let allScanners = 
+        match part1Result with
+        | Some p -> p
+        | None ->
+            part1 () |> ignore
+            match part1Result with Some p -> p | _ -> failwith "something went wrong"
+                
+    let mh a b = 
+        if a < 0 && b > 0 then abs a + b
+        else if a > 0 && b < 0 then a + abs b
+        else abs (abs a - abs b)
+    allScanners 
+    |> Array.collect (fun (x1, y1, z1) -> 
+        allScanners |> Array.map (fun (x2, y2, z2) -> 
+            mh x1 x2 + mh y1 y2 + mh z1 z2))
+    |> Array.max |> int

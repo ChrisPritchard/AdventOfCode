@@ -100,10 +100,12 @@ let main argv =
     // total <- total + timeForDay 18 1 Day18.part1
     // total <- total + timeForDay 18 2 Day18.part2
     
-    // Day19.init()
+    Day19.init()
+
+    // note: my solution for day 19 takes about six-eight minutes to run :(
         
-    // total <- total + timeForDay 19 1 Day19.part1
-    // total <- total + timeForDay 19 2 Day19.part2
+    total <- total + timeForDay 19 1 Day19.part1
+    total <- total + timeForDay 19 2 Day19.part2
     
     // Day20.init()
         
@@ -115,10 +117,10 @@ let main argv =
     // total <- total + timeForDay 21 1 Day21.part1
     // total <- total + timeForDay 21 2 Day21.part2
 
-    Day22.init()
+    // Day22.init()
         
-    total <- total + timeForDay 22 1 Day22.part1
-    total <- total + timeForDay 22 2 Day22.part2
+    // total <- total + timeForDay 22 1 Day22.part1
+    // total <- total + timeForDay 22 2 Day22.part2
 
     printfn ""
     printfn "total time elapsed: %f ms" total

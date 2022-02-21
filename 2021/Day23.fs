@@ -16,48 +16,47 @@ let init () =
     processed |> Array.length |> ignore
 
 let part1 () =
-    // any unit can move to one of seven locations from its start
-    //  unless blocked: either by a unit in front or by another unit in one of the seven locations
-    // once in the seven, a unit may move to only one location: its own column. it may only move here if its empty, 
-    //  or if it has one of its kind inside
 
-    // brute force all options to track victories, keeping record of paths so costs can be calculated
-    // nodes could be presented as positions, with possible options available for each
-    // this could also be memoised -> from a given setup, given costs?
-    // could be presented as a mere set of 8 number pairs for AABBCCDD, 
-    //  each presented as 0 to 6 for top positions, 0, 1 for col positions, 
-    //  prefixed with T for top or the col home for bottom (e.g. A0)
+    // render input as a sequence of numbers in hex, from 0 to 14 (E)
+    // or as 0-6 and then AaBbCcDd?
+    // also in order - there are eight units we are concerned about
+    // so starting data is (for test): ADacbCBd
 
-    // "A0D0A1C1B1C0B0D1" for test data
-    // could be done with pure ints for index, using 4 for up
-    // "0030012111201031"
+    let cost index dist = (pown 10 (index / 2)) * dist
 
-    // things can move are all ups, all 1s, and all 0s where there isnt also a 1
-    // line can be parsed into columns for this calculations, or parsed as is
+    let effectivePos col = 
+        let neutral = Char.ToLower col
+        1.5 + float (int neutral - int 'a')
+
+    let blocked start target line =
+        let start = if Char.IsLetter start then effectivePos start else float start
+        let target = if Char.IsLetter target then effectivePos target else float target
+        line 
+        |> Seq.filter Char.IsDigit
+        |> Seq.map (fun c -> float  c - float '0')
+        |> Seq.exists (fun digit -> 
+            (start < target && digit <= target && digit > start)
+            || (target < start && digit < start && digit >= target))
+
+    let dist start target = 
+        let col = 
+            if Char.IsUpper start || Char.IsUpper target then 1.5
+            else 0.5
+        let start = if Char.IsLetter start then effectivePos start else float start
+        let target = if Char.IsLetter target then effectivePos target else float target
+        if target > start then (target - start) + col
+        else (start - target) + col
 
     let next (line: string) =
-        let elems = line |> Seq.toArray |> Array.chunkBySize 2 |> Array.map (fun a -> a[0], a[1]-'0')
-        [|0..3|]
-        |> Array.collect (fun i ->
-            let (pos,idx) = elems[i]
-            if pos = 'T' then
-                let goal = i*2+2
-                let blocked = elems |> Array.exists (fun j -> 
-                    j <> i && line[j*2] = 'T' 
-                    && let p = line[j*2+1]-'0' in 
-                        if space < goal then p > space && p < goal else p > goal && p < space)
-                if blocked then Array.empty
-                else
-                    let empty = elems |> Array.forall (fun (pos2,_) -> pos2 <> i)
-                    if empty then 
-                        // return dist cost + new board state
-                        [||]
-                    else
-                        let blocked2 = elems |> Array.exists (fun (pos2,idx2) -> pos2 = i && idx = 1)
-                        if blocked2 then Array.empty
-                        else
-                            let blocked3 = elems |> Array
-                )
+        []
+
+        // collect options for each char, track with cost and new line
+        // collect options for each new line
+        // ultimately if a line is a success then it returns cost
+        // let options = collect options.
+        // if options empty, then none
+        // else options choose next options, min
+        // memoize result?
 
         // if up then
             // test path to col, if blocked then no target
@@ -66,6 +65,7 @@ let part1 () =
             // else test if its bottom element is in right position, if so then first is target
             // else no targets
         // if down then
+            // if in right position, then nothing
             // each up not blocked should be tested
             // for each check if path to position is blocked
 

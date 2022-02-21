@@ -36,14 +36,28 @@ let part1 () =
     // line can be parsed into columns for this calculations, or parsed as is
 
     let next (line: string) =
-        let bits = line |> Seq.toArray
+        let elems = line |> Seq.toArray |> Array.chunkBySize 2 |> Array.map (fun a -> a[0], a[1]-'0')
         [|0..3|]
         |> Array.collect (fun i ->
-            let pos = line[i*2]
+            let (pos,idx) = elems[i]
             if pos = 'T' then
-                let targets = 
-                    if line.Contains(string(i) + "1" then Array.empty
-                    else if line[i*2]))
+                let goal = i*2+2
+                let blocked = elems |> Array.exists (fun j -> 
+                    j <> i && line[j*2] = 'T' 
+                    && let p = line[j*2+1]-'0' in 
+                        if space < goal then p > space && p < goal else p > goal && p < space)
+                if blocked then Array.empty
+                else
+                    let empty = elems |> Array.forall (fun (pos2,_) -> pos2 <> i)
+                    if empty then 
+                        // return dist cost + new board state
+                        [||]
+                    else
+                        let blocked2 = elems |> Array.exists (fun (pos2,idx2) -> pos2 = i && idx = 1)
+                        if blocked2 then Array.empty
+                        else
+                            let blocked3 = elems |> Array
+                )
 
         // if up then
             // test path to col, if blocked then no target
@@ -54,6 +68,8 @@ let part1 () =
         // if down then
             // each up not blocked should be tested
             // for each check if path to position is blocked
+
+        // each given start state can calculate options, the cost to reach said option, and then recurse, trying to find the min cost
         
 
         // check each pair, keeping track of index

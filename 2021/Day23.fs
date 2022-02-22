@@ -21,19 +21,26 @@ let part1 () =
     // or as 0-6 and then AaBbCcDd?
     // also in order - there are eight units we are concerned about
     // so starting data is (for test): ADacbCBd
+    // next state in test is ADa3bCBd
 
     let cost index dist = (pown 10 (index / 2)) * dist
 
     let effectivePos col = 
         let neutral = Char.ToLower col
-        1.5 + float (int neutral - int 'a')
+        2 + (int neutral - int 'a')*2
     
+    let isCol c = Char.IsLetter c && c <> 'x'
+    let top c = if Char.IsLetter c then 10 else int c - int '0'
+
     let dist start target = 
+        // for calculations, 0-1 and 5-6 are 1 apart, but 1-2, 2-3, 3-4, 4-5 are 2 apart
+        // maybe render top as 0-10? but 10 doesnt fit and it means 0-6 cant be used as possible targets
+        // could be, take top move and double it, then if start or end are 0 or 6 sub 1
         let col = 
-            if Char.IsUpper start || Char.IsUpper target then 1.5
-            else 0.5
-        let start = if Char.IsLetter start then effectivePos start else float start - float '0'
-        let target = if Char.IsLetter target then effectivePos target else float target - float '0'
+            if Char.IsUpper start || Char.IsUpper target then 2
+            else 1
+        let start = if isCol start then effectivePos start else top start
+        let target = if isCol target then effectivePos target else top target
         if target > start then (target - start) + col
         else (start - target) + col
 
@@ -41,11 +48,11 @@ let part1 () =
         dist start target |> int |> cost index
 
     let blocked start target line =
-        let start = if Char.IsLetter start then effectivePos start else float start
-        let target = if Char.IsLetter target then effectivePos target else float target
+        let start = if isCol start then effectivePos start else top start
+        let target = if isCol target then effectivePos target else top target
         line 
-        |> Seq.filter Char.IsDigit
-        |> Seq.map (fun c -> float  c - float '0')
+        |> Seq.filter (isCol >> not)
+        |> Seq.map top
         |> Seq.exists (fun digit -> 
             (start < target && digit <= target && digit > start)
             || (target < start && digit < start && digit >= target))
@@ -61,7 +68,7 @@ let part1 () =
                 if c = Char.ToUpper targetCol then Array.empty // current index is in right place
                 else if c = targetCol && index % 2 = 1 && line[index - 1] = Char.ToUpper targetCol then Array.empty // ditto
                 else 
-                    [|'0'..'6'|] 
+                    [|'0';'1';'3';'5';'7';'9';'x'|]
                     |> Array.filter (fun target -> not (blocked c target line))
                     |> Array.map (fun target -> 
                         costByDist index c target, newLine line index target)
@@ -97,7 +104,9 @@ let part1 () =
             // each up not blocked should be tested
             // for each check if path to position is blocked
 
-    next "ADacbCBd"
+    //next "ADacbCBd"
+    next "ADa3bCBd"
+    //dist 'c' '3'
 
 let part2 () =
     

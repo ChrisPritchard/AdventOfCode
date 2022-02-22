@@ -33,29 +33,38 @@ let part1 () =
     let top c = if Char.IsLetter c then 10 else int c - int '0'
 
     let dist start target = 
-        // for calculations, 0-1 and 5-6 are 1 apart, but 1-2, 2-3, 3-4, 4-5 are 2 apart
-        // maybe render top as 0-10? but 10 doesnt fit and it means 0-6 cant be used as possible targets
-        // could be, take top move and double it, then if start or end are 0 or 6 sub 1
-        let col = 
-            if Char.IsUpper start || Char.IsUpper target then 2
+        let colStart = 
+            if not (isCol start) then 0
+            else if Char.IsUpper start then 2
+            else 1
+        let colTarget = 
+            if not (isCol target) then 0
+            else if Char.IsUpper target then 2
             else 1
         let start = if isCol start then effectivePos start else top start
         let target = if isCol target then effectivePos target else top target
-        if target > start then (target - start) + col
-        else (start - target) + col
+        if target > start then (target - start) + colStart + colTarget
+        else (start - target) + colStart + colTarget
 
     let costByDist index start target = 
         dist start target |> int |> cost index
 
-    let blocked start target line =
-        let start = if isCol start then effectivePos start else top start
-        let target = if isCol target then effectivePos target else top target
-        line 
-        |> Seq.filter (isCol >> not)
-        |> Seq.map top
-        |> Seq.exists (fun digit -> 
-            (start < target && digit <= target && digit > start)
-            || (target < start && digit < start && digit >= target))
+    let blocked start target (line: string) =
+        let sv = if isCol start then effectivePos start else top start
+        let tv = if isCol target then effectivePos target else top target
+        let topBlocked = 
+            line 
+            |> Seq.filter (isCol >> not)
+            |> Seq.map top
+            |> Seq.exists (fun digit -> 
+                (sv < tv && digit <= tv && digit > sv)
+                || (tv < sv && digit < sv && digit >= tv))
+        if topBlocked then false
+        else
+            if Char.IsUpper start && line.Contains (Char.ToLower start) then false
+            else if Char.IsUpper target && line.Contains (Char.ToLower target) then false
+            else if isCol target && line.Contains target then false
+            else true
 
     let newLine (line: string) index (newPos: char) =
         line[0..index-1] + Char.ToString newPos + line[index+1..]
@@ -63,10 +72,15 @@ let part1 () =
     let next (line: string) =
         [|0..7|] |> Array.collect (fun index ->
             let targetCol = char ((index / 2) + int 'a')
+            let upper = Char.ToUpper targetCol
             let c = line[index]
-            if Char.IsLetter c then
+            if isCol c then
                 if c = Char.ToUpper targetCol then Array.empty // current index is in right place
                 else if c = targetCol && index % 2 = 1 && line[index - 1] = Char.ToUpper targetCol then Array.empty // ditto
+                else if not (blocked c upper line) then 
+                    [|costByDist index c upper, newLine line index upper|]
+                else if not (blocked c targetCol line) then
+                    [|costByDist index c targetCol, newLine line index targetCol|]
                 else 
                     [|'0';'1';'3';'5';'7';'9';'x'|]
                     |> Array.filter (fun target -> not (blocked c target line))
@@ -75,23 +89,12 @@ let part1 () =
             else
                 if blocked c targetCol line then Array.empty
                 else
-                    let upper = Char.ToUpper targetCol
                     if not (line.Contains(Char.ToString upper)) then 
                         [|costByDist index c upper, newLine line index upper|] // col is empty
                     else if line.Contains(Char.ToString targetCol) then Array.empty // col is full
                     else if line.IndexOf (Char.ToString upper) = index / 2 then 
                         [|costByDist index c targetCol, newLine line index targetCol|] // top of col is target
                     else Array.empty)
-
-        // collect options for each char, track with cost and new line
-        // collect options for each new line
-        // ultimately if a line is a success then it returns cost
-
-        // let options = collect options.
-        // if options empty, then none
-        // else options choose next options, min
-        // memoize result?
-        // could be line -> options -> map to next -> min or none
 
         // if up then
             // test path to col, if blocked then no target
@@ -103,9 +106,10 @@ let part1 () =
             // if in right position, then nothing
             // each up not blocked should be tested
             // for each check if path to position is blocked
+            // additionally
 
-    //next "ADacbCBd"
-    next "ADa3bCBd"
+    next "ADacbCBd" // should go to ADa3bCBd
+    // next "ADa3cCBd" // should go to ADa3bCBd
     //dist 'c' '3'
 
 let part2 () =

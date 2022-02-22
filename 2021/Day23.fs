@@ -2,6 +2,7 @@ module Day23
 
 open Common
 open System
+open System.Collections.Generic
 
 let processed = 
     let lines = readEmbedded "day23"
@@ -16,12 +17,6 @@ let init () =
     processed |> Array.length |> ignore
 
 let part1 () =
-
-    // render input as a sequence of numbers in hex, from 0 to 14 (E)
-    // or as 0-6 and then AaBbCcDd?
-    // also in order - there are eight units we are concerned about
-    // so starting data is (for test): ADacbCBd
-    // next state in test is ADa3bCBd
 
     let cost index dist = (pown 10 (index / 2)) * dist
 
@@ -59,12 +54,12 @@ let part1 () =
             |> Seq.exists (fun digit -> 
                 (sv < tv && digit <= tv && digit > sv)
                 || (tv < sv && digit < sv && digit >= tv))
-        if topBlocked then false
+        if topBlocked then true
         else
-            if Char.IsUpper start && line.Contains (Char.ToLower start) then false
-            else if Char.IsUpper target && line.Contains (Char.ToLower target) then false
-            else if isCol target && line.Contains target then false
-            else true
+            if Char.IsUpper start && line.Contains (Char.ToLower start) then true
+            else if Char.IsUpper target && line.Contains (Char.ToLower target) then true
+            else if isCol target && line.Contains target then true
+            else false
 
     let newLine (line: string) index (newPos: char) =
         line[0..index-1] + Char.ToString newPos + line[index+1..]
@@ -76,7 +71,7 @@ let part1 () =
             let c = line[index]
             if isCol c then
                 if c = Char.ToUpper targetCol then Array.empty // current index is in right place
-                else if c = targetCol && index % 2 = 1 && line[index - 1] = Char.ToUpper targetCol then Array.empty // ditto
+                else if c = targetCol && ((index % 2 = 0 && line[index + 1] = Char.ToUpper targetCol) || (index % 2 = 1 && line[index - 1] = Char.ToUpper targetCol)) then Array.empty // ditto
                 else if not (blocked c upper line) then 
                     [|costByDist index c upper, newLine line index upper|]
                 else if not (blocked c targetCol line) then
@@ -96,21 +91,24 @@ let part1 () =
                         [|costByDist index c targetCol, newLine line index targetCol|] // top of col is target
                     else Array.empty)
 
-        // if up then
-            // test path to col, if blocked then no target
-            // test if target col is empty, if so then thats a target
-            // else test if its full if so then no targets
-            // else test if its bottom element is in right position, if so then first is target
-            // else no targets
-        // if down then
-            // if in right position, then nothing
-            // each up not blocked should be tested
-            // for each check if path to position is blocked
-            // additionally
+    let memo = Dictionary<string, int option>()
 
-    next "ADacbCBd" // should go to ADa3bCBd
-    // next "ADa3cCBd" // should go to ADa3bCBd
-    //dist 'c' '3'
+    let rec minToWin line = 
+        if memo.ContainsKey line then memo[line]
+        else
+            if line.ToLower() = "aabbccdd" then
+                memo.Add(line, Some 0)
+                Some 0
+            else
+                let options = next line
+                let minOptions = options |> Array.choose (fun (cost, nextLine) -> minToWin nextLine |> Option.map (fun nextCost -> nextCost + cost))
+                let res = if Array.isEmpty minOptions then None else Some (Array.min minOptions)
+                memo.Add(line, res)
+                res
+
+    // minToWin "ADacbCBd" |> Option.get // test data
+    // minToWin "bCACBdac" |> Option.get // my data
+    minToWin "CbACBdac" |> Option.get // my data
 
 let part2 () =
     

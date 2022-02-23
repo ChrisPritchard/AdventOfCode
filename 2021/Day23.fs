@@ -70,8 +70,8 @@ let part1 () =
             let upper = Char.ToUpper targetCol
             let c = line[index]
             if isCol c then
-                if c = Char.ToUpper targetCol then Array.empty // current index is in right place
-                else if c = targetCol && ((index % 2 = 0 && line[index + 1] = Char.ToUpper targetCol) || (index % 2 = 1 && line[index - 1] = Char.ToUpper targetCol)) then Array.empty // ditto
+                if c = upper then Array.empty // current index is in right place
+                else if c = targetCol && ((index % 2 = 0 && line[index + 1] = upper) || (index % 2 = 1 && line[index - 1] = upper)) then Array.empty // ditto
                 else if not (blocked c upper line) then 
                     [|costByDist index c upper, newLine line index upper|]
                 else if not (blocked c targetCol line) then
@@ -94,6 +94,7 @@ let part1 () =
     let memo = Dictionary<string, int option>()
 
     let rec minToWin line = 
+        printfn "%s" line
         if memo.ContainsKey line then memo[line]
         else
             if line.ToLower() = "aabbccdd" then
@@ -108,7 +109,7 @@ let part1 () =
 
     // minToWin "ADacbCBd" |> Option.get // test data
     // minToWin "bCACBdac" |> Option.get // my data
-    minToWin "CbACBdac" |> Option.get // my data
+    minToWin "CbCABdac" |> Option.get // my data
 
 let part2 () =
     

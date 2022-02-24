@@ -1,20 +1,13 @@
 module Day23
 
-open Common
 open System
 open System.Collections.Generic
 
-let processed = 
-    let lines = readEmbedded "day23"
-    [|
-        [|lines[2][3];lines[3][3]|]
-        [|lines[2][5];lines[3][5]|]
-        [|lines[2][7];lines[3][7]|]
-        [|lines[2][9];lines[3][9]|]
-    |]
+let processed = "ADacbCBd" // test data
+//let processed = "bCACBdac" // my data
 
 let init () =
-    processed |> Array.length |> ignore
+    () // not used
 
 let part1 () =
 
@@ -94,7 +87,6 @@ let part1 () =
     let memo = Dictionary<string, int option>()
 
     let rec minToWin line = 
-        printfn "%s" line
         if memo.ContainsKey line then memo[line]
         else
             if line.ToLower() = "aabbccdd" then
@@ -102,14 +94,20 @@ let part1 () =
                 Some 0
             else
                 let options = next line
-                let minOptions = options |> Array.choose (fun (cost, nextLine) -> minToWin nextLine |> Option.map (fun nextCost -> nextCost + cost))
+                let minOptions = 
+                    options 
+                    |> Array.choose (fun (cost, nextLine) -> 
+                        minToWin nextLine |> Option.map (fun nextCost -> nextCost + cost))
                 let res = if Array.isEmpty minOptions then None else Some (Array.min minOptions)
                 memo.Add(line, res)
                 res
 
-    // minToWin "ADacbCBd" |> Option.get // test data
-    // minToWin "bCACBdac" |> Option.get // my data
-    minToWin "CbCABdac" |> Option.get // my data
+    try
+        Option.get (minToWin processed)
+    with
+    | :? StackOverflowException ->
+        printfn "stack overflow :("
+        -1
 
 let part2 () =
     

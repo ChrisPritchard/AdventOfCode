@@ -68,31 +68,42 @@ let part1 () =
 
     let nextMemo = Dictionary<string, (int * string)[]>()
 
+    let deepestFree category positions =
+        let allowedMin = (int category - int 'a') * colDepth
+        let allowedMax = allowedMin + colDepth - 1
+        let positions = Array.indexed positions
+        if positions |> Array.exists (fun (i, (cat, _)) -> 
+            cat = category && (i < allowedMin || i > allowedMax)) then
+            None
+        else
+            [colDepth..(-1)..1] 
+            |> List.tryFind (fun i -> 
+                not (positions |> Array.exists(fun (_, p) -> fst p = category && pos p = i)))
+            |> Option.map (fun i -> category, posChar i)
+
     let next (line: string) =
-        let parts = parts line
+        let positions = parts line
         [|0..7|] |> Array.collect (fun index ->
             let cat = char ((index / 2) + int 'a')
-            let c = parts[index]
+            let target = deepestFree cat positions
+            let c = positions[index]
             if isCol c then
                 if fst c = cat && [pos c..colDepth] |> List.forall (fun i -> Array.contains (cat, posChar i) parts) then Array.empty // current index is in right place
-                else if not (blocked c upper line) then 
-                    [|costByDist index c upper, newLine line index upper|]
-                else if not (blocked c targetCol line) then
-                    [|costByDist index c targetCol, newLine line index targetCol|]
                 else 
-                    [|'0';'1';'3';'5';'7';'9';'x'|]
-                    |> Array.filter (fun target -> not (blocked c target line))
-                    |> Array.map (fun target -> 
-                        costByDist index c target, newLine line index target)
+                    match target with
+                    | Some t when not (blocked c t line) ->
+                        [|costByDist cat c t, newLine line index t|]
+                    | _ ->
+                        parts "t0t1t3t5t7t9tx"
+                        |> Array.filter (fun target -> not (blocked c target line))
+                        |> Array.map (fun target -> 
+                            costByDist cat c target, newLine line index target)
             else
-                if blocked c targetCol line then Array.empty
-                else
-                    if not (line.Contains(Char.ToString upper)) then 
-                        [|costByDist index c upper, newLine line index upper|] // col is empty
-                    else if line.Contains(Char.ToString targetCol) then Array.empty // col is full
-                    else if (index % 2 = 0 && line[index + 1] = upper) || (index % 2 = 1 && line[index - 1] = upper) then 
-                        [|costByDist index c targetCol, newLine line index targetCol|] // top of col is target
-                    else Array.empty)
+                match target with
+                | None -> Array.empty
+                | Some t when blocked c t line -> Array.empty
+                | Some t ->
+                    [|costByDist cat c t, newLine line index t|])
 
     let nextMemoised (line: string) =
         if nextMemo.ContainsKey line then nextMemo[line]

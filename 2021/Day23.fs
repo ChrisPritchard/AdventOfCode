@@ -3,8 +3,8 @@ module Day23
 open System
 open System.Collections.Generic
 
-let processed = "ADacbCBd" // test data
-//let processed = "bCACBdac" // my data
+//let processed = "ADacbCBd" // test data
+let processed = "bCACBdac" // my data
 
 let init () =
     () // not used
@@ -80,7 +80,7 @@ let part1 () =
                     if not (line.Contains(Char.ToString upper)) then 
                         [|costByDist index c upper, newLine line index upper|] // col is empty
                     else if line.Contains(Char.ToString targetCol) then Array.empty // col is full
-                    else if line.IndexOf (Char.ToString upper) = index / 2 then 
+                    else if (let upperPos = line.IndexOf (Char.ToString upper) in upperPos = index / 2 || upperPos = index / 2 + 1) then 
                         [|costByDist index c targetCol, newLine line index targetCol|] // top of col is target
                     else Array.empty)
 
@@ -102,13 +102,7 @@ let part1 () =
                 memo.Add(line, res)
                 res
 
-    try
-        Option.get (minToWin processed)
-    with
-    | :? StackOverflowException ->
-        printfn "stack overflow :("
-        -1
+    Option.get (minToWin processed)
 
 let part2 () =
-    
     0

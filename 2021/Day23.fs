@@ -57,6 +57,8 @@ let part1 () =
     let newLine (line: string) index (newPos: char) =
         line[0..index-1] + Char.ToString newPos + line[index+1..]
 
+    let nextMemo = Dictionary<string, (int * string)[]>()
+
     let next (line: string) =
         [|0..7|] |> Array.collect (fun index ->
             let targetCol = char ((index / 2) + int 'a')
@@ -84,25 +86,38 @@ let part1 () =
                         [|costByDist index c targetCol, newLine line index targetCol|] // top of col is target
                     else Array.empty)
 
-    let memo = Dictionary<string, int option>()
-
-    let rec minToWin line = 
-        if memo.ContainsKey line then memo[line]
+    let nextMemoised (line: string) =
+        if nextMemo.ContainsKey line then nextMemo[line]
         else
-            if line.ToLower() = "aabbccdd" then
-                memo.Add(line, Some 0)
-                Some 0
-            else
-                let options = next line
-                let minOptions = 
-                    options 
-                    |> Array.choose (fun (cost, nextLine) -> 
-                        minToWin nextLine |> Option.map (fun nextCost -> nextCost + cost))
-                let res = if Array.isEmpty minOptions then None else Some (Array.min minOptions)
-                memo.Add(line, res)
-                res
+            let res = next line
+            nextMemo.Add(line, res)
+            res
 
-    Option.get (minToWin processed)
+    let visited = HashSet<int * string>()
+
+    let rec minToWin lowestCost options = 
+        if Array.isEmpty options then lowestCost
+        else
+            let (cost, line:string) = Array.head options
+            let rem = Array.tail options
+            if not (visited.Add((cost, line))) || cost > lowestCost then
+                minToWin lowestCost rem
+            else if line.ToLower() = "aabbccdd" then
+                printfn "%d" cost
+                minToWin cost rem
+            else
+                let options = nextMemoised line
+                let nextOptions = 
+                    options 
+                    |> Array.choose (fun (optionCost, line) -> 
+                        if visited.Contains(cost + optionCost, line) then
+                            None
+                        else if cost + optionCost < lowestCost then 
+                            Some (cost + optionCost, line) 
+                        else None)
+                minToWin lowestCost (Array.append nextOptions rem)
+
+    minToWin Int32.MaxValue [|0, processed|]
 
 let part2 () =
     0

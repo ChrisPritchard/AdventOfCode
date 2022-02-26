@@ -124,7 +124,7 @@ let main argv =
 
     Day23.init() 
         
-    //total <- total + timeForDay 23 1 Day23.part1
+    total <- total + timeForDay 23 1 Day23.part1
     total <- total + timeForDay 23 2 Day23.part2
 
     printfn ""

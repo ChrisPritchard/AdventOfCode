@@ -8,34 +8,34 @@ let init () =
 
 let cost (cat: char) dist = (pown 10 (int cat - int 'a')) * dist
 
-let effectivePos (col, _) = 
-    2 + (int col - int 'a')*2
+let effectivePos colDepth (col, _) = 
+    2 + (int col - int 'a')*colDepth
 
 let isCol (cat, _) = cat <> 't'
 let pos (_, c) = if Char.IsLetter c then 10 else int c - int '0'
 let posChar i = if i = 10 then 'x' else char (int '0' + i)
 
-let dist start target = 
+let dist colDepth start target = 
     let colStart = 
         if not (isCol start) then 0
         else pos start
     let colTarget = 
         if not (isCol target) then 0
         else pos target
-    let start = if isCol start then effectivePos start else pos start
-    let target = if isCol target then effectivePos target else pos target
+    let start = if isCol start then effectivePos colDepth start else pos start
+    let target = if isCol target then effectivePos colDepth target else pos target
     if target > start then (target - start) + colStart + colTarget
     else (start - target) + colStart + colTarget
 
-let costByDist cat start target = 
-    dist start target |> cost cat
+let costByDist colDepth cat start target = 
+    dist colDepth start target |> cost cat
 
 let parts (line: string) =
     line |> Seq.toArray |> Array.chunkBySize 2 |> Array.map (fun a -> a[0], a[1])
 
-let blocked start target (line: string) =
-    let sv = if isCol start then effectivePos start else pos start
-    let tv = if isCol target then effectivePos target else pos target
+let blocked colDepth start target (line: string) =
+    let sv = if isCol start then effectivePos colDepth start else pos start
+    let tv = if isCol target then effectivePos colDepth target else pos target
     let line = parts line
     let topBlocked = 
         line 
@@ -51,6 +51,8 @@ let blocked start target (line: string) =
         else false
 
 let newLine (line: string) index (newCat: char, newPos: char) =
+    if newCat = 'h' then
+        failwith "invalid cat"
     line[0..(index*2)-1] + Char.ToString newCat + Char.ToString newPos + line[(index+1)*2..]
 
 let deepestFree colDepth category positions =
@@ -68,27 +70,26 @@ let deepestFree colDepth category positions =
 
 let next colDepth (line: string) =
     let positions = parts line
-    [|0..7|] |> Array.collect (fun index ->
-        let cat = char ((index / 2) + int 'a')
+    [|0..positions.Length-1|] |> Array.collect (fun index ->
+        let cat = char ((index / colDepth) + int 'a')
         let target = deepestFree colDepth cat positions
         let c = positions[index]
         if isCol c then
-            if fst c = cat && [pos c..colDepth] |> List.forall (fun i -> Array.contains (cat, posChar i) positions) then Array.empty // current index is in right place
-            else 
-                match target with
-                | Some t when not (blocked c t line) ->
-                    [|costByDist cat c t, newLine line index t|]
-                | _ ->
-                    parts "t0t1t3t5t7t9tx"
-                    |> Array.filter (fun target -> not (blocked c target line))
-                    |> Array.map (fun target -> 
-                        costByDist cat c target, newLine line index target)
+            match target with
+            | Some t when fst t = fst c && pos c > pos t -> Array.empty // in right position
+            | Some t when not (blocked colDepth c t line) ->
+                [|costByDist colDepth cat c t, newLine line index t|] // move direct to right position
+            | _ -> // move up top
+                parts "t0t1t3t5t7t9tx"
+                |> Array.filter (fun target -> not (blocked colDepth c target line))
+                |> Array.map (fun target -> 
+                    costByDist colDepth cat c target, newLine line index target)
         else
             match target with
             | None -> Array.empty
-            | Some t when blocked c t line -> Array.empty
+            | Some t when blocked colDepth c t line -> Array.empty
             | Some t ->
-                [|costByDist cat c t, newLine line index t|])
+                [|costByDist colDepth cat c t, newLine line index t|])
 
 let getGoal colDepth =
     Array.concat
@@ -122,7 +123,7 @@ let rec minToWin goal colDepth lowestCost options =
     if Array.isEmpty options then lowestCost
     else
         let (cost, line:string) = Array.head options
-        printfn "%s" line
+        //printfn "%s" line
         let rem = Array.tail options
         if not (visited.Add((cost, line))) || cost > lowestCost then
             minToWin goal colDepth lowestCost rem
@@ -138,18 +139,19 @@ let rec minToWin goal colDepth lowestCost options =
                     else if cost + optionCost < lowestCost then 
                         Some (cost + optionCost, line) 
                     else None)
-            minToWin goal colDepth lowestCost (Array.append nextOptions rem)
+            let allOptions = Array.append nextOptions rem |> Array.sortBy fst
+            minToWin goal colDepth lowestCost allOptions
 
 let part1 () =
-    0
-    // let start = "b1d2a2c2b2d1a1c1"
-    // let colDepth = 2
-
-    // let goal = getGoal colDepth
     
-    // nextMemo.Clear()
-    // visited.Clear()
-    // minToWin goal colDepth Int32.MaxValue [|0, start|]
+    let start = "b1d2a2c2b2d1a1c1"
+    let colDepth = 2
+
+    let goal = getGoal colDepth
+    
+    nextMemo.Clear()
+    visited.Clear()
+    minToWin goal colDepth Int32.MaxValue [|0, start|]
 
 let part2 () =
     
@@ -162,4 +164,5 @@ let part2 () =
     nextMemo.Clear()
     visited.Clear()
     minToWin goal colDepth Int32.MaxValue [|0, start|]
+    //parts start
     //nextMemoised colDepth "a4t5d2d4c2b3txt9b1b2c4c3a2a3b4d1"

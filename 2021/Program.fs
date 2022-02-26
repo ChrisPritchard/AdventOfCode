@@ -122,10 +122,17 @@ let main argv =
     // total <- total + timeForDay 22 1 Day22.part1
     // total <- total + timeForDay 22 2 Day22.part2
 
-    Day23.init() 
+    // Day23.init() 
+
+    // takes about a minute to run...
         
-    total <- total + timeForDay 23 1 Day23.part1
-    total <- total + timeForDay 23 2 Day23.part2
+    // total <- total + timeForDay 23 1 Day23.part1
+    // total <- total + timeForDay 23 2 Day23.part2
+
+    Day24.init() 
+        
+    total <- total + timeForDay 24 1 Day24.part1
+    total <- total + timeForDay 24 2 Day24.part2
 
     printfn ""
     printfn "total time elapsed: %f ms" total

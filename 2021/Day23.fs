@@ -162,8 +162,8 @@ let part1 () =
 
 let part2 () =
 
-    //let start = "b1c3d2d4a4b3c2c4a2a3b4d1a1b2d3c1"
-    let start = "a4c3d2d4"+"a1b3c1c2"+"b1b2c4d3"+"a2a3b4d1"
+    let start = "b1d4c3d2" + "a4c4b3c2" + "b4d1b2d3" + "a1c1a2a3"
+    //let start = "a4c3d2d4"+"a1b3c1c2"+"b1b2c4d3"+"a2a3b4d1"
     let colDepth = 4
 
     let goal = getGoal colDepth

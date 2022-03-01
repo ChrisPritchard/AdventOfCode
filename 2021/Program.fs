@@ -102,7 +102,7 @@ let main argv =
     
     // Day19.init()
 
-    // note: my solution for day 19 takes about six-eight minutes to run :(
+    // printfn "day 19 takes about six to eight minutes to run :("
         
     // total <- total + timeForDay 19 1 Day19.part1
     // total <- total + timeForDay 19 2 Day19.part2
@@ -124,15 +124,20 @@ let main argv =
 
     // Day23.init() 
 
-    // takes about a minute to run...
+    // printfn "day 25 takes about a minute to run..."
         
     // total <- total + timeForDay 23 1 Day23.part1
     // total <- total + timeForDay 23 2 Day23.part2
 
-    Day24.init() 
+    // Day24.init() 
         
-    total <- total + timeForDay 24 1 Day24.part1
-    total <- total + timeForDay 24 2 Day24.part2
+    // total <- total + timeForDay 24 1 Day24.part1
+    // total <- total + timeForDay 24 2 Day24.part2
+
+    Day25.init() 
+        
+    total <- total + timeForDay 25 1 Day25.part1
+    total <- total + timeForDay 25 2 Day25.part2
 
     printfn ""
     printfn "total time elapsed: %f ms" total

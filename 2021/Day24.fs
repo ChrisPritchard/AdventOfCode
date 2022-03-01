@@ -15,18 +15,18 @@ mod x 26 // x = z % 26
 div z 26 // 1 in some indexes, e.g. dont divide
 
 add x 0  // add first constant
-eql x w  // if equal to digit then 0 else 1
-eql x 0  // invert
+eql x w  // if equal to digit then 1 else 0
+eql x 0  // invert: if equal then 0 else 1
 
 mul y 0
 add y 25
-mul y x
-add y 1
-mul z y  // if x = 1 then y will be 26 else 1 i.e. dont multiply
+mul y x  // y = 25 or 0 based on x
+add y 1  // y = 26 or 1 based on x
+mul z y  // z = z * 26 if x is 1
 
 mul y 0  
-add y w  
-add y 6  
+add y w  // y = digit
+add y 6  // y = digit + constant
 mul y x  // if x = 0 then y = 0, and wont be added, else
 add z y  // if x = 1 then y will be (digit + constant)
 
@@ -45,64 +45,138 @@ constant1: 14 12 11 -4 10 10 15 -9 -9 12 -15 -7 -10 0
 constant2: 7 4 8 1 5 14 12 10 5 7 6 8 4 6
 
 in order to succeed, the final result must be 0
-this means the final x must be 0 (in order for the constant, 6, not to be added)
-z will be multiplied by 26 if x is 0, therefore z must also be 0 to end up as 0
-however, as this is integer devision, z can be any value less than 26 in order to end up as 0 after division
-finally, for z to be 0, z must equal the digit, which means it must be 1-9
 
-going from other end, every constant1 greater than 9 will result in an x of 1,
-meaning that the final result will be z + constant2 + the digit (w)
+more simply:
 
-for index 0, the result will be 7 + the digit
-for index 1, the result will be 7 + 4 + digit 1 + digit 2
-for index 2 the result will be 7 + 4 + 8 + digit 1 + digit 2 + digit 3, or 19 + first three digits
+let res z w (d, c, o) =
+    if z % 26 + c = w then 
+        z / d 
+    else 
+        ((z / d) * 26) + o + w
 
-for index 3 the result will be:
-    if z > 26 then z = 1 else 0
-    if z % 26 - 4 = digit then z = z * 26 (26 or 0, based on z initial val)
-    else z = 1 + digit + (26 or 0, based on initial val
-    
-for index 4 5 and 6 the first constant is too high, so x will be 0
-these also dont divide so z stays the same
-meaning z will be z after index three, plus 31 (5 + 14 + 12) + the sum of the three digits
+// help for this solution came from https://www.ericburden.work/blog/2022/01/05/advent-of-code-2021-day-24/
 
+the input can be viewed as a stack, with the divisor 1 and 26 being the open and close statements. 
+on my input this can be vidualised as:
 
+1, 14, 7
+    1, 12, 4
+        1, 11, 8
+        26, -4, 1
+        1, 10, 5
+            1, 10, 14
+                1, 15, 12
+                26, -9, 10
+            26, -9, 5
+            1, 12, 7
+            26, -15, 6
+        26, -7, 8
+    26, -10, 4
+26, 0, 6
+
+with the ongoing z value viewed as a base-26 number. 
+if z % 26 + c = w for opcode 1 (dont divide) this does nothing, else it adds the offset and w
+if z % 26 + c = w for opcode 26 (divide) this will remove the added value (as it will always be less than 26)
+ideally on opcode 1 we want to add a val, and on opcode 26 we want to remove it
+
+1, 14, 7 with 26, 0, 6:
+will always add 7 + w
+assuming by last line 7 + w is all thats left, 
+(7 + w0) + 0 = w13
+2, 9
+
+1, 12, 4 with 26, -10, 4
+(4 + w1) - 10 = w12
+9, 3
+
+1, 11, 8 with 26, -4, 1
+(8 + w2) - 4 = w3
+5, 9
+
+1, 10, 5 with 26, -7, 8
+(5 + w4) - 7 = w11
+9, 4
+
+1, 10, 14 with 26, -9, 5
+(14 + w5) - 9 = w8
+4, 9
+
+1, 15, 12 with 26, -9, 10
+(12 + w6) - 9 = w7
+6, 9
+
+1, 12, 7 with 26, -15, 6
+(7 + w9) - 15 = w10
+9, 1
+
+so possibly, 29599469991439?
 
 *)
 
+let processed = readEmbedded "day24" |> Array.map (split " ")
 
 let init () =
-    () // not used
+    processed |> Array.length |> ignore
 
+let config = 
+    [|
+        1, 14, 7
+        1, 12, 4
+        1, 11, 8
+        26, -4, 1
+        1, 10, 5
+        1, 10, 14
+        1, 15, 12
+        26, -9, 10
+        26, -9, 5
+        1, 12, 7
+        26, -15, 6
+        26, -7, 8
+        26, -10, 4
+        26, 0, 6
+    |]
+
+let res z w (d, c, o) =
+    if z % 26 + c = w then 
+        z / d 
+    else 
+        ((z / d) * 26) + o + w
+
+let processLine (line: string[]) (read: char -> int) (write: char -> int -> unit) (input: unit -> int) =
+    if line[0] = "inp" then write (line[1][0]) (input())
+    else
+        let target = line[1][0]
+        let source = if Char.IsLetter (line[2][0]) then (read (line[2][0])) else int (line[2])
+        let res = 
+            match line[0] with
+            | "add" -> read target + source
+            | "mul" -> read target * source
+            | "div" -> read target / source
+            | "mod" -> read target % source
+            | "eql" | _ -> if read target = source then 1 else 0
+        write target res
+
+let validateNumber (n: int64) = 
+    let s = string n
+    if s.Contains "0" then -1L
+    else
+        let mutable candidate = s |> Seq.toList |> List.map (string >> int)
+        let input () = 
+            match candidate with 
+            | head::rest ->
+                candidate <- rest
+                head
+            | _ -> failwith "input exhausted"
+        let mem = Array.create 4 0
+        let idx = function 'w' -> 0 | 'x' -> 1 | 'y' -> 2 | _ -> 3
+        let read a = mem[idx a]
+        let write a v = mem[idx a] <- v
+        for line in processed do processLine line read write input
+        read 'z'
 
 let part1 () =
 
-    let constant1 = [|14; 12; 11; -4; 10; 10; 15; -9; -9; 12; -15; -7; -10; 0|]
-    let constant2 = [| 7;  4;  8;  1;  5; 14; 12; 10;  5;  7;   6;  8;   4; 6|]
-    let divIndexes = Set.ofArray [|3;7;8;10;11;12;13|]
-
-    let res z w i =
-        let x = if z % 26 + constant1[i] = w then 0 else 1
-        let z = if Set.contains i divIndexes then z / 26 else z
-        if x = 0 then z * 26 else z + constant2[i] + w
-
-    let range () = Array.init 9 (id >> (+) 1)
-    let firstThree = 
-        range () 
-            |> Array.collect (fun i0 -> 
-                range () 
-                |> Array.collect (fun i1 ->
-                    range () 
-                    |> Array.map (fun i2 -> i0, i1, i2)))
-    
-    for (i0, i1, i2) in firstThree do
-        let result = 
-            [|i0; i1; i2|] 
-            |> Array.indexed 
-            |> Array.fold (fun z (i, w) -> res z w i) 0
-        let m = result = 19 + i0 + i1 + i2
-        printfn "%b" m
-        
+    validateNumber 29599469991439L
 
 let part2 () =
     

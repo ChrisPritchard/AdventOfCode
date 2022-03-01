@@ -137,7 +137,6 @@ let main argv =
     Day25.init() 
         
     total <- total + timeForDay 25 1 Day25.part1
-    total <- total + timeForDay 25 2 Day25.part2
 
     printfn ""
     printfn "total time elapsed: %f ms" total

@@ -75,7 +75,7 @@ on my input this can be vidualised as:
 26, 0, 6
 
 with the ongoing z value viewed as a base-26 number. 
-if z % 26 + c = w for opcode 1 (dont divide) this does nothing, else it adds the offset and w
+if z % 26 + c != w for opcode 1 (dont divide) the offset and w is added
 if z % 26 + c = w for opcode 26 (divide) this will remove the added value (as it will always be less than 26)
 ideally on opcode 1 we want to add a val, and on opcode 26 we want to remove it
 
@@ -95,7 +95,7 @@ assuming by last line 7 + w is all thats left,
 
 1, 10, 5 with 26, -7, 8
 (5 + w4) - 7 = w11
-9, 4
+9, 7
 
 1, 10, 14 with 26, -9, 5
 (14 + w5) - 9 = w8
@@ -109,7 +109,39 @@ assuming by last line 7 + w is all thats left,
 (7 + w9) - 15 = w10
 9, 1
 
-so possibly, 29599469991439?
+so possibly, 29599469991739? yes!
+
+for part 2, the smallest number must be found, so again:
+
+1, 14, 7 with 26, 0, 6:
+(7 + w0) + 0 = w13
+1, 8
+
+1, 12, 4 with 26, -10, 4
+(4 + w1) - 10 = w12
+7, 1
+
+1, 11, 8 with 26, -4, 1
+(8 + w2) - 4 = w3
+1, 5
+
+1, 10, 5 with 26, -7, 8
+(5 + w4) - 7 = w11
+3, 1
+
+1, 10, 14 with 26, -9, 5
+(14 + w5) - 9 = w8
+1, 6
+
+1, 15, 12 with 26, -9, 10
+(12 + w6) - 9 = w7
+1, 4
+
+1, 12, 7 with 26, -15, 6
+(7 + w9) - 15 = w10
+9, 1
+
+so possibly, 17153114691118? yes!
 
 *)
 
@@ -118,30 +150,7 @@ let processed = readEmbedded "day24" |> Array.map (split " ")
 let init () =
     processed |> Array.length |> ignore
 
-let config = 
-    [|
-        1, 14, 7
-        1, 12, 4
-        1, 11, 8
-        26, -4, 1
-        1, 10, 5
-        1, 10, 14
-        1, 15, 12
-        26, -9, 10
-        26, -9, 5
-        1, 12, 7
-        26, -15, 6
-        26, -7, 8
-        26, -10, 4
-        26, 0, 6
-    |]
-
-let res z w (d, c, o) =
-    if z % 26 + c = w then 
-        z / d 
-    else 
-        ((z / d) * 26) + o + w
-
+// for formal verification
 let processLine (line: string[]) (read: char -> int) (write: char -> int -> unit) (input: unit -> int) =
     if line[0] = "inp" then write (line[1][0]) (input())
     else
@@ -156,6 +165,7 @@ let processLine (line: string[]) (read: char -> int) (write: char -> int -> unit
             | "eql" | _ -> if read target = source then 1 else 0
         write target res
 
+// ditto
 let validateNumber (n: int64) = 
     let s = string n
     if s.Contains "0" then -1L
@@ -176,8 +186,10 @@ let validateNumber (n: int64) =
 
 let part1 () =
 
-    validateNumber 29599469991439L
+    let candidate = 29599469991739L
+    if validateNumber candidate = 0 then candidate else failwith "bad candidate"
 
 let part2 () =
     
-    0
+    let candidate = 17153114691118L
+    if validateNumber candidate = 0 then candidate else failwith "bad candidate"

@@ -1,8 +1,7 @@
 open Common
 
-
 [<EntryPoint>]
-let main argv =
+let main _ =
     
     printfn ""
     printfn "ADVENT OF CODE 2022"

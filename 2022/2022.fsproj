@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishTrimmed>true</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="./inputs/day01.txt">
+      <Link>day01</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Common.fs" />
+    <Compile Include="Day01.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>

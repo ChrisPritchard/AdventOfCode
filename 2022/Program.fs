@@ -10,10 +10,7 @@ let main _ =
     
     let mutable total = 0.0
     
-    Day01.init()
-    
-    total <- total + timeForDay 1 1 Day01.part1
-    total <- total + timeForDay 1 2 Day01.part2
+    total <- totalTimeForDay 1 Day01.part1And2
 
     printfn ""
     printfn "total time elapsed: %f ms" total

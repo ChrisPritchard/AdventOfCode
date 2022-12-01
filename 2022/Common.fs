@@ -75,5 +75,5 @@ let totalTimeForDay day func =
             sprintf "%A" part2
     printfn "day%d part1: %s" day part1Res
     printfn "day%d part2: %s" day part2Res
-    printfn "elapsed: %f ms" elapsed
+    printfn "day%d elapsed: %f ms" day elapsed
     elapsed

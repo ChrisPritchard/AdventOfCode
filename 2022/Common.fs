@@ -20,10 +20,14 @@ let asString (chars: seq<char>) =
 let asInt (c: char) = int c - int '0'
 
 // expects files to be in the format 2021.[filename]
-let readEmbedded file =
+let readEmbeddedRaw file =
     use s: Stream = Assembly.GetEntryAssembly().GetManifestResourceStream ("2022." + file)
     use r = new StreamReader(s)
-    r.ReadToEnd() |> split "\r\n"
+    r.ReadToEnd()
+
+// expects files to be in the format 2021.[filename]
+let readEmbedded file =
+    readEmbeddedRaw file |> split "\r\n"
 
 let time func = 
     let timer = Stopwatch.StartNew();    

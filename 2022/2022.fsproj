@@ -14,11 +14,15 @@
     <EmbeddedResource Include="./inputs/day01.txt">
       <Link>day01</Link>
     </EmbeddedResource>
+    <EmbeddedResource Include="./inputs/day02.txt">
+      <Link>day02</Link>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="Common.fs" />
     <Compile Include="Day01.fs" />
+    <Compile Include="Day02.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

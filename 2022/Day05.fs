@@ -19,7 +19,7 @@ let createStacks (lines: string list) =
             else line[index]::s))
     |> Stacks
 
-let part1 () =
+let crateMover shouldReverse = 
     (Reading [], readEmbeddedRaw "day05")
     ||> Seq.fold (fun state line ->
         match state with
@@ -31,11 +31,19 @@ let part1 () =
             else
                 state
         | Stacks stacks ->
-            state
+            let orders = line |> split "movefromto " |> Array.map int
+            let from, toStack, amt = orders[1] - 1, orders[2] - 1, orders[0]
+            let toMove = stacks[from] |> List.take amt
+            let toMove = if shouldReverse then List.rev toMove else toMove
+            stacks 
+            |> Array.mapi (fun i s -> if i = from then List.skip amt s else if i = toStack then List.append toMove s else s)
+            |> Stacks
     )
+    |> function | Stacks s -> Array.map List.head s | _ -> failwith "error"
+    |> asString
 
+let part1 () =
+    crateMover true
 
 let part2 () =
-    readEmbeddedRaw "day05"
-
-
+    crateMover false

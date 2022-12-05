@@ -20,6 +20,9 @@ let main _ =
     
     total <- total + timeForDay 4 1 Day04.part1
     total <- total + timeForDay 4 2 Day04.part2
+    
+    total <- total + timeForDay 5 1 Day05.part1
+    total <- total + timeForDay 5 2 Day05.part2
 
     printfn ""
     printfn "total time elapsed: %f ms" total

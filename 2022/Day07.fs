@@ -51,7 +51,6 @@ let rec createDirectory name dirs files (commands: CmdLine list) =
         createStruct (), []
 
 let part1And2 () =
-
     let commandHistory = readEmbeddedRaw "day07" |> Seq.map asCmdLine |> List.ofSeq
     let rootDir = createDirectory "/" [] [] (List.skip 2 commandHistory) |> fst
 
@@ -59,14 +58,14 @@ let part1And2 () =
         let sum = List.sumBy under100k dir.dirs
         if dir.totalSize < 100000L then sum + dir.totalSize else sum
 
-    let totalSpace = 70000000L
-    let minToDelete = totalSpace - rootDir.totalSize
+    let used = 70000000L - rootDir.totalSize
+    let needed = 30000000L - used
 
     let rec minSuitable acc dir =
-        if dir.totalSize < minToDelete then acc
-        else if List.isEmpty dir.dirs then acc 
+        if dir.totalSize < needed then acc
         else
             let acc = if dir.totalSize < acc then dir.totalSize else acc
-            List.map (minSuitable acc) dir.dirs |> List.min
+            if List.isEmpty dir.dirs then acc 
+            else List.map (minSuitable acc) dir.dirs |> List.min
 
-    under100k rootDir, minSuitable totalSpace rootDir
+    under100k rootDir, minSuitable rootDir.totalSize rootDir

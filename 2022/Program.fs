@@ -28,6 +28,8 @@ let main _ =
 
     total <- totalTimeForDay 7 Day07.part1And2
 
+    total <- totalTimeForDay 8 Day08.part1And2
+
     printfn ""
     printfn "total time elapsed: %f ms" total
     printfn ""

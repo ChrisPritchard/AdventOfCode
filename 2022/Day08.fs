@@ -37,4 +37,24 @@ let part1 () =
     Set.count withVertical + outside
 
 let part2() =
-    0
+    let grid = readEmbedded "day08"
+    let rec crawl maxHeight count (x, y) (dx, dy) =
+        let (nx, ny) = (x + dx, y + dy)
+        if nx < 0 || ny < 0 || nx = grid[0].Length || ny = grid.Length then count
+        else
+            let height = grid[ny][nx]
+            if height < maxHeight then 
+                crawl maxHeight (count + 1) (nx, ny) (dx, dy)
+            else 
+                count + 1
+
+    [0..grid.Length - 1] |> Seq.collect (fun y ->
+        [0..grid[y].Length - 1] |> Seq.map (fun x -> 
+            let height = grid[y][x]
+            let res = 
+                crawl height 0 (x, y) (-1, 0) * 
+                crawl height 0 (x, y) (1, 0) * 
+                crawl height 0 (x, y) (0, -1) * 
+                crawl height 0 (x, y) (0, 1)
+            res))
+            |> Seq.max

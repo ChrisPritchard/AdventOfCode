@@ -39,10 +39,14 @@ let part2() =
                     if abs (X - ((cycle - 1) % 40)) <= 1 then Set.add (cycle - 1) lit else lit
                 lit, (X + toAdd, cycle))
         |> fst
-    for y in [0..5] do
-        for x in [0..39] do
-            let p = y * 40 + x
-            if Set.contains p litPixels then printf "#" else printf "."
-        printfn ""
-    0
+
+    let res =
+        [0..5] 
+        |> Seq.map (fun y -> 
+            [0..39] 
+            |> Seq.map (fun x -> 
+                if Set.contains (y * 40 + x) litPixels then '#' else ' ')
+            |> asString)
+        |> String.concat "\n\t"
+    "\n\t" + res
     

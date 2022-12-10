@@ -21,7 +21,6 @@ let part1() =
     |> fst
 
 let part2() =
-    // six 40 bool arrays
     // track position of x each cycle - if cycle x is +- 1 of cycle then mark cycle position as positive
     let litPixels =
         ((Set.empty, (1, 0)), readEmbeddedRaw "day10")

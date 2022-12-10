@@ -3,31 +3,36 @@ module Day09
 open Common
 open System
 
-//   PPP 
+//  XPPPX
 //  PHHHP
 //  PHTHP
 //  PHHHP
-//   PPP 
+//  XPPPX
 
 // for a difference from current position of the head
 // the difference to move for the tail
 let adjust = Map [
-    (-1,-2), (-1,-1)
+    (-1,-2), (-1,-1)    // top three P positions
     (0,-2), (0,-1)
     (1,-2), (1,-1)
 
-    (-2,-1), (-1,-1)
+    (-2,-1), (-1,-1) // two under top
     (2,-1), (1,-1)
 
-    (-2,0), (-1,0)
+    (-2,0), (-1,0) // two either side of middle
     (2,0), (1,0)
 
-    (-2,1), (-1,1)
+    (-2,1), (-1,1) // two above bottom
     (2,1), (1,1)
 
-    (-1,2), (-1,1)
+    (-1,2), (-1,1) // final three p positions
     (0,2), (0,1)
     (1,2), (1,1)
+
+    (-2,-2), (-1,-1)    // x positions (only possible in part 2)
+    (2,-2), (1,-1)
+    (-2,2), (-1,1)
+    (2,2), (1,1)
 ]
 
 let dirMap = Map [

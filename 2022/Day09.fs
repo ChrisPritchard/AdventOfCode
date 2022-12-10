@@ -56,4 +56,28 @@ let part1() =
     
 
 let part2() =
-    0
+    // same as before except we should continue pairs of movements
+    // the instruction only affects the last (or first?) entry, then each subsequent adjust is based on the rules as before
+    // the final position is the tail
+
+    let start = Array.create 10 (0, 0)
+    ((Set [ (0,0) ], start), readEmbeddedRaw "day09")
+    ||> Seq.fold (fun (visited, rope) instruction -> 
+        let (dx, dy), mag = 
+            let p = split " " instruction
+            dirMap[p[0]], Int32.Parse p[1]
+        ((visited, rope), [1..mag])
+        ||> Seq.fold (fun (visited, rope) _ ->
+            let nextRope, _ =
+                (None, rope) 
+                ||> Array.mapFold (fun prev (x, y) ->
+                    match prev with
+                    | None -> (x + dx, y + dy), Some (x + dx, y + dy)
+                    | Some (px, py) ->
+                        let x, y =
+                            match Map.tryFind (px - x, py - y) adjust with
+                            | None -> x, y
+                            | Some (dx, dy) -> x + dx, y + dy
+                        (x, y), Some (x, y) )
+            Set.add nextRope[9] visited, nextRope))
+    |> fst |> Seq.length

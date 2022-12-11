@@ -69,13 +69,13 @@ let monkeyBusiness roundCount reduceWorry =
                 ||> List.fold (fun tosses item ->
                     let r = (monkey.operation item)
                     let r = if reduceWorry then r / (bigint 3) else r
-                    if r % monkey.test = bigint 0 then appendEntry r monkey.onTrue tosses
+                    if bigint.ModPow (r, bigint 1, monkey.test) = bigint 0 then appendEntry r monkey.onTrue tosses
                     else appendEntry r monkey.onFalse tosses)
             { monkey with inspections = monkey.inspections + int64 (List.length items); items = [] }, tosses))
-    |> fst |> Seq.map (fun m -> m.inspections) |> Seq.sortByDescending id // |> Seq.take 2 |> Seq.reduce (*)
+    |> fst |> Seq.map (fun m -> m.inspections) |> Seq.sortByDescending id |> Seq.take 2 |> Seq.reduce (*)
 
 let part1 () =
     monkeyBusiness 20 true
     
 let part2 () =
-    monkeyBusiness 10000 false
+    0 // monkeyBusiness 10000 false

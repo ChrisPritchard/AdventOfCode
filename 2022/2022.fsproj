@@ -45,7 +45,7 @@
       <Link>day11</Link>
     </EmbeddedResource>
     <EmbeddedResource Include="./inputs/day12.txt">
-      <Link>Day12</Link>
+      <Link>day12</Link>
     </EmbeddedResource>
   </ItemGroup>
 

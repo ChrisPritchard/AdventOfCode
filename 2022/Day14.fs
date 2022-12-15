@@ -20,20 +20,20 @@ let part1 () =
             )))
         |> Set.ofSeq
     let rock = Set.count blocked
-    let across = blocked |> Seq.map fst |> Set.ofSeq
-    let abyss x = not (Set.contains x across)
+    let overAbyss (x, y) = 
+        [y..y+50] |> List.forall (fun y -> not (Set.contains (x, y) blocked))
     
-    let rec gravity blocked sand = 
+    let rec gravity i blocked sand = 
         match sand with
-        | None -> gravity blocked (Some (500, 0))
+        | None -> gravity (i + 1) blocked (Some (500, 0))
         | Some (x, y) ->
             let next = x, y + 1
             let next = if Set.contains next blocked then x - 1, y + 1 else next
             let next = if Set.contains next blocked then x + 1, y + 1 else next
-            if Set.contains next blocked then gravity (Set.add (x, y) blocked) None
-            else if abyss (fst next) then Set.count blocked - rock
-            else gravity blocked (Some next)
-    gravity blocked None
+            if Set.contains next blocked then gravity (i + 1) (Set.add (x, y) blocked) None
+            else if overAbyss next then Set.count blocked - rock
+            else gravity (i + 1) blocked (Some next)
+    gravity 0 blocked None
 
 let part2 () = 
     0

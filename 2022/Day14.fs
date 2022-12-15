@@ -2,8 +2,8 @@ module Day14
 
 open Common
 
-let part1 () =
-    let blocked = 
+let part1And2 () =
+    let rock = 
         readEmbeddedRaw "day14"
         |> Seq.collect (fun line ->
             line
@@ -19,21 +19,50 @@ let part1 () =
                     [y1..(if y1 < y2 then 1 else -1)..y2] |> Seq.map (fun y -> x, y)
             )))
         |> Set.ofSeq
-    let rock = Set.count blocked
-    let overAbyss (x, y) = 
-        [y..y+50] |> List.forall (fun y -> not (Set.contains (x, y) blocked))
     
-    let rec gravity i blocked sand = 
+    let rockCount = Set.count rock
+    let bedRock = rock |> Seq.map snd |> Seq.max |> (+) 2
+
+    let rec gravity blocked sand = 
         match sand with
-        | None -> gravity (i + 1) blocked (Some (500, 0))
+        | None -> gravity blocked (Some (500, 0))
         | Some (x, y) ->
             let next = x, y + 1
             let next = if Set.contains next blocked then x - 1, y + 1 else next
             let next = if Set.contains next blocked then x + 1, y + 1 else next
-            if Set.contains next blocked then gravity (i + 1) (Set.add (x, y) blocked) None
-            else if overAbyss next then Set.count blocked - rock
-            else gravity (i + 1) blocked (Some next)
-    gravity 0 blocked None
+            if Set.contains next blocked then gravity (Set.add (x, y) blocked) None
+            else if snd next = bedRock then Set.count blocked - rockCount
+            else gravity blocked (Some next)
+    
+    let part1 = gravity rock None
 
-let part2 () = 
-    0
+    let rec gravity2 blocked sand = 
+        let isBlocked p = Set.contains p blocked || snd p = bedRock
+        match sand with
+        | None -> gravity2 blocked (Some (500, 0))
+        | Some (x, y) ->
+            let next = x, y + 1
+            let next = if isBlocked next then x - 1, y + 1 else next
+            let next = if isBlocked next then x + 1, y + 1 else next
+            if isBlocked next then 
+                if (x, y) = (500, 0) then 
+                    (Set.count blocked - rockCount) + 1
+                else gravity2 (Set.add (x, y) blocked) None
+            else gravity2 blocked (Some next)
+
+    let part2 = gravity2 rock None
+
+    part1, part2
+
+
+
+// used for debugging
+
+// let renderMap blocked file = 
+//     let mutable parsed = ""
+//     for y in [0..600] do
+//         for x in [400..600] do
+//             parsed <- parsed + 
+//                 if Set.contains (x, y) blocked then "X" else " "
+//         parsed <- parsed + "\n"
+//     System.IO.File.WriteAllText (file, parsed)

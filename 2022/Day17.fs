@@ -64,4 +64,8 @@ let part1 () =
     tick 1 Set.empty Across (spawn 0 Across) []
 
 let part2 () =
+    let max = 1000000000000L
+
+    // with such a high count we are possibly looking for repeating patterns then doing a multiplier
+    // the above could be simplified though by tracking the top of each column rather than checking overall intersections
     0

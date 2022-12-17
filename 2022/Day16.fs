@@ -46,15 +46,26 @@ let part1 () =
                 .Replace("; tunnel leads to valve ", ",")
             |> split ",")
     
-    input 
-    |> Seq.choose (fun a -> 
-        if a[1] = "0" then None 
-        else Some (int a[1]))
-    |> fun s -> [Seq.length s..(-1)..1] |> List.reduce (*)
+    let valves = 
+        input 
+        |> Seq.choose (fun a -> 
+            if a[1] = "0" then None 
+            else Some (a[0], int a[1]))
+        |> Array.ofSeq
+
+    let paths =
+        input 
+        |> Seq.map (fun a -> a[0], a[2..])
+        |> Map.ofSeq
+
+    let start = "AA"
 
     // while there are too many possible paths to test them all, there are less valves with actual pressure values
     // you would never visit a pressure valve more than once. 720 in the source data, 2004310016 in the real data 
     //  (which might be barely attainable, especially with eager discarding of ineffient paths)
+    // another approach might be to from a given node, calculate the hightest value of open nodes (by time to reach them off the total and their total value given that?)
+
+    0
 
 let part2 () =
     0

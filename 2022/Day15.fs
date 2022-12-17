@@ -14,6 +14,13 @@ let onRow row ((sx, sy), d) =
         Some (sx - rd, sx + rd)
     else None
 
+let subtract (min1, max1) (min2, max2) =
+    if max1 < min2 || min1 > max2 then [min1, max1] // no overlap
+    else if min1 < min2 && max1 > max2 then [min1,max2] // full overlap
+    else if max1 = min2 || (min1 < min2 && max1 < max2) then [min1, min2-1] // overlap left
+    else if min1 = max2 || (min1 > min2 && max1 > max2) then [max2+1, max1] // overlap right
+    else [] // overlapped
+
 
 let part1 () =
     let input = 
@@ -23,13 +30,21 @@ let part1 () =
 
     let sensorDistances = Seq.map (fun (s, b) -> s, dist s b) input
     let rowToTest = 2000000
-    let ranges = sensorDistances |> Seq.choose (onRow rowToTest)
-    let onLine = input |> Seq.collect (fun (s, b) -> [s;b]) |> Seq.distinct |> Seq.filter (snd >> (=) rowToTest) |> Seq.length
+    let ranges = sensorDistances |> Seq.choose (onRow rowToTest) |> List.ofSeq
+    let onLine = input |> Seq.collect (fun (s, b) -> [s;b]) |> Seq.filter (snd >> (=) rowToTest) |> Seq.length
 
-    ranges 
-    |> Seq.map (fun (a, b) -> set [a..b])
-    |> Seq.reduce Set.union
-    |> Set.count
+    let rec reduce acc =
+        function 
+        | [] -> List.collect id acc
+        | (min, max)::ranges when min = max -> reduce acc ranges
+        | range::ranges ->
+            let newranges = 
+                ([range], ranges) 
+                ||> List.fold (fun acc r2 -> acc |> List.collect (fun s -> subtract s r2))
+            reduce (newranges::acc) ranges
+
+    reduce [] ranges
+    |> Seq.sumBy (fun (min, max) -> (max - min) + 1)
     |> fun total -> total - onLine
 
 let part2 () =

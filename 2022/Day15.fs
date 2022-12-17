@@ -26,21 +26,11 @@ let part1 () =
     let onLine = input |> Seq.collect (fun (s, b) -> [s;b]) |> Seq.filter (snd >> (=) rowToTest) |> Seq.length
 
     // take a set of ranges, sort by min
-    // for each range, if its max is over the next min, reduce it to that min - 1. if this is negative then set its dist to 0
-    // how to do this... windowed? for eac
+    // take the last max. if thats greater than the current max, then skip the current and continue
+    // if its less than the current max, 
 
     ranges
-    |> Seq.append ([System.Int32.MaxValue, 0])
-    |> Seq.sortBy fst
-    |> Seq.windowed 2
-    |> Seq.sumBy (fun pair ->
-        let (min, max) = Seq.head pair
-        let (omin, omax) = Seq.last pair
-        // three scenarios: max is less than other (no overlap), max is more than other but less than other max (partial overlap), max is more than other max (total overlap)
-        // if no overlap, add to total, if partial then add less than next, if total, add pre and post
-        if max < min then max - min
-        else if max > omax then (omin - min) + (max - omax)
-        else omin - min)
+    |> Seq.toArray
 
 let part2 () =
     0

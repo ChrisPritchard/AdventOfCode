@@ -60,13 +60,45 @@ let part1 () =
         |> Seq.map (fun a -> a[0], a[2..])
         |> Map.ofSeq
 
+    let mutable memoDists = Map.empty
     let distToValve start target = 
-        let isGoal = (=) target
-        let edges p = 
-            printfn "finding path for %s" p
-            Map.find p paths |> Array.toSeq
-        let path = bfs isGoal edges start
-        path.Value |> List.length
+        if Map.containsKey (start, target) memoDists then
+            memoDists.[start, target]
+        else
+            let isGoal = (=) target
+            let edges p = Map.find p paths |> Array.toSeq
+            let path = bfs isGoal edges start
+            let dist = List.length path.Value
+            memoDists <- Map.add (start, target) dist memoDists
+            dist
+
+    let possiblePaths pos left timeLeft = 
+        left 
+        |> Seq.filter (fun p -> distToValve pos p < timeLeft)
+
+    let rec allPaths acc = 
+
+        // time to brain
+        // // calculate all paths
+        // any path that runs out of other valves or has no possible additional paths, can have its score calculated
+        // then there are some remainder paths
+
+        let next = 
+            acc |> List.collect (fun (path, time) -> 
+                match path with
+                | [] -> failwith "not possible"
+                | last::_ -> 
+                    let newPaths = 
+                        possiblePaths last (List.except path valves) time
+                        |> Seq.map (fun p -> (p::path), time - distToValve last p)
+                        |> Seq.toList
+                    if List.isEmpty newPaths then [path, time]
+                    else newPaths)
+
+        // add a fold. given the current paths, fold to find the next paths and current max
+        // if no next paths, return current max, else, recurse with new paths and max
+
+        next
 
     let rec findBest pos left timeLeft score =
         let nextBest, dist, scoreToAdd = 
@@ -75,19 +107,21 @@ let part1 () =
                 let dist = distToValve pos p
                 p, dist, (timeLeft - dist) * valveValues.[p])
             |> Seq.maxBy (fun (_, _, v) -> v)
+        printfn "from %s to %s in %d minutes" pos nextBest dist
         let left = List.except [nextBest] left
         if List.isEmpty left then score + scoreToAdd
         else
             findBest nextBest left (timeLeft - dist) (score + scoreToAdd)
-        // from current, find all off valves
-        // calculate time to each to find time remaining multiplied by val and pick best
-    
+
     findBest "AA" valves 30 0
 
     // while there are too many possible paths to test them all, there are less valves with actual pressure values
     // you would never visit a pressure valve more than once. 720 in the source data, 2004310016 in the real data 
     //  (which might be barely attainable, especially with eager discarding of ineffient paths)
-    // another approach might be to from a given node, calculate the hightest value of open nodes (by time to reach them off the total and their total value given that?)
+        
+    // from a given pos, with a given score and time, return the best of all available options...
+    // from AA there are a bunch of possibles, with dists and scores for each
+    // going to be all valves except those opened, with a cost
 
 let part2 () =
     0

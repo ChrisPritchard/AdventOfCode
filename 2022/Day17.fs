@@ -41,6 +41,12 @@ let top = Seq.maxBy snd >> snd
 
 let part1 () =
 
+    // optimisation: track tops of each column
+    // track current height position
+    // whenever a shape moves or drops, if part of intersects with the top of the tops,
+    //  block or end. might not work if there is a possible combo where a shape could be blocked sideways, without being blocked vertically
+    // say one side was built up, 
+
     let moves = readEmbedded "day17" |> Array.head |> Seq.toList
 
     let max = 2022

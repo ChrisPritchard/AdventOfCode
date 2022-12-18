@@ -44,28 +44,50 @@ let part1 () =
                 .Replace(" has flow rate=", ",")
                 .Replace("; tunnels lead to valves ", ",")
                 .Replace("; tunnel leads to valve ", ",")
+                .Replace(", ", ",")
             |> split ",")
     
-    let valves = 
+    let valveValues = 
         input 
         |> Seq.choose (fun a -> 
             if a[1] = "0" then None 
             else Some (a[0], int a[1]))
-        |> Array.ofSeq
+        |> Map.ofSeq
+    let valves = Map.keys valveValues |> List.ofSeq
 
     let paths =
         input 
         |> Seq.map (fun a -> a[0], a[2..])
         |> Map.ofSeq
 
-    let start = "AA"
+    let distToValve start target = 
+        let isGoal = (=) target
+        let edges p = 
+            printfn "finding path for %s" p
+            Map.find p paths |> Array.toSeq
+        let path = bfs isGoal edges start
+        path.Value |> List.length
+
+    let rec findBest pos left timeLeft score =
+        let nextBest, dist, scoreToAdd = 
+            left 
+            |> Seq.map (fun p -> 
+                let dist = distToValve pos p
+                p, dist, (timeLeft - dist) * valveValues.[p])
+            |> Seq.maxBy (fun (_, _, v) -> v)
+        let left = List.except [nextBest] left
+        if List.isEmpty left then score + scoreToAdd
+        else
+            findBest nextBest left (timeLeft - dist) (score + scoreToAdd)
+        // from current, find all off valves
+        // calculate time to each to find time remaining multiplied by val and pick best
+    
+    findBest "AA" valves 30 0
 
     // while there are too many possible paths to test them all, there are less valves with actual pressure values
     // you would never visit a pressure valve more than once. 720 in the source data, 2004310016 in the real data 
     //  (which might be barely attainable, especially with eager discarding of ineffient paths)
     // another approach might be to from a given node, calculate the hightest value of open nodes (by time to reach them off the total and their total value given that?)
-
-    0
 
 let part2 () =
     0

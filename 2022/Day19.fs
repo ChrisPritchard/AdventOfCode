@@ -44,33 +44,35 @@ let part1 () =
                     // dont build anything
                     yield automate (minute - 1) bots (add resources bots) botCosts
                     
-                    if resources.ore >= botCosts.oreBotOreCost then 
-                        let newResources = add resources bots
-                        let newResources = { newResources with ore = newResources.ore - botCosts.oreBotOreCost }
-                        yield automate (minute - 1) { bots with ore = bots.ore + 1 } newResources botCosts
+                    // if resources.ore >= botCosts.oreBotOreCost then 
+                    //     let newResources = add resources bots
+                    //     let newResources = { newResources with ore = newResources.ore - botCosts.oreBotOreCost }
+                    //     yield automate (minute - 1) { bots with ore = bots.ore + 1 } newResources botCosts
 
                     if resources.ore >= botCosts.clayBotOreCost then 
                         let newResources = add resources bots
                         let newResources = { newResources with ore = newResources.ore - botCosts.clayBotOreCost }
                         yield automate (minute - 1) { bots with clay = bots.clay + 1 } newResources botCosts
 
-                    if resources.ore >= botCosts.obsidianBotOreCost && resources.clay >= botCosts.obsidianBotClayCost then 
-                        let newResources = add resources bots
-                        let newResources = 
-                            { newResources with 
-                                ore = newResources.ore - botCosts.obsidianBotOreCost
-                                clay = newResources.clay - botCosts.obsidianBotClayCost }
-                        yield automate (minute - 1) { bots with obsidian = bots.obsidian + 1 } newResources botCosts
+                    // if resources.ore >= botCosts.obsidianBotOreCost && resources.clay >= botCosts.obsidianBotClayCost then 
+                    //     let newResources = add resources bots
+                    //     let newResources = 
+                    //         { newResources with 
+                    //             ore = newResources.ore - botCosts.obsidianBotOreCost
+                    //             clay = newResources.clay - botCosts.obsidianBotClayCost }
+                    //     yield automate (minute - 1) { bots with obsidian = bots.obsidian + 1 } newResources botCosts
 
-                    if resources.ore >= botCosts.geodeBotOreCost && resources.obsidian >= botCosts.geodeBotObsidianCost then 
-                        let newResources = add resources bots
-                        let newResources = 
-                            { newResources with 
-                                ore = newResources.ore - botCosts.geodeBotOreCost
-                                obsidian = newResources.obsidian - botCosts.geodeBotObsidianCost }
-                        yield automate (minute - 1) { bots with geode = bots.geode + 1 } newResources botCosts
+                    // if resources.ore >= botCosts.geodeBotOreCost && resources.obsidian >= botCosts.geodeBotObsidianCost then 
+                    //     let newResources = add resources bots
+                    //     let newResources = 
+                    //         { newResources with 
+                    //             ore = newResources.ore - botCosts.geodeBotOreCost
+                    //             obsidian = newResources.obsidian - botCosts.geodeBotObsidianCost }
+                    //     yield automate (minute - 1) { bots with geode = bots.geode + 1 } newResources botCosts
                 ] 
             res |> Seq.max
+    
+    // i dont think this is working because the calculations per minute rapidly expand beyond a processible range
 
     readEmbeddedRaw "day19"
     |> Seq.map (fun line ->

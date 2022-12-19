@@ -72,56 +72,35 @@ let part1 () =
             memoDists <- Map.add (start, target) dist memoDists
             dist
 
-    let possiblePaths pos left timeLeft = 
-        left 
-        |> Seq.filter (fun p -> distToValve pos p < timeLeft)
+    let scoreForPath path =
+        ((0, 30), List.windowed 2 path)
+        ||> List.fold (fun (score, timeLeft) pair ->
+            let dist = distToValve pair[0] pair[1]
+            let timeLeft = timeLeft - dist
+            score + timeLeft * valveValues[pair[1]], timeLeft)
+        |> fst
 
-    let rec allPaths acc = 
+    let timeLeft path =
+        (30, List.windowed 2 path)
+        ||> List.fold (fun timeLeft pair -> timeLeft - distToValve pair[0] pair[1])
 
-        // time to brain
-        // // calculate all paths
-        // any path that runs out of other valves or has no possible additional paths, can have its score calculated
-        // then there are some remainder paths
+    let possiblePaths path = 
+        let timeLeft = timeLeft path
+        valves 
+        |> List.except path 
+        |> List.filter (fun p -> distToValve (List.head path) p < timeLeft) 
+        |> List.map (fun p -> p::path)
 
-        let next = 
-            acc |> List.collect (fun (path, time) -> 
-                match path with
-                | [] -> failwith "not possible"
-                | last::_ -> 
-                    let newPaths = 
-                        possiblePaths last (List.except path valves) time
-                        |> Seq.map (fun p -> (p::path), time - distToValve last p)
-                        |> Seq.toList
-                    if List.isEmpty newPaths then [path, time]
-                    else newPaths)
+    let rec highScore paths =
+        paths 
+        |> Seq.map (fun p ->
+            let next = possiblePaths p
+            if List.isEmpty next then List.rev p |> scoreForPath
+            else
+                highScore next)
+        |> Seq.max
 
-        // add a fold. given the current paths, fold to find the next paths and current max
-        // if no next paths, return current max, else, recurse with new paths and max
-
-        next
-
-    let rec findBest pos left timeLeft score =
-        let nextBest, dist, scoreToAdd = 
-            left 
-            |> Seq.map (fun p -> 
-                let dist = distToValve pos p
-                p, dist, (timeLeft - dist) * valveValues.[p])
-            |> Seq.maxBy (fun (_, _, v) -> v)
-        printfn "from %s to %s in %d minutes" pos nextBest dist
-        let left = List.except [nextBest] left
-        if List.isEmpty left then score + scoreToAdd
-        else
-            findBest nextBest left (timeLeft - dist) (score + scoreToAdd)
-
-    findBest "AA" valves 30 0
-
-    // while there are too many possible paths to test them all, there are less valves with actual pressure values
-    // you would never visit a pressure valve more than once. 720 in the source data, 2004310016 in the real data 
-    //  (which might be barely attainable, especially with eager discarding of ineffient paths)
-        
-    // from a given pos, with a given score and time, return the best of all available options...
-    // from AA there are a bunch of possibles, with dists and scores for each
-    // going to be all valves except those opened, with a cost
+    highScore [["AA"]]
 
 let part2 () =
     0

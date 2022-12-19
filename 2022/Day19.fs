@@ -11,33 +11,64 @@ type costs = {
     geodeBotObsidianCost: int
 }
 
+type resource = {
+    ore: int
+    clay: int
+    obsidian: int
+    geode: int
+}
+
+let add r1 r2 = { 
+    ore = r1.ore + r2.ore
+    clay = r1.clay + r2.clay
+    obsidian = r1.obsidian + r2.obsidian
+    geode = r1.geode + r2.geode }
+
+let empty () = {
+    ore = 0
+    clay = 0
+    obsidian = 0
+    geode = 0 }
+
+
 let part1 () =
     let minutes = 24
 
-    let rec automate minute
-        (oreBots, clayBots, obsidianBots, geodeBots) 
-        (ore, clay, obsidian, geodes) 
-        (botCosts: costs) =
+    let rec automate minute (bots: resource) (resources: resource) (botCosts: costs) =
 
         if minute = 0 then 
-            geodes
+            resources.geode
         else
             let res = 
                 seq [
                     // dont build anything
-                    yield automate (minute - 1) (oreBots, clayBots, obsidianBots, geodeBots) (ore + oreBots, clay + clayBots, obsidian + obsidianBots, geodes + geodeBots) botCosts
+                    yield automate (minute - 1) bots (add resources bots) botCosts
                     
-                    if ore >= botCosts.oreBotOreCost then 
-                        yield automate (minute - 1) (oreBots + 1, clayBots, obsidianBots, geodeBots) (ore + oreBots - botCosts.oreBotOreCost, clay + clayBots, obsidian + obsidianBots, geodes + geodeBots) botCosts
+                    if resources.ore >= botCosts.oreBotOreCost then 
+                        let newResources = add resources bots
+                        let newResources = { newResources with ore = newResources.ore - botCosts.oreBotOreCost }
+                        yield automate (minute - 1) { bots with ore = bots.ore + 1 } newResources botCosts
 
-                    if ore >= botCosts.clayBotOreCost then 
-                        yield automate (minute - 1) (oreBots, clayBots + 1, obsidianBots, geodeBots) (ore + oreBots - botCosts.clayBotOreCost, clay + clayBots, obsidian + obsidianBots, geodes + geodeBots) botCosts
+                    if resources.ore >= botCosts.clayBotOreCost then 
+                        let newResources = add resources bots
+                        let newResources = { newResources with ore = newResources.ore - botCosts.clayBotOreCost }
+                        yield automate (minute - 1) { bots with clay = bots.clay + 1 } newResources botCosts
 
-                    if ore >= botCosts.obsidianBotOreCost && clay >= botCosts.obsidianBotClayCost then 
-                        yield automate (minute - 1) (oreBots, clayBots, obsidianBots + 1, geodeBots) (ore + oreBots - botCosts.obsidianBotOreCost, clay + clayBots - botCosts.obsidianBotClayCost, obsidian + obsidianBots, geodes + geodeBots) botCosts
+                    if resources.ore >= botCosts.obsidianBotOreCost && resources.clay >= botCosts.obsidianBotClayCost then 
+                        let newResources = add resources bots
+                        let newResources = 
+                            { newResources with 
+                                ore = newResources.ore - botCosts.obsidianBotOreCost
+                                clay = newResources.clay - botCosts.obsidianBotClayCost }
+                        yield automate (minute - 1) { bots with obsidian = bots.obsidian + 1 } newResources botCosts
 
-                    if ore >= botCosts.geodeBotOreCost && obsidian >= botCosts.geodeBotObsidianCost then 
-                        yield automate (minute - 1) (oreBots, clayBots, obsidianBots, geodeBots + 1) (ore + oreBots - botCosts.geodeBotOreCost, clay + clayBots, obsidian + obsidianBots - botCosts.geodeBotObsidianCost, geodes + geodeBots) botCosts
+                    if resources.ore >= botCosts.geodeBotOreCost && resources.obsidian >= botCosts.geodeBotObsidianCost then 
+                        let newResources = add resources bots
+                        let newResources = 
+                            { newResources with 
+                                ore = newResources.ore - botCosts.geodeBotOreCost
+                                obsidian = newResources.obsidian - botCosts.geodeBotObsidianCost }
+                        yield automate (minute - 1) { bots with geode = bots.geode + 1 } newResources botCosts
                 ] 
             res |> Seq.max
 
@@ -52,7 +83,7 @@ let part1 () =
                 obsidianBotClayCost = int a[21]
                 geodeBotOreCost = int a[27]
                 geodeBotObsidianCost = int a[30] }
-            id * automate minutes (1, 0, 0, 0) (0, 0, 0, 0) botCosts))
+            id * automate minutes { empty () with ore = 1 } (empty ()) botCosts))
 
 let part2 () =
     0

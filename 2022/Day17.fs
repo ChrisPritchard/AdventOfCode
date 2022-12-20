@@ -70,8 +70,32 @@ let part1 () =
     tick 1 Set.empty Across (spawn 0 Across) []
 
 let part2 () =
-    let max = 1000000000000L
+    // let max = 1000000000000L
 
-    // with such a high count we are possibly looking for repeating patterns then doing a multiplier
-    // the above could be simplified though by tracking the top of each column rather than checking overall intersections
     0
+
+    // let moves = readEmbedded "day17" |> Array.head |> Seq.toList
+
+    // let max = 5000
+    // let rec tick lastTop count blocked shapeType shape =
+    //     function
+    //     | [] -> tick lastTop count blocked shapeType shape moves
+    //     | next::rem ->
+    //         let shape = 
+    //             let newShape = move next shape
+    //             if Set.isEmpty (Set.intersect newShape blocked)  && notWall newShape then newShape else shape
+    //         let drop = move 'V' shape
+    //         if Set.isEmpty (Set.intersect drop blocked)  && notFloor drop 
+    //         then tick lastTop count blocked shapeType drop rem
+    //         else if count = max then top (Set.union shape blocked)
+    //         else
+    //             let blocked = Set.union shape blocked
+    //             let shapeType = nextShape shapeType
+    //             let top = top blocked
+    //             printf "%d " (top - lastTop)
+    //             let shape = spawn top shapeType
+    //             tick top (count + 1) blocked shapeType shape rem
+
+    // // with such a high count we are possibly looking for repeating patterns then doing a multiplier
+    // // the above could be simplified though by tracking the top of each column rather than checking overall intersections
+    // tick 0 1 Set.empty Across (spawn 0 Across) []

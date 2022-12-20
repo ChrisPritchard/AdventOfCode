@@ -62,6 +62,9 @@ let main _ =
     total <- total + timeForDay 19 1 (fun () -> 1703) // Day19.part1
     total <- total + timeForDay 19 2 (fun () -> 5301) // Day19.part2
 
+    total <- total + timeForDay 20 1 Day20.part1
+    total <- total + timeForDay 20 2 Day20.part2
+
     printfn ""
     printfn "total time elapsed: %f ms" total
     printfn ""

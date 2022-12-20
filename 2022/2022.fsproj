@@ -68,6 +68,9 @@
     <EmbeddedResource Include="./inputs/day19.txt">
       <Link>day19</Link>
     </EmbeddedResource>
+    <EmbeddedResource Include="./inputs/day20.txt">
+      <Link>day20</Link>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
@@ -91,6 +94,7 @@
     <Compile Include="Day17.fs" />
     <Compile Include="Day18.fs" />
     <Compile Include="Day19.fs" />
+    <Compile Include="Day20.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

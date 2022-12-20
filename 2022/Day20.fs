@@ -12,14 +12,18 @@ let part1 () =
 
     let insert value index =
         let rec flip prev next =
-            let next = if next = ring.Length then 0 else next
             let current = positions[next]
             positions[next] <- prev
             let next = next + 1
             if next = index then ()
+            else if next = ring.Length then
+                flip current 0
             else
                 flip current next
+
         flip positions[index] (index + 1)
+        let prev = if index = 0 then ring.Length - 1 else index - 1
+        positions[prev] <- positions[index]
         positions[index] <- value
 
     for i in [0..ring.Length-1] do

@@ -22,7 +22,6 @@ let part1 () =
         match prev with
         | None -> slide dir (index (current + dir)) (Some positions[current]) last
         | Some prevValue ->
-            printfn "setting pos %d to %d" current prevValue
             let newPrev = Some positions[current]
             positions[current] <- prevValue
             if current = last then ()
@@ -30,18 +29,17 @@ let part1 () =
                 slide dir (index (current + dir)) newPrev last
 
     for i in [0..ring.Length-1] do
-        printfn "before %d moving %d: %A" i ring[i] positions
         let pos = Array.findIndex ((=) i) positions
-        let target = (pos + ring[i]) % ring.Length
-        let target = if target < 0 then ring.Length + target else target
-        printfn "span is %d - %d" pos target
-        if target >= pos then slide -1 target None pos else slide 1 pos None target
-        printfn "finally setting pos %d to %d" target i
-        positions[target] <- i
-        printfn "final state: %A" positions
-        printfn "real state:  %A" (positions |> Array.map (fun i -> ring[i]))
+        let adjust = let r = ring[i] in if r < 0 then r - 1 else r
+        let target = let v = (pos + adjust) % ring.Length in if v < 0 then ring.Length + v else v
+        let target = if target >= pos then target else target + 1
+        if target <> pos then
+            if target >= pos then slide -1 target None pos else slide 1 target None pos
+            positions[target] <- i
         
-    positions |> Array.map (fun i -> ring[i])
+    let final = positions |> Array.map (fun i -> ring[i])
+    let start = Array.findIndex ((=) 0) final
+    [1000;2000;3000] |> List.sumBy (fun i -> final[(start + i) % final.Length])
 
 let part2 () =
     0

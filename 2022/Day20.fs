@@ -1,6 +1,7 @@
 module Day20
 
 open Common
+open System.Collections.Generic
 
 let part1 () =
     let ring = 
@@ -14,50 +15,74 @@ let part1 () =
     let indexToNeighbours = 
         [|0..ring.Length - 1|] 
         |> Array.map (fun i -> i, normalise (i-1, i+1))
-        |> dict
-    let neighboursToIndex = indexToNeighbours |> Seq.map (fun kv -> kv.Value, kv.Key) |> dict
+        |> dict |> Dictionary<int, int * int>
+    let neighboursToIndex = indexToNeighbours |> Seq.map (fun kv -> kv.Value, kv.Key) |> dict |> Dictionary<int * int, int>
+
+    let asArray mapToRing =
+        let index0 = Array.findIndex ((=) 0) ring
+        (indexToNeighbours[index0], [|0..ring.Length - 1|])
+        ||> Array.mapFold (fun neighbours _ -> 
+            (if mapToRing then ring[neighboursToIndex[neighbours]] else neighboursToIndex[neighbours]), indexToNeighbours[snd neighbours])
+        |> fst
 
     let rec findTarget (left, right) amount =
         if amount = 0 then
-            (left, right)
+            neighboursToIndex[left, right]
         else if amount < 0 then 
             findTarget indexToNeighbours[left] (amount + 1)
         else
             findTarget indexToNeighbours[right] (amount - 1)
 
-    for i in [0..ring.Length - 1] do
+    let update index neighbours = 
+        indexToNeighbours[index] <- neighbours
+        neighboursToIndex[neighbours] <- index
+
+    let removeElement (elementLeftNeighbour, elementRightNeighbour) =
+        let (leftNeighbourLeft, _) = indexToNeighbours[elementLeftNeighbour]
+        let newLeft = (leftNeighbourLeft, elementRightNeighbour)
+        update elementLeftNeighbour newLeft
+
+        let (_, rightNeighbourRight) = indexToNeighbours[elementRightNeighbour]
+        let newright = (elementLeftNeighbour, rightNeighbourRight)
+        update elementRightNeighbour newright
+
+    for i in [0..0] do
         let amount = ring[i]
+        printfn "processing: %d" amount
+        printfn "current state: %A" (asArray false)
         if amount <> 0 then
-            let (left, right) = indexToNeighbours[i]
-            let (tleft, tright) = findTarget (left, right) amount
+            let left, right = indexToNeighbours[i] // current position - by binding the neighbours together we 'remove' the value we are moving
 
-            // removing from current left
-            let (leftleft, _) = indexToNeighbours[left]
-            let newLeft = (leftleft, right)
-            indexToNeighbours[left] <- newLeft
-            neighboursToIndex[newLeft] <- left
+            let target = findTarget (left, right) amount
 
-            // removing from current right
-            let (_, rightright) = indexToNeighbours[right]
-            let newright = (left, rightright)
-            indexToNeighbours[right] <- newright
-            neighboursToIndex[newright] <- right
+            removeElement (left, right)    
+            
+            let targetLeft, targetRight = indexToNeighbours[target]
+            printfn "index: %A (neighbours: (%d, %d)" i left right
+            printfn "target: %A (neighbours: (%d, %d)" target targetLeft targetRight        
 
-            // adding to target left
-            let (leftleft, _) = indexToNeighbours[tleft]
-            let newLeft = (leftleft, i)
-            indexToNeighbours[tleft] <- newLeft
-            neighboursToIndex[newLeft] <- tleft
+            if amount > 0 then 
+                // should be target left, index, target, target right
+                let targetLeftLeft, _ = indexToNeighbours[targetLeft]
+                let newLeftNeighbours = targetLeftLeft, i
+                update targetLeft newLeftNeighbours
+                let indexNeighbours = targetLeft, target
+                update i indexNeighbours
+                let newTargetNeighbours = i, targetRight
+                update target newTargetNeighbours        
+            else
+                // should be target left, target, index, target right
+                let newTargetNeighbours = targetLeft, i
+                update target newTargetNeighbours
+                let indexNeighbours = target, targetRight
+                update i indexNeighbours
+                let _, targetRightRight = indexToNeighbours[targetRight]
+                let newRightNeighbours = i, targetRightRight
+                update targetRight newRightNeighbours 
 
-            // adding to target right
-            let (_, rightright) = indexToNeighbours[tright]
-            let newright = (i, rightright)
-            indexToNeighbours[tright] <- newright
-            neighboursToIndex[newright] <- tright
+            printfn "new state %A" (asArray false)
 
-    let index0 = Array.findIndex ((=) 0) ring
-    (indexToNeighbours[index0], [|0..ring.Length - 1|])
-    ||> Array.mapFold (fun (_, right) _ -> right, indexToNeighbours[right])
+    asArray true
 
 let part2 () =
     0

@@ -44,20 +44,20 @@ let part1 () =
     let max = 2
 
     let overlaps shape stack = 
-        Array.exists (fun (row, bits) -> Map.containsKey row stack && (bits ^^^ stack[row]) <> (bits ||| stack[row])) shape
+        Array.exists (fun (row, bits) -> Map.containsKey row stack && (bits &&& stack[row]) <> 0uy) shape
 
     let rec tick shape shapeIndex shapeCount stack moves =
         match moves with
         | [] -> tick shape shapeIndex shapeCount stack originalMoves // loop around moves
         | '<'::rem ->
-            if Array.exists (fun (_, bits) -> 0b10000000uy &&& bits = 0b10000000uy) shape then 
+            if Array.exists (fun (_, bits) -> 0b10000000uy &&& bits <> 0uy) shape then 
                 tick shape shapeIndex shapeCount stack rem // no move because wall is blocking
             else
                 let newShape = Array.map (fun (row, bits) -> row, (bits <<< 1)) shape
                 let nextShape = if overlaps newShape stack then shape else newShape
                 tick nextShape shapeIndex shapeCount stack rem
         | '>'::rem ->
-            if Array.exists (fun (_, bits) -> 0b00000001uy &&& bits = 0b00000001uy) shape then 
+            if Array.exists (fun (_, bits) -> 0b00000001uy &&& bits <> 0uy) shape then 
                 tick shape shapeIndex shapeCount stack rem // no move because wall is blocking
             else
                 let newShape = Array.map (fun (row, bits) -> row, (bits >>> 1)) shape
@@ -72,7 +72,7 @@ let part1 () =
                 let newStack = 
                     (stack, shape) 
                     ||> Array.fold (fun stack (row, bits) -> 
-                        let newBits = if Map.containsKey row stack then stack[row] &&& bits else bits
+                        let newBits = if Map.containsKey row stack then stack[row] ||| bits else bits
                         Map.add row newBits stack)
                 
                 let stackTop = Map.keys newStack |> Seq.max

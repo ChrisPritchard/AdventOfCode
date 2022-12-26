@@ -6,7 +6,7 @@ open System.Collections.Generic
 let part1 () =
     let ring = 
         readEmbedded "day20"
-        |> Array.map int
+        |> Array.map int64
 
     let normalise (left, right) =
         let l, r = left % ring.Length, right % ring.Length
@@ -18,9 +18,8 @@ let part1 () =
         |> dict |> Dictionary<int, int * int>
     let neighboursToIndex = indexToNeighbours |> Seq.map (fun kv -> kv.Value, kv.Key) |> dict |> Dictionary<int * int, int>
 
-    let asArray mapToRing =
-        let index0 = Array.findIndex ((=) 0) ring
-        (indexToNeighbours[index0], [|0..ring.Length - 1|])
+    let asArray startIndex mapToRing =
+        (indexToNeighbours[startIndex], [|0..ring.Length - 1|])
         ||> Array.mapFold (fun neighbours _ -> 
             (if mapToRing then ring[neighboursToIndex[neighbours]] else neighboursToIndex[neighbours]), indexToNeighbours[snd neighbours])
         |> fst
@@ -46,23 +45,16 @@ let part1 () =
         let newright = (elementLeftNeighbour, rightNeighbourRight)
         update elementRightNeighbour newright
 
-    for i in [0..0] do
+    for i in [0..ring.Length-1] do
         let amount = ring[i]
-        printfn "processing: %d" amount
-        printfn "current state: %A" (asArray false)
-        if amount <> 0 then
+        if amount <> 0L then
             let left, right = indexToNeighbours[i] // current position - by binding the neighbours together we 'remove' the value we are moving
+            removeElement (left, right)   
 
-            let target = findTarget (left, right) amount
-
-            removeElement (left, right)    
-            
-            let targetLeft, targetRight = indexToNeighbours[target]
-            printfn "index: %A (neighbours: (%d, %d)" i left right
-            printfn "target: %A (neighbours: (%d, %d)" target targetLeft targetRight        
+            let target = findTarget (left, right) (if amount < 0 then amount - 1 else amount + 1)            
+            let targetLeft, targetRight = indexToNeighbours[target]      
 
             if amount > 0 then 
-                // should be target left, index, target, target right
                 let targetLeftLeft, _ = indexToNeighbours[targetLeft]
                 let newLeftNeighbours = targetLeftLeft, i
                 update targetLeft newLeftNeighbours
@@ -71,7 +63,6 @@ let part1 () =
                 let newTargetNeighbours = i, targetRight
                 update target newTargetNeighbours        
             else
-                // should be target left, target, index, target right
                 let newTargetNeighbours = targetLeft, i
                 update target newTargetNeighbours
                 let indexNeighbours = target, targetRight
@@ -80,9 +71,8 @@ let part1 () =
                 let newRightNeighbours = i, targetRightRight
                 update targetRight newRightNeighbours 
 
-            printfn "new state %A" (asArray false)
-
-    asArray true
+    let final = asArray (Array.findIndex ((=) 0) ring) true
+    [1000;2000;3000] |> List.sumBy (fun n -> final[n % final.Length])
 
 let part2 () =
     0

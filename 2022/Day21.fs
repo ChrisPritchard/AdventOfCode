@@ -5,12 +5,6 @@ open System
 open System.Collections.Generic
 
 let part1() =
-    // loop process? loop over lines, seperating values into a dictionary
-    // repeat, removing values using a fold that are set or can be set.
-    // two collections: unresolved calculations and raw values
-    // loop is, go over unresolved calculations, for any that can be resolved remove and add to raw values
-    // repeat until root is resolved
-    // maybe two dictionaries? one with ints and one with strings
 
     let resolved = Dictionary<string, int64>()
     let unresolved = Dictionary<string, string * char * string>()
@@ -38,4 +32,8 @@ let part1() =
     resolved["root"]
 
 let part2() =
+    
+    // now need to calculate the input number (for key 'humn') that will result in root's two keys being the same
+    // this might be brute forcable, it might not be...
+    
     0

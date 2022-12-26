@@ -30,6 +30,7 @@ let shapes = [|
     |]
 |]
 
+// useful for debugging
 let renderStack stack = 
     let keys = Map.keys stack
     for r in [Seq.max keys..(-1)..0] do
@@ -41,7 +42,7 @@ let renderStack stack =
 let part1 () =
 
     let originalMoves = readEmbedded "day17" |> Array.head |> Seq.collect (fun a -> [a;'v']) |> Seq.toList
-    let max = 2
+    let max = 2022
 
     let overlaps shape stack = 
         Array.exists (fun (row, bits) -> Map.containsKey row stack && (bits &&& stack[row]) <> 0uy) shape
@@ -57,7 +58,7 @@ let part1 () =
                 let nextShape = if overlaps newShape stack then shape else newShape
                 tick nextShape shapeIndex shapeCount stack rem
         | '>'::rem ->
-            if Array.exists (fun (_, bits) -> 0b00000001uy &&& bits <> 0uy) shape then 
+            if Array.exists (fun (_, bits) -> 0b00000010uy &&& bits <> 0uy) shape then 
                 tick shape shapeIndex shapeCount stack rem // no move because wall is blocking
             else
                 let newShape = Array.map (fun (row, bits) -> row, (bits >>> 1)) shape
@@ -76,8 +77,8 @@ let part1 () =
                         Map.add row newBits stack)
                 
                 let stackTop = Map.keys newStack |> Seq.max
-                if shapeCount + 1 = max then 
-                    renderStack newStack
+                if shapeCount = max then 
+                    // renderStack newStack
                     Map.keys newStack |> Seq.max // final result
                 else
                     let nextShapeIndex = if shapeIndex = shapes.Length - 1 then 0 else shapeIndex + 1

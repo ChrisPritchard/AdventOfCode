@@ -41,34 +41,36 @@ let renderStack stack =
 
 let part1 () =
 
-    let originalMoves = readEmbedded "day17" |> Array.head |> Seq.collect (fun a -> [a;'v']) |> Seq.toList
-    let max = 2022
+    let originalMoves = readEmbedded "day17" |> Array.head |> Seq.toList
+    let maxShapes = 6
 
     let overlaps shape stack = 
         Array.exists (fun (row, bits) -> Map.containsKey row stack && (bits &&& stack[row]) <> 0uy) shape
 
-    let rec tick shape shapeIndex shapeCount stack moves =
+    let rec tick topBlock shape shapeIndex shapeCount stack moves =
         match moves with
-        | [] -> tick shape shapeIndex shapeCount stack originalMoves // loop around moves
-        | '<'::rem ->
-            if Array.exists (fun (_, bits) -> 0b10000000uy &&& bits <> 0uy) shape then 
-                tick shape shapeIndex shapeCount stack rem // no move because wall is blocking
-            else
-                let newShape = Array.map (fun (row, bits) -> row, (bits <<< 1)) shape
-                let nextShape = if overlaps newShape stack then shape else newShape
-                tick nextShape shapeIndex shapeCount stack rem
-        | '>'::rem ->
-            if Array.exists (fun (_, bits) -> 0b00000010uy &&& bits <> 0uy) shape then 
-                tick shape shapeIndex shapeCount stack rem // no move because wall is blocking
-            else
-                let newShape = Array.map (fun (row, bits) -> row, (bits >>> 1)) shape
-                let nextShape = if overlaps newShape stack then shape else newShape
-                tick nextShape shapeIndex shapeCount stack rem
-        | _::rem -> // down, or 'v'
+        | [] -> tick topBlock shape shapeIndex shapeCount stack originalMoves // loop around moves
+        | jet::rem ->
+            let shape = 
+                if jet = '<' then
+                    if Array.exists (fun (_, bits) -> 0b10000000uy &&& bits <> 0uy) shape then 
+                        shape // no move because wall is blocking
+                    else
+                        let newShape = Array.map (fun (row, bits) -> row, (bits <<< 1)) shape
+                        if overlaps newShape stack then shape else newShape
+                else if jet = '>' then
+                    if Array.exists (fun (_, bits) -> 0b00000010uy &&& bits <> 0uy) shape then 
+                        shape // no move because wall is blocking
+                    else
+                        let newShape = Array.map (fun (row, bits) -> row, (bits >>> 1)) shape
+                        if overlaps newShape stack then shape else newShape
+                else
+                    failwithf "unexpected character: '%A'" jet
+
             let newShape = Array.map (fun (row, bits) -> row - 1, bits) shape
             let blocked = overlaps newShape stack
             if not blocked then 
-                tick newShape shapeIndex shapeCount stack rem
+                tick topBlock newShape shapeIndex shapeCount stack rem
             else
                 let newStack = 
                     (stack, shape) 
@@ -76,20 +78,20 @@ let part1 () =
                         let newBits = if Map.containsKey row stack then stack[row] ||| bits else bits
                         Map.add row newBits stack)
                 
-                let stackTop = Map.keys newStack |> Seq.max
-                if shapeCount = max then 
-                    // renderStack newStack
-                    Map.keys newStack |> Seq.max // final result
+                let topBlock = max topBlock (fst shape[0])
+                if (shapeCount + 1) = maxShapes then 
+                    renderStack newStack
+                    topBlock // final result
                 else
                     let nextShapeIndex = if shapeIndex = shapes.Length - 1 then 0 else shapeIndex + 1
                     let nextShape = shapes[nextShapeIndex]
-                    let shapeTop = nextShape.Length + 5 + stackTop
+                    let shapeTop = nextShape.Length + 3 + topBlock
                     let nextShape = nextShape |> Array.indexed |> Array.map (fun (row, bits) -> (shapeTop - row), bits)
-                    tick nextShape nextShapeIndex (shapeCount + 1) newStack rem
+                    tick topBlock nextShape nextShapeIndex (shapeCount + 1) newStack rem
 
     let shapeTop = shapes[0].Length + 2 
     let firstShape = shapes[0] |> Array.indexed |> Array.map (fun (row, bits) -> (shapeTop - row), bits)
-    tick firstShape 0 0 (Map [ -1, 0b11111111uy ]) originalMoves
+    tick 0 firstShape 0 0 (Map [ -1, 0b11111111uy ]) originalMoves
 
 let part2 () =
     // let max = 1000000000000L

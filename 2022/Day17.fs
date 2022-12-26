@@ -6,27 +6,27 @@ open Common
 
 let shapes = [|
     [| // horizontal bar
-        0b0011110uy
+        0b00111100uy
     |]
     [| // cross / plus symbol
-        0b0001000uy
-        0b0011100uy
-        0b0001000uy
+        0b00010000uy
+        0b00111000uy
+        0b00010000uy
     |]
     [| // reverse L
-        0b0000100uy
-        0b0000100uy
-        0b0011100uy
+        0b00001000uy
+        0b00001000uy
+        0b00111000uy
     |]
     [| // vertical bar
-        0b0010000uy
-        0b0010000uy
-        0b0010000uy
-        0b0010000uy
+        0b00100000uy
+        0b00100000uy
+        0b00100000uy
+        0b00100000uy
     |]
     [| // box / square
-        0b0011000uy
-        0b0011000uy
+        0b00110000uy
+        0b00110000uy
     |]
 |]
 
@@ -42,7 +42,7 @@ let renderStack stack =
 let part1 () =
 
     let originalMoves = readEmbedded "day17" |> Array.head |> Seq.toList
-    let maxShapes = 6
+    let maxShapes = 2022
 
     let overlaps shape stack = 
         Array.exists (fun (row, bits) -> Map.containsKey row stack && (bits &&& stack[row]) <> 0uy) shape
@@ -80,8 +80,8 @@ let part1 () =
                 
                 let topBlock = max topBlock (fst shape[0])
                 if (shapeCount + 1) = maxShapes then 
-                    renderStack newStack
-                    topBlock // final result
+                    // renderStack newStack
+                    topBlock + 1 // final result, allow for this being 0 based
                 else
                     let nextShapeIndex = if shapeIndex = shapes.Length - 1 then 0 else shapeIndex + 1
                     let nextShape = shapes[nextShapeIndex]

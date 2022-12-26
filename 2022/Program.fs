@@ -38,32 +38,35 @@ let main _ =
     // total <- total + timeForDay 10 2 Day10.part2
 
     // total <- total + timeForDay 11 1 Day11.part1
-    // total <- total + timeForDay 11 2 (fun () -> 35270398814L) // Day11.part2
+    // total <- total + timeForDay 11 2 Day11.part2
     
-    // total <- total + totalTimeForDay 12 (fun () -> 456, 454) // Day12.part1And2
+    // total <- total + totalTimeForDay 12 Day12.part1And2
     
     // total <- total + timeForDay 13 1 Day13.part1
     // total <- total + timeForDay 13 2 Day13.part2
    
-    // total <- total + totalTimeForDay 14 (fun () -> 592, 30367) // Day14.part1And2
+    // total <- total + totalTimeForDay 14 Day14.part1And2
     
     // total <- total + timeForDay 15 1 Day15.part1
-    // total <- total + timeForDay 15 2 (fun () -> 12625383204261L) // Day15.part2
+    // total <- total + timeForDay 15 2 Day15.part2
     
-    // total <- total + timeForDay 16 1 (fun () -> 1638) // Day16.part1
-    // total <- total + timeForDay 16 2 (fun () -> 2400) // Day16.part2
+    // total <- total + timeForDay 16 1 Day16.part1
+    // total <- total + timeForDay 16 2 Day16.part2
 
-    total <- total + timeForDay 17 1 Day17.part1 // (fun () -> 3227)
-    total <- total + timeForDay 17 2 Day17.part2 // todo
+    // total <- total + timeForDay 17 1 Day17.part1
+    // total <- total + timeForDay 17 2 Day17.part2
 
     // total <- total + timeForDay 18 1 Day18.part1
-    // total <- total + timeForDay 18 2 (fun () -> 2534) // Day18.part2
+    // total <- total + timeForDay 18 2 Day18.part2
 
-    // total <- total + timeForDay 19 1 (fun () -> 1703) // Day19.part1
-    // total <- total + timeForDay 19 2 (fun () -> 5301) // Day19.part2
+    // total <- total + timeForDay 19 1 Day19.part1
+    // total <- total + timeForDay 19 2 Day19.part2
 
     // total <- total + timeForDay 20 1 Day20.part1
     // total <- total + timeForDay 20 2 Day20.part2
+
+    total <- total + timeForDay 21 1 Day21.part1
+    total <- total + timeForDay 21 2 Day21.part2
 
     printfn ""
     printfn "total time elapsed: %f ms" total

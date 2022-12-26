@@ -73,74 +73,76 @@ let addShapeToStack shape (stack: byte[]) =
         if Map.containsKey row shapeRows then bits ||| shapeRows[row] else bits)
     |> fun a -> Array.append a newRows
 
+let rec tick shape shapeIndex shapeCount (stack: byte[]) moves originalMoves maxShapes =
+    match moves with
+    | [] -> tick shape shapeIndex shapeCount stack originalMoves originalMoves maxShapes // loop around moves
+    | jet::rem ->
+        let shape = shunt jet stack shape           
+        let newShape = drop shape
+        if not (overlaps newShape stack) then 
+            tick newShape shapeIndex shapeCount stack rem originalMoves maxShapes
+        else
+            let newStack = addShapeToStack shape stack
+            if (shapeCount + 1) = maxShapes then 
+                // renderStack newStack
+                newStack.Length - 1
+            else
+                let nextShape, nextShapeIndex = nextShape shapeIndex newStack.Length
+                // printfn "%A" nextShape
+                tick nextShape nextShapeIndex (shapeCount + 1) newStack rem originalMoves maxShapes
+
 let part1 () =
     let originalMoves = readEmbedded "day17" |> Array.head |> Seq.toList
     let maxShapes = 2022
 
-    let rec tick shape shapeIndex shapeCount (stack: byte[]) moves =
-        match moves with
-        | [] -> tick shape shapeIndex shapeCount stack originalMoves // loop around moves
-        | jet::rem ->
-            let shape = shunt jet stack shape           
-            let newShape = drop shape
-            if not (overlaps newShape stack) then 
-                tick newShape shapeIndex shapeCount stack rem
-            else
-                let newStack = addShapeToStack shape stack
-                if (shapeCount + 1) = maxShapes then 
-                    // renderStack newStack
-                    newStack.Length - 1
-                else
-                    let nextShape, nextShapeIndex = nextShape shapeIndex newStack.Length
-                    // printfn "%A" nextShape
-                    tick nextShape nextShapeIndex (shapeCount + 1) newStack rem
-
     let shapeTop = shapes[0].Length + 3
     let firstShape = shapes[0] |> Array.indexed |> Array.map (fun (row, bits) -> (shapeTop - row), bits)
-    tick firstShape 0 0 [| 0b11111111uy |] originalMoves
+    tick firstShape 0 0 [| 0b11111111uy |] originalMoves originalMoves maxShapes
 
 let part2 () =
     let target = 1000000000000L // too large to run
 
-    let windowSize = 12000
+    let windowSize = 30
 
     let originalMoves = readEmbedded "day17" |> Array.head |> Seq.toList
 
-    let rec tick shape shapeIndex shapeCount (stack: byte[]) moves stopAt =
+    let rec findCycle shape shapeIndex shapeCount (stack: byte[]) moves tracked =
         match moves with
-        | [] -> tick shape shapeIndex shapeCount stack originalMoves stopAt // loop around moves
+        | [] -> findCycle shape shapeIndex shapeCount stack originalMoves tracked // loop around moves
         | jet::rem ->
             let shape = shunt jet stack shape           
             let newShape = drop shape
             if not (overlaps newShape stack) then 
-                tick newShape shapeIndex shapeCount stack rem stopAt
+                findCycle newShape shapeIndex shapeCount stack rem tracked
             else
                 let newStack = addShapeToStack shape stack
                 let nextShape, nextShapeIndex = nextShape shapeIndex newStack.Length
 
-                match stopAt with
-                | Some v when v <= newStack.Length + 1 -> 
-                    shapeCount, (stack.Length - 1)
-                | Some _ -> 
-                    tick nextShape nextShapeIndex (shapeCount + 1) newStack rem stopAt
-                | None ->
-                    if newStack.Length < windowSize * 2 then
-                        tick nextShape nextShapeIndex (shapeCount + 1) newStack rem None
-                    else
-                        let last = newStack[newStack.Length - windowSize..]
-                        let result = 
-                            newStack 
-                            |> Array.take (newStack.Length - windowSize) 
-                            |> Array.windowed windowSize 
-                            |> Array.exists (Array.forall2 (=) last)
-                        if result then 
-                            let stopAt = Some (newStack.Length - windowSize)
-                            tick nextShape nextShapeIndex (shapeCount + 1) newStack rem stopAt
-                        else
-                            tick nextShape nextShapeIndex (shapeCount + 1) newStack rem None                
+                if newStack.Length < windowSize * 2 then
+                    findCycle nextShape nextShapeIndex (shapeCount + 1) newStack rem []
+                else
+                    let last = newStack[newStack.Length - windowSize..]
+                    let repeat = 
+                        tracked
+                        |> List.tryFindIndex (fun (si, _, _, window) -> si = shapeIndex && Array.forall2 (=) window last)
+
+                    match repeat with
+                    | None ->
+                        let newTrack = (shapeIndex, newStack.Length - 1, shapeCount + 1, last)
+                        let tracked = newTrack::tracked
+                        findCycle nextShape nextShapeIndex (shapeCount + 1) newStack rem tracked
+                    | Some index ->
+                        let cycle = tracked |> Seq.take (index + 1) |> Seq.map (fun (_, height, count, _) -> height, count) |> Seq.rev |> Seq.toArray
+                        let height, count = cycle[0]
+                        let cycle = cycle |> Array.skip 1 |> Array.map (fun (h, _) -> int64 (h - height - 1))
+                        height, (newStack.Length - 1) - height, count, (shapeCount + 1) - count, cycle
 
     let shapeTop = shapes[0].Length + 3
     let firstShape = shapes[0] |> Array.indexed |> Array.map (fun (row, bits) -> (shapeTop - row), bits)
+    let baseHeight, heightDiff, baseCount, countDiff, cycle = findCycle firstShape 0 0 [| 0b11111111uy |] originalMoves []
     
-    let repeatShapeCount, repeatHeight = tick firstShape 0 0 [| 0b11111111uy |] originalMoves None
-    (target / int64 repeatShapeCount) * int64 repeatHeight
+    let multiple = (target - int64 baseCount) / int64 countDiff
+    let afterCycle = (multiple * int64 heightDiff) + int64 baseHeight
+    let remainder = (target - int64 baseCount) - (multiple * int64 countDiff)
+    let remHeight = cycle[int remainder]
+    afterCycle + int64 remHeight

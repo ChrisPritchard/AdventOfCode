@@ -4,98 +4,100 @@ open Common
 
 // shapes appear two from left, three above top x or floor
 
-type Shape =
-    | Across
-    | Cross
-    | ReverseL
-    | Vertical
-    | Box
+let shapes = [|
+    [| // horizontal bar
+        0b0011110uy
+    |]
+    [| // cross / plus symbol
+        0b0001000uy
+        0b0011100uy
+        0b0001000uy
+    |]
+    [| // reverse L
+        0b0000100uy
+        0b0000100uy
+        0b0011100uy
+    |]
+    [| // vertical bar
+        0b0010000uy
+        0b0010000uy
+        0b0010000uy
+        0b0010000uy
+    |]
+    [| // box / square
+        0b0011000uy
+        0b0011000uy
+    |]
+|]
 
-let nextShape =
-    function
-    | Across -> Cross
-    | Cross -> ReverseL
-    | ReverseL -> Vertical
-    | Vertical -> Box
-    | Box -> Across
-
-let spawn topY =
-    let y = topY + 4
-    function
-    | Across -> set [2,y; 3,y; 4,y; 5,y]
-    | Cross -> set [3,y; 2,y+1; 3,y+1; 4,y+1; 3,y+2]
-    | ReverseL -> set [2,y; 3,y; 4,y; 4,y+1; 4,y+2]
-    | Vertical -> set [2,y; 2,y+1; 2,y+2; 2,y+3]
-    | Box -> set [2,y; 3,y; 2,y+1; 3,y+1;]
-
-let move mv = 
-    match mv with
-    | '<' -> Set.map (fun (x, y) -> x - 1, y)
-    | '>' -> Set.map (fun (x, y) -> x + 1, y)
-    | _ -> Set.map (fun (x, y) -> x, y - 1)
-
-let notWall = Set.forall (fun (x, _) -> x >= 0 && x < 7)
-let notFloor = Set.forall (fun (_, y) -> y > 0)
-
-let top = Seq.maxBy snd >> snd
+let renderStack stack = 
+    let keys = Map.keys stack
+    for r in [Seq.max keys..(-1)..0] do
+        let s = 
+            if not (Map.containsKey r stack) then "......." 
+            else [0..6] |> List.map (fun n -> if (0b10000000uy >>> n) &&& stack[r] = (0b10000000uy >>> n) then '#' else '.') |> asString
+        printfn "|%s|" s
 
 let part1 () =
 
-    // optimisation: track tops of each column
-    // track current height position
-    // whenever a shape moves or drops, if part of intersects with the top of the tops,
-    //  block or end. might not work if there is a possible combo where a shape could be blocked sideways, without being blocked vertically
-    // say one side was built up, 
+    let originalMoves = readEmbedded "day17" |> Array.head |> Seq.collect (fun a -> [a;'v']) |> Seq.toList
+    let max = 2
 
-    let moves = readEmbedded "day17" |> Array.head |> Seq.toList
+    let overlaps shape stack = 
+        Array.exists (fun (row, bits) -> Map.containsKey row stack && (bits ^^^ stack[row]) <> (bits ||| stack[row])) shape
 
-    let max = 2022
-    let rec tick count blocked shapeType shape =
-        function
-        | [] -> tick count blocked shapeType shape moves
-        | next::rem ->
-            let shape = 
-                let newShape = move next shape
-                if Set.isEmpty (Set.intersect newShape blocked)  && notWall newShape then newShape else shape
-            let drop = move 'V' shape
-            if Set.isEmpty (Set.intersect drop blocked)  && notFloor drop 
-            then tick count blocked shapeType drop rem
-            else if count = max then top (Set.union shape blocked)
+    let rec tick shape shapeIndex shapeCount stack moves =
+        match moves with
+        | [] -> tick shape shapeIndex shapeCount stack originalMoves // loop around moves
+        | '<'::rem ->
+            if Array.exists (fun (_, bits) -> 0b10000000uy &&& bits = 0b10000000uy) shape then 
+                tick shape shapeIndex shapeCount stack rem // no move because wall is blocking
             else
-                let blocked = Set.union shape blocked
-                let shapeType = nextShape shapeType
-                let shape = spawn (top blocked) shapeType
-                tick (count + 1) blocked shapeType shape rem
+                let newShape = Array.map (fun (row, bits) -> row, (bits <<< 1)) shape
+                let nextShape = if overlaps newShape stack then shape else newShape
+                tick nextShape shapeIndex shapeCount stack rem
+        | '>'::rem ->
+            if Array.exists (fun (_, bits) -> 0b00000001uy &&& bits = 0b00000001uy) shape then 
+                tick shape shapeIndex shapeCount stack rem // no move because wall is blocking
+            else
+                let newShape = Array.map (fun (row, bits) -> row, (bits >>> 1)) shape
+                let nextShape = if overlaps newShape stack then shape else newShape
+                tick nextShape shapeIndex shapeCount stack rem
+        | _::rem -> // down, or 'v'
+            let newShape = Array.map (fun (row, bits) -> row - 1, bits) shape
+            let blocked = overlaps newShape stack
+            if not blocked then 
+                tick newShape shapeIndex shapeCount stack rem
+            else
+                let newStack = 
+                    (stack, shape) 
+                    ||> Array.fold (fun stack (row, bits) -> 
+                        let newBits = if Map.containsKey row stack then stack[row] &&& bits else bits
+                        Map.add row newBits stack)
+                
+                let stackTop = Map.keys newStack |> Seq.max
+                if shapeCount + 1 = max then 
+                    renderStack newStack
+                    Map.keys newStack |> Seq.max // final result
+                else
+                    let nextShapeIndex = if shapeIndex = shapes.Length - 1 then 0 else shapeIndex + 1
+                    let nextShape = shapes[nextShapeIndex]
+                    let shapeTop = nextShape.Length + 5 + stackTop
+                    let nextShape = nextShape |> Array.indexed |> Array.map (fun (row, bits) -> (shapeTop - row), bits)
+                    tick nextShape nextShapeIndex (shapeCount + 1) newStack rem
 
-    tick 1 Set.empty Across (spawn 0 Across) []
+    let shapeTop = shapes[0].Length + 2 
+    let firstShape = shapes[0] |> Array.indexed |> Array.map (fun (row, bits) -> (shapeTop - row), bits)
+    tick firstShape 0 0 (Map [ -1, 0b11111111uy ]) originalMoves
 
 let part2 () =
     // let max = 1000000000000L
 
+    // need a better approach
+    // treat each line as a byte?
+    // when moving down, if line is 0 then free
+    // if line is not zero, then and the two numbers and xor them - if these are the same then its free
+    // a shape is made of multiple numbers, based on height
+    // when jetting left or right, bit shift the number 
+
     0
-
-    // let moves = readEmbedded "day17" |> Array.head |> Seq.toList
-
-    // let max = 5000
-    // let rec tick lastTop count blocked shapeType shape =
-    //     function
-    //     | [] -> tick lastTop count blocked shapeType shape moves
-    //     | next::rem ->
-    //         let shape = 
-    //             let newShape = move next shape
-    //             if Set.isEmpty (Set.intersect newShape blocked)  && notWall newShape then newShape else shape
-    //         let drop = move 'V' shape
-    //         if Set.isEmpty (Set.intersect drop blocked)  && notFloor drop 
-    //         then tick lastTop count blocked shapeType drop rem
-    //         else if count = max then top (Set.union shape blocked)
-    //         else
-    //             let blocked = Set.union shape blocked
-    //             let shapeType = nextShape shapeType
-    //             let top = top blocked
-    //             printf "%d " (top - lastTop)
-    //             let shape = spawn top shapeType
-    //             tick top (count + 1) blocked shapeType shape rem
-
-    // // with such a high count we are possibly looking for repeating patterns then doing a multiplier
-    // // the above could be simplified though by tracking the top of each column rather than checking overall intersections
-    // tick 0 1 Set.empty Across (spawn 0 Across) []

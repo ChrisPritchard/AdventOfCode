@@ -90,14 +90,10 @@ let part2() =
             if x < 50 then 3 else 4
         else 5
         
-    let adjacentFaces = [|
-        0, [|1,2,_,_|]
-        1, [|_,2,0,_|]
-        2, [|_,4,_,0|]
-        3, [|4,5,_,2|]
-        4, [|_,_,3,2|]
-        5, [|_,_,_,3|]
-    |]
+    // describe each face in its 3d orientation
+    // from that, derive its adjacent sides?
+    // and from *that*, determine the transforms?
+    // is there an easier way?
 
     let checkForWrap (map: string[]) nx ny d =
         if nx < 0 || ny < 0 || ny >= map.Length || nx >= map[ny].Length || map[ny][nx] = ' ' then

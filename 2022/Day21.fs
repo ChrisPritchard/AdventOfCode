@@ -71,8 +71,15 @@ let part2() =
         let second = if resolved.ContainsKey second then resolved[second].ToString() else second
         unresolved[kv.Key] <- first,op,second
     
+    let reverse =
+        function
+        | '+' -> '-'
+        | '-' -> '+'
+        | '/' -> '*'
+        | '*' -> '/'
+        | _ -> '#'
+
     let rec findHumn value key =
-        printfn "%A" value
         if key = "humn" then value
         else
             let first,op,second = unresolved[key]

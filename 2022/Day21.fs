@@ -19,6 +19,8 @@ let part1() =
         for kv in unresolved do
             let first, op, second = kv.Value
             if resolved.ContainsKey first && resolved.ContainsKey second then
+                // if kv.Key = "root" then
+                //     printfn "%d %d" resolved[first] resolved[second]
                 unresolved.Remove kv.Key |> ignore
                 let resolvedValue = 
                     match op with
@@ -32,10 +34,7 @@ let part1() =
     resolved["root"]
 
 let part2() =
-    
-    // now need to calculate the input number (for key 'humn') that will result in root's two keys being the same
-    // this might be brute forcable, it might not be...
-    
+        
     let resolved = Dictionary<string, int64>()
     let unresolved = Dictionary<string, string * char * string>()
     for line in readEmbeddedRaw "day21" do
@@ -65,43 +64,53 @@ let part2() =
             finished <- true
         else
             unresolvedCount <- unresolved.Count
+
     for kv in unresolved do
         let first, op, second = kv.Value
         let first = if resolved.ContainsKey first then resolved[first].ToString() else first
         let second = if resolved.ContainsKey second then resolved[second].ToString() else second
-        unresolved[kv.Key] <- first,op,second
+        unresolved[kv.Key] <- first, op, second
     
-    let reverse =
-        function
-        | '+' -> '-'
-        | '-' -> '+'
-        | '/' -> '*'
-        | '*' -> '/'
-        | _ -> '#'
+    // let reverse =
+    //     function
+    //     | '+' -> '-'
+    //     | '-' -> '+'
+    //     | '/' -> '*'
+    //     | '*' -> '/'
+    //     | _ -> '#'
 
     let rec findHumn value key =
         if key = "humn" then value
         else
-            let first,op,second = unresolved[key]
+            let first, op, second = unresolved[key]
+            // printfn "\nnext op is '%d (%s) = %s %c %s'" value key first op second
             if Char.IsLetter first[0] then
-                let second = Int64.Parse second
+                // nextKey op constant = value
+                let constant = Int64.Parse second
+                let nextKey = first
+                // printfn "reversing to %s = %d %c %d" nextKey constant (reverse op) value
                 match op with
-                | '+' -> findHumn (second - value) first
-                | '-' -> findHumn (second + value) first
-                | '*' -> findHumn (second / value) first
-                | '/' -> findHumn (second * value) first
+                | '+' -> findHumn (value - constant) nextKey // value - constant = nextKey
+                | '-' -> findHumn (value + constant) nextKey // k - 4 = 6 -> 6 + 4 = k  // value + constant = nextKey
+                | '*' -> findHumn (value / constant) nextKey // value / constant = nextKey
+                | '/' -> findHumn (value * constant) nextKey // value * constant = nextKey
                 | _ -> failwithf "unknown op %A" op
             else
-                let first = Int64.Parse first
+                // constant op nextKey = value
+                let constant = Int64.Parse first
+                let nextKey = second
+                // printfn "reversing to %s = %d %c %d" nextKey value (reverse op) constant
                 match op with
-                | '+' -> findHumn (value - first) second
-                | '-' -> findHumn (value + first) second
-                | '*' -> findHumn (value / first) second
-                | '/' -> findHumn (value * first) second
+                | '+' -> findHumn (value - constant) nextKey // 4 + k = 6 -> 6 - 4 = k
+                | '-' -> findHumn (constant - value) nextKey // 4 - k = 6 -> 4 - 6 = k
+                | '*' -> findHumn (value / constant) nextKey // 4 * k = 6
+                | '/' -> findHumn (constant / value) nextKey // (4 / k = 6) = (6 * k = 4) = (4 / 6 = k)
                 | _ -> failwithf "unknown op %A" op
 
     let rootFirst,_, rootSecond = unresolved["root"]
     if Char.IsLetter rootFirst[0] then
+        // printfn "root is %s = %s" rootFirst rootSecond
         findHumn (Int64.Parse rootSecond) rootFirst
     else
+        // printfn "root is %s = %s" rootFirst rootSecond
         findHumn (Int64.Parse rootFirst) rootSecond

@@ -70,16 +70,34 @@ let part2() =
     let instructions = parse input[input.Length - 1]
 
     // for part 2, when exiting the board (wrapping), move to the right 'face'
-    // this involves matching each 50x50 zone to four faces, and transforming coords based on the arrangement
+    // this involves matching each 50x50 zone to six faces, and transforming coords based on the arrangement
     // transforming coords might drastically change x and y values, as well as change the direction
 
     // board in the input data looks like:
-    //  ##
-    //  #
-    // ##
-    // #
+    //  ##      01
+    //  #       2
+    // ##      34
+    // #       5
     // there is a centre 50x150 column, where vertical wraps work fine
     // top 100x50 jumps to second-bottom 100x50 horizontally, flipping direction 
+    // bottom of right on top 100x50 wraps to right of second down 50x50, change from down to left and switching x/y
+
+    let face x y = 
+        if y < 50 then
+            if x < 100 then 0 else 1
+        else if y < 100 then 2
+        else if y < 150 then
+            if x < 50 then 3 else 4
+        else 5
+        
+    let adjacentFaces = [|
+        0, [|1,2,_,_|]
+        1, [|_,2,0,_|]
+        2, [|_,4,_,0|]
+        3, [|4,5,_,2|]
+        4, [|_,_,3,2|]
+        5, [|_,_,_,3|]
+    |]
 
     let checkForWrap (map: string[]) nx ny d =
         if nx < 0 || ny < 0 || ny >= map.Length || nx >= map[ny].Length || map[ny][nx] = ' ' then

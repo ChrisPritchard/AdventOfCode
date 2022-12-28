@@ -18,7 +18,7 @@ let parse (instructionText: string) =
     |> Array.toList
 
 let rec march (map: string[]) checkForWrap x y n d = 
-    if n = 0 then x, y
+    if n = 0 then x, y, d
     else
         let nx, ny = 
             match d with
@@ -26,15 +26,15 @@ let rec march (map: string[]) checkForWrap x y n d =
             | 1 -> x, y + 1
             | 2 -> x - 1, y
             | _ -> x, y - 1
-        let nx, ny = checkForWrap map nx ny d
-        if map[ny][nx] = '#' then x, y
+        let nx, ny, d = checkForWrap map nx ny d
+        if map[ny][nx] = '#' then x, y, d
         else march map checkForWrap nx ny (n - 1) d
 
 let rec crawler map checkForWrap x y d =
     function
     | [] -> ((y + 1) * 1000) + ((x + 1) * 4) + d
     | (Move n)::rem ->
-        let x, y = march map checkForWrap x y n d
+        let x, y, d = march map checkForWrap x y n d
         crawler map checkForWrap x y d rem
     | Right::rem ->
         let d = if d = 3 then 0 else d + 1
@@ -55,11 +55,11 @@ let part1() =
             let findOpenBack = Seq.findIndexBack ((<>) ' ')
             let col x = [0..map.Length - 1] |> Seq.filter (fun y -> map[y].Length > x) |> Seq.map (fun y -> map[y][x]) |> asString
             match d with
-            | 0 -> (findOpen map[ny]), ny
-            | 1 -> nx, (findOpen (col nx))
-            | 2 -> (findOpenBack map[ny]), ny
-            | _ -> nx, (findOpenBack (col nx))
-        else nx, ny
+            | 0 -> (findOpen map[ny]), ny, d
+            | 1 -> nx, (findOpen (col nx)), d
+            | 2 -> (findOpenBack map[ny]), ny, d
+            | _ -> nx, (findOpenBack (col nx)), d
+        else nx, ny, d
     
     let x = Seq.findIndex ((=) '.') map[0]
     crawler map checkForWrap x 0 0 instructions
@@ -111,28 +111,26 @@ let part2() =
 
     Array.zip side0left (Array.map (fun (_, y) -> 0, y) side3left) |> withDirection 0
     Array.zip side0top (Array.map (fun (_, y) -> 0, y) side5left) |> withDirection 0
+    
     Array.zip side1top (Array.map (fun (x, _) -> x, 199) side5bottom) |> withDirection 3
-    Array.zip side1right (Array.map (fun (_, y) -> 149, y) side4right) |> withDirection 2
+    Array.zip side1right (Array.map (fun (_, y) -> 99, y) side4right) |> withDirection 2
+    Array.zip side1bottom (Array.map (fun (_, y) -> 99, y) side2right) |> withDirection 2
 
-    // adding left edge for side 0 (left to right on edge 3)
-    let portalMap = 
-        (Map.empty, [50..99])
-        ||> List.fold (fun acc x -> 
-            Map.add (x, -1) (0, 150 + (x - 50), 0) acc)
+    Array.zip side2left (Array.map (fun (x, _) -> x, 100) side3top) |> withDirection 1
+    Array.zip side2right (Array.map (fun (x, _) -> x, 49) side1bottom) |> withDirection 3
 
-    // if only there was a way to model in 3d... almost like a rotating map where we can follow across the board
+    Array.zip side3left (Array.map (fun (_, y) -> 50, y) side0left) |> withDirection 0
+    Array.zip side3top (Array.map (fun (_, y) -> 59, y) side2left) |> withDirection 0
+
+    Array.zip side4right (Array.map (fun (_, y) -> 149, y) side1right) |> withDirection 2
+    Array.zip side4bottom (Array.map (fun (_, y) -> 49, y) side5right) |> withDirection 2
+
+    Array.zip side5left (Array.map (fun (x, _) -> x, 0) side0top) |> withDirection 1
+    Array.zip side5right (Array.map (fun (x, _) -> x, 149) side4bottom) |> withDirection 3
+    Array.zip side5bottom (Array.map (fun (x, _) -> x, 0) side1top) |> withDirection 1
           
-    let checkForWrap (map: string[]) nx ny d =
-        if nx < 0 || ny < 0 || ny >= map.Length || nx >= map[ny].Length || map[ny][nx] = ' ' then
-            let findOpen = Seq.findIndex ((<>) ' ')
-            let findOpenBack = Seq.findIndexBack ((<>) ' ')
-            let col x = [0..map.Length - 1] |> Seq.filter (fun y -> map[y].Length > x) |> Seq.map (fun y -> map[y][x]) |> asString
-            match d with
-            | 0 -> (findOpen map[ny]), ny
-            | 1 -> nx, (findOpen (col nx))
-            | 2 -> (findOpenBack map[ny]), ny
-            | _ -> nx, (findOpenBack (col nx))
-        else nx, ny
+    let checkForWrap _ nx ny d =
+        if portals.ContainsKey(nx, ny) then portals[nx, ny] else nx, ny, d
     
     let x = Seq.findIndex ((=) '.') map[0]
     crawler map checkForWrap x 0 0 instructions

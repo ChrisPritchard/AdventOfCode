@@ -95,6 +95,23 @@ let part2() =
     // and from *that*, determine the transforms?
     // is there an easier way?
 
+    // possibly track orientation...
+
+    // or just hardwire the edges. there are only 12, each which can be crossed by movement 
+    // from a single direction on a given face. we could start with face 0, which has a left and top wrapping edge
+
+    // face to direction to x/y/d transform
+    let edges = [|
+        0, [|
+            2, fun (_, y) -> 0, 100 + (50 - y), 0 // left edge, low to high y, moving right on 3
+            3, fun (x, _) -> 0, 150 + x, 0 // top edge, x becomes y, y becomes x, moving right on 5
+        |]
+        3, [|
+            2, fun (_, y) -> 50, 50 - (150 - y), 0 // moving left off 3, to appear moving right on 0
+            3, fun (x, _) -> 50, 50 + x, 0 // moving top off 3, to appear moving right on 2
+        |]
+    |]
+
     let checkForWrap (map: string[]) nx ny d =
         if nx < 0 || ny < 0 || ny >= map.Length || nx >= map[ny].Length || map[ny][nx] = ' ' then
             let findOpen = Seq.findIndex ((<>) ' ')

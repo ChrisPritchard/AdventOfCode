@@ -87,9 +87,6 @@ let part2() =
     // again there would be twelve of them. possibly creating maps of coord to coord would be easier than a transform function?
     // the advantage would be no need to determine face or anything - just check nx, ny in the portal map
 
-    // for a given out-of-bounds x,y -> face x,y and direction
-    let portals = Dictionary<int * int, int * int * int>()
-
     // all side coordinates, just out of bounds
     let side0left = Array.init 50 (fun y -> 49, y)
     let side0top = Array.init 50 (fun x -> 50 + x, -1)
@@ -106,10 +103,16 @@ let part2() =
     let side5right = Array.init 50 (fun y -> 50, 150 + y)
     let side5bottom = Array.init 50 (fun x -> x, 200)
 
-    // side 0 (left) to side 3 (right)
-    for y in 0..49 do
-        let side0Left = 49, y
-        let side3Right = 
+    // for a given out-of-bounds x,y -> face x,y and direction
+    let portals = Dictionary<int * int, int * int * int>()
+    let withDirection d = 
+        Array.map (fun (a, (x, y)) -> a, (x, y, d)) 
+        >> fun a -> Array.ForEach (a, (fun (k, v) -> portals.Add(k, v)))
+
+    Array.zip side0left (Array.map (fun (_, y) -> 0, y) side3left) |> withDirection 0
+    Array.zip side0top (Array.map (fun (_, y) -> 0, y) side5left) |> withDirection 0
+    Array.zip side1top (Array.map (fun (x, _) -> x, 199) side5bottom) |> withDirection 3
+    Array.zip side1right (Array.map (fun (_, y) -> 149, y) side4right) |> withDirection 2
 
     // adding left edge for side 0 (left to right on edge 3)
     let portalMap = 

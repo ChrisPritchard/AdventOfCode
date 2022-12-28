@@ -88,19 +88,20 @@ let part2() =
     // the advantage would be no need to determine face or anything - just check nx, ny in the portal map
 
     // all side coordinates, just out of bounds
+    // there are three corner cases that need to be calculated seperately (affecting six sides)
     let side0left = Array.init 50 (fun y -> 49, y)
     let side0top = Array.init 50 (fun x -> 50 + x, -1)
     let side1top = Array.init 50 (fun x -> 100 + x, -1)
     let side1right = Array.init 50 (fun y -> 150, y)
-    let side1bottom = Array.init 50 (fun x -> 100 + x, 50)
-    let side2left = Array.init 50 (fun y -> 49, 50 + y)
-    let side2right = Array.init 50 (fun y -> 100, 50 + y)
+    let side1bottom = Array.init 49 (fun x -> 101 + x, 50) // skipping corner 100,50
+    let side2left = Array.init 49 (fun y -> 49, 50 + y) // skipping corner 49, 99
+    let side2right = Array.init 49 (fun y -> 100, 51 + y) // skipping corner 100,50
     let side3left = Array.init 50 (fun y -> -1, 100 + y)
-    let side3top = Array.init 50 (fun x -> x, 99)
+    let side3top = Array.init 49 (fun x -> x, 99) // skipping corner 49, 99
     let side4right = Array.init 50 (fun y -> 100, 100 + y)
-    let side4bottom = Array.init 50 (fun x -> 50 + x, 150)
+    let side4bottom = Array.init 49 (fun x -> 51 + x, 150) // skipping corner 50, 150
     let side5left = Array.init 50 (fun y -> -1, 150 + y)
-    let side5right = Array.init 50 (fun y -> 50, 150 + y)
+    let side5right = Array.init 49 (fun y -> 50, 151 + y) // skipping corner 50, 150
     let side5bottom = Array.init 50 (fun x -> x, 200)
 
     // for a given out-of-bounds x,y -> face x,y and direction
@@ -130,7 +131,15 @@ let part2() =
     Array.zip side5bottom (Array.map (fun (x, _) -> x, 0) side1top) |> withDirection 1
           
     let checkForWrap _ nx ny d =
-        if portals.ContainsKey(nx, ny) then portals[nx, ny] else nx, ny, d
+        match nx, ny, d with
+        | 49,99,2 -> 49,100,1 // side 2 left to side 3 top
+        | 49,99,3 -> 50,100,0 // side 3 top to side 2 left
+        | 50,150,1 -> 49,150,2 // side 4 bottom to side 5 right
+        | 50,150,0 -> 50,149,1 // side 5 right to side 4 bottom
+        | 100,50,1 -> 99,50,2 // side 1 bottom to side 2 right
+        | 100,50,0 -> 100,49,3 // side 2 right to side 1 bottom
+        | _ when portals.ContainsKey(nx, ny) -> portals[nx, ny]
+        | _ -> nx, ny, d
     
     let x = Seq.findIndex ((=) '.') map[0]
     crawler map checkForWrap x 0 0 instructions

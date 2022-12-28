@@ -110,25 +110,30 @@ let part2() =
         Array.map (fun (a, (x, y)) -> a, (x, y, d)) 
         >> fun a -> Array.ForEach (a, (fun (k, v) -> portals.Add(k, v)))
 
-    Array.zip side0left (Array.map (fun (_, y) -> 0, y) side3left) |> withDirection 0
+    //  ##      01      5
+    //  #       2      301  
+    // ##      34       2
+    // #       5    
+
+    Array.zip side0left (Array.map (fun (_, y) -> 0, y) side3left |> Array.rev) |> withDirection 0
     Array.zip side0top (Array.map (fun (_, y) -> 0, y) side5left) |> withDirection 0
     
-    Array.zip side1top (Array.map (fun (x, _) -> x, 199) side5bottom) |> withDirection 3
-    Array.zip side1right (Array.map (fun (_, y) -> 99, y) side4right) |> withDirection 2
+    Array.zip side1top (Array.map (fun (x, _) -> x, 199) side5bottom |> Array.rev) |> withDirection 3
+    Array.zip side1right (Array.map (fun (_, y) -> 99, y) side4right |> Array.rev) |> withDirection 2
     Array.zip side1bottom (Array.map (fun (_, y) -> 99, y) side2right) |> withDirection 2
 
     Array.zip side2left (Array.map (fun (x, _) -> x, 100) side3top) |> withDirection 1
     Array.zip side2right (Array.map (fun (x, _) -> x, 49) side1bottom) |> withDirection 3
 
-    Array.zip side3left (Array.map (fun (_, y) -> 50, y) side0left) |> withDirection 0
+    Array.zip side3left (Array.map (fun (_, y) -> 50, y) side0left |> Array.rev) |> withDirection 0
     Array.zip side3top (Array.map (fun (_, y) -> 59, y) side2left) |> withDirection 0
 
-    Array.zip side4right (Array.map (fun (_, y) -> 149, y) side1right) |> withDirection 2
+    Array.zip side4right (Array.map (fun (_, y) -> 149, y) side1right |> Array.rev) |> withDirection 2
     Array.zip side4bottom (Array.map (fun (_, y) -> 49, y) side5right) |> withDirection 2
 
     Array.zip side5left (Array.map (fun (x, _) -> x, 0) side0top) |> withDirection 1
     Array.zip side5right (Array.map (fun (x, _) -> x, 149) side4bottom) |> withDirection 3
-    Array.zip side5bottom (Array.map (fun (x, _) -> x, 0) side1top) |> withDirection 1
+    Array.zip side5bottom (Array.map (fun (x, _) -> x, 0) side1top |> Array.rev) |> withDirection 1
           
     let checkForWrap _ nx ny d =
         match nx, ny, d with

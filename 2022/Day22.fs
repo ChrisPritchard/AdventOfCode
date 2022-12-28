@@ -2,6 +2,7 @@ module Day22
 
 open Common
 open System
+open System.Collections.Generic
 
 type Instruction = 
     | Move of int
@@ -74,44 +75,50 @@ let part2() =
     // transforming coords might drastically change x and y values, as well as change the direction
 
     // board in the input data looks like:
-    //  ##      01
-    //  #       2
-    // ##      34
-    // #       5
+    //  ##      01      5
+    //  #       2      301  
+    // ##      34       2
+    // #       5    
     // there is a centre 50x150 column, where vertical wraps work fine
     // top 100x50 jumps to second-bottom 100x50 horizontally, flipping direction 
     // bottom of right on top 100x50 wraps to right of second down 50x50, change from down to left and switching x/y
-
-    let face x y = 
-        if y < 50 then
-            if x < 100 then 0 else 1
-        else if y < 100 then 2
-        else if y < 150 then
-            if x < 50 then 3 else 4
-        else 5
         
-    // describe each face in its 3d orientation
-    // from that, derive its adjacent sides?
-    // and from *that*, determine the transforms?
-    // is there an easier way?
+    // create 'portals', running along the edge of each unmatched section. these would be maps to values in the target edge
+    // again there would be twelve of them. possibly creating maps of coord to coord would be easier than a transform function?
+    // the advantage would be no need to determine face or anything - just check nx, ny in the portal map
 
-    // possibly track orientation...
+    // for a given out-of-bounds x,y -> face x,y and direction
+    let portals = Dictionary<int * int, int * int * int>()
 
-    // or just hardwire the edges. there are only 12, each which can be crossed by movement 
-    // from a single direction on a given face. we could start with face 0, which has a left and top wrapping edge
+    // all side coordinates, just out of bounds
+    let side0left = Array.init 50 (fun y -> 49, y)
+    let side0top = Array.init 50 (fun x -> 50 + x, -1)
+    let side1top = Array.init 50 (fun x -> 100 + x, -1)
+    let side1right = Array.init 50 (fun y -> 150, y)
+    let side1bottom = Array.init 50 (fun x -> 100 + x, 50)
+    let side2left = Array.init 50 (fun y -> 49, 50 + y)
+    let side2right = Array.init 50 (fun y -> 100, 50 + y)
+    let side3left = Array.init 50 (fun y -> -1, 100 + y)
+    let side3top = Array.init 50 (fun x -> x, 99)
+    let side4right = Array.init 50 (fun y -> 100, 100 + y)
+    let side4bottom = Array.init 50 (fun x -> 50 + x, 150)
+    let side5left = Array.init 50 (fun y -> -1, 150 + y)
+    let side5right = Array.init 50 (fun y -> 50, 150 + y)
+    let side5bottom = Array.init 50 (fun x -> x, 200)
 
-    // face to direction to x/y/d transform
-    let edges = [|
-        0, [|
-            2, fun (_, y) -> 0, 100 + (50 - y), 0 // left edge, low to high y, moving right on 3
-            3, fun (x, _) -> 0, 150 + x, 0 // top edge, x becomes y, y becomes x, moving right on 5
-        |]
-        3, [|
-            2, fun (_, y) -> 50, 50 - (150 - y), 0 // moving left off 3, to appear moving right on 0
-            3, fun (x, _) -> 50, 50 + x, 0 // moving top off 3, to appear moving right on 2
-        |]
-    |]
+    // side 0 (left) to side 3 (right)
+    for y in 0..49 do
+        let side0Left = 49, y
+        let side3Right = 
 
+    // adding left edge for side 0 (left to right on edge 3)
+    let portalMap = 
+        (Map.empty, [50..99])
+        ||> List.fold (fun acc x -> 
+            Map.add (x, -1) (0, 150 + (x - 50), 0) acc)
+
+    // if only there was a way to model in 3d... almost like a rotating map where we can follow across the board
+          
     let checkForWrap (map: string[]) nx ny d =
         if nx < 0 || ny < 0 || ny >= map.Length || nx >= map[ny].Length || map[ny][nx] = ' ' then
             let findOpen = Seq.findIndex ((<>) ' ')

@@ -3,6 +3,9 @@ module Day22
 open Common
 open System
 open System.Collections.Generic
+open SDL
+open System.Runtime.InteropServices
+open System.Threading
 
 type Instruction = 
     | Move of int
@@ -16,32 +19,6 @@ let parse (instructionText: string) =
         if part = "R" then Right else if part = "L" then Left 
         else Move (Int32.Parse part))
     |> Array.toList
-
-let rec march (map: string[]) checkForWrap x y n d = 
-    if n = 0 then x, y, d
-    else
-        let nx, ny = 
-            match d with
-            | 0 -> x + 1, y
-            | 1 -> x, y + 1
-            | 2 -> x - 1, y
-            | _ -> x, y - 1
-        let nx, ny, d = checkForWrap map nx ny d
-        if map[ny][nx] = '#' then x, y, d
-        else march map checkForWrap nx ny (n - 1) d
-
-let rec crawler map checkForWrap x y d =
-    function
-    | [] -> ((y + 1) * 1000) + ((x + 1) * 4) + d
-    | (Move n)::rem ->
-        let x, y, d = march map checkForWrap x y n d
-        crawler map checkForWrap x y d rem
-    | Right::rem ->
-        let d = if d = 3 then 0 else d + 1
-        crawler map checkForWrap x y d rem
-    | Left::rem ->
-        let d = if d = 0 then 3 else d - 1
-        crawler map checkForWrap x y d rem
 
 let part1() =
     let input = readEmbedded "day22"
@@ -60,6 +37,32 @@ let part1() =
             | 2 -> (findOpenBack map[ny]), ny, d
             | _ -> nx, (findOpenBack (col nx)), d
         else nx, ny, d
+    
+    let rec march (map: string[]) checkForWrap x y n d = 
+        if n = 0 then x, y, d
+        else
+            let nx, ny = 
+                match d with
+                | 0 -> x + 1, y
+                | 1 -> x, y + 1
+                | 2 -> x - 1, y
+                | _ -> x, y - 1
+            let nx, ny, nd = checkForWrap map nx ny d
+            if map[ny][nx] = '#' then x, y, d
+            else march map checkForWrap nx ny (n - 1) nd
+
+    let rec crawler map checkForWrap x y d =
+        function
+        | [] -> ((y + 1) * 1000) + ((x + 1) * 4) + d
+        | (Move n)::rem ->
+            let x, y, d = march map checkForWrap x y n d
+            crawler map checkForWrap x y d rem
+        | Right::rem ->
+            let d = if d = 3 then 0 else d + 1
+            crawler map checkForWrap x y d rem
+        | Left::rem ->
+            let d = if d = 0 then 3 else d - 1
+            crawler map checkForWrap x y d rem
     
     let x = Seq.findIndex ((=) '.') map[0]
     crawler map checkForWrap x 0 0 instructions
@@ -135,6 +138,83 @@ let part2() =
     let checkForWrap _ nx ny d =
         if portals.ContainsKey (nx, ny, d) then portals[(nx, ny, d)]
         else nx, ny, d
+
+    // uncomment from here...
+    //
+    // SDL_Init(SDL_INIT_VIDEO) |> ignore
+
+    // let win_x, win_y = 1000, 1000
+    // let tile_x, tile_y = 5, 5
+    // let mutable window, renderer = IntPtr.Zero, IntPtr.Zero
+    // let windowFlags = SDL_WindowFlags.SDL_WINDOW_SHOWN ||| SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS
+    // SDL_CreateWindowAndRenderer(win_x, win_y, windowFlags, &window, &renderer) |> ignore
+
+    // let asUint32 (r, g, b) = BitConverter.ToUInt32 (ReadOnlySpan [|b; g; r; 255uy|])
+    // let black = asUint32 (0uy, 0uy, 0uy)
+    // let white = asUint32 (255uy, 255uy, 255uy)
+    // let red = asUint32 (255uy, 0uy, 0uy)
+    // let green = asUint32 (0uy, 255uy, 0uy)
+    // let texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, win_x, win_y)
+    // let frameBuffer = Array.create (win_x * win_y) black
+    // let bufferPtr = IntPtr ((Marshal.UnsafeAddrOfPinnedArrayElement (frameBuffer, 0)).ToPointer ())
+
+    // let drawRect x y w h colour =
+    //     for dy = y to y + h - 1 do
+    //         let pos = (dy * win_x) + x
+    //         Array.fill frameBuffer pos w colour
+
+    // let visited = HashSet()
+    //
+    // ... to here to set up sdl rendering
+
+    let rec march (map: string[]) checkForWrap x y n d = 
+        // uncomment from here...
+        //
+        // visited.Add((x, y)) |> ignore
+        // drawRect 0 0 win_x win_y black
+        // for y in [0..map.Length-1] do
+        //     for x in [0..map[y].Length-1] do
+        //         if visited.Contains((x, y)) then
+        //             drawRect (x * tile_x) (y * tile_y) tile_x tile_y red
+        //         else if map[y][x] = '#' then
+        //             drawRect (x * tile_x) (y * tile_y) tile_x tile_y white
+        //         else
+        //             ()
+        // drawRect (x * tile_x) (y * tile_y) tile_x tile_y green
+
+        // SDL_UpdateTexture(texture, IntPtr.Zero, bufferPtr, win_x * 4) |> ignore
+        // SDL_RenderClear(renderer) |> ignore
+        // SDL_RenderCopy(renderer, texture, IntPtr.Zero, IntPtr.Zero) |> ignore
+        // SDL_RenderPresent(renderer) |> ignore
+
+        // Thread.Sleep(10)
+        //
+        // ... to here to render map with moving current and snake line
+
+        if n = 0 then x, y, d
+        else
+            let nx, ny = 
+                match d with
+                | 0 -> x + 1, y
+                | 1 -> x, y + 1
+                | 2 -> x - 1, y
+                | _ -> x, y - 1
+            let nx, ny, nd = checkForWrap map nx ny d
+            if map[ny][nx] = '#' then x, y, d
+            else march map checkForWrap nx ny (n - 1) nd
+
+    let rec crawler map checkForWrap x y d =
+        function
+        | [] -> ((y + 1) * 1000) + ((x + 1) * 4) + d
+        | (Move n)::rem ->
+            let x, y, d = march map checkForWrap x y n d
+            crawler map checkForWrap x y d rem
+        | Right::rem ->
+            let d = if d = 3 then 0 else d + 1
+            crawler map checkForWrap x y d rem
+        | Left::rem ->
+            let d = if d = 0 then 3 else d - 1
+            crawler map checkForWrap x y d rem
 
     let x = Seq.findIndex ((=) '.') map[0]
     crawler map checkForWrap x 0 0 instructions

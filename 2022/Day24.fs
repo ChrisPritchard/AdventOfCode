@@ -59,13 +59,13 @@ let edges step (x, y) =
             x > 0 && x < x_out && y > 0 && y < y_out &&
             not (Set.contains (x, y) storms))
 
-let bfs isGoal edges start =
+let bfs isGoal edges (start_tile, start_step) =
     let queue = Queue<(int * int) * int>()
     let discovered = HashSet<(int * int) * int>()
     let parents = Dictionary<(int * int) * int, (int * int) * int>()
     
-    discovered.Add (start, 0) |> ignore
-    queue.Enqueue (start, 0)
+    discovered.Add (start_tile, start_step) |> ignore
+    queue.Enqueue (start_tile, start_step)
 
     let rec reconstructPath acc (v, s) =
         if parents.ContainsKey (v, s) then
@@ -92,10 +92,30 @@ let bfs isGoal edges start =
 
 let part1 () =
 
-    let path = bfs ((=) end_tile) edges start_tile
+    let path = bfs ((=) end_tile) edges (start_tile, 0)
     match path with
     | Some p -> (List.length p) - 1
     | _ -> failwith "no path found"
 
 let part2 () =
-    0
+    
+    let path = bfs ((=) end_tile) edges (start_tile, 0)
+    let journey_1 = 
+        match path with
+        | Some p -> (List.length p) - 1
+        | _ -> failwith "no path found"
+
+    let path = bfs ((=) start_tile) edges (end_tile, journey_1)
+    let journey_2 = 
+        match path with
+        | Some p -> (List.length p) - 1
+        | _ -> failwith "no path found"
+
+    let path = bfs ((=) end_tile) edges (start_tile, journey_1 + journey_2)
+    let journey_3 = 
+        match path with
+        | Some p -> (List.length p) - 1
+        | _ -> failwith "no path found"
+
+    journey_1 + journey_2 + journey_3
+    

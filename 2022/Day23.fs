@@ -48,10 +48,6 @@ let parse_elves () =
 let part1 () =
     let elves = parse_elves ()
 
-    // for each elf, test all directions. if all free, no move
-    // else find first free, then mark position to move to as (old, new) or new, [old]
-    // once all elves are processed, any new position with only one old is moved, else old positions are preserved
-
     let count_free_spaces elves = 
         let top = elves |> Array.minBy snd |> snd
         let left = elves |> Array.minBy fst |> fst
@@ -73,4 +69,17 @@ let part1 () =
     processor elves 0
 
 let part2 () =
-    0
+
+    let elves = parse_elves ()
+    
+    let rec processor elves turn =
+        let dirs = sort_by turn
+        let next_candidates = elves |> Set.toArray |> Array.map (fun e -> next_state e elves dirs, e) |> Array.groupBy fst
+        let after_rules = next_candidates |> Array.collect (fun (n, matches) -> if matches.Length = 1 then [|n|] else matches |> Array.map snd) |> Set.ofArray
+
+        let diff = Set.difference elves after_rules
+        let next_turn = turn + 1
+        if Set.isEmpty diff then next_turn
+        else processor after_rules next_turn
+
+    processor elves 0

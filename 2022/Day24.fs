@@ -48,12 +48,9 @@ let part1 () =
 
     let all_storms = climate [start_storms] start_storms
 
-    // bfs challenge?
-    // read all map data
-    // pre-calculate blizzard positions:
-    // repeat until diff matches initial state
-
     Array.length all_storms
+
+    // need to conduct some form of bfs, where the current pos has its count included so the current storm state can be detected
 
 let part2 () =
     0

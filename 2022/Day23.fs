@@ -15,24 +15,28 @@ let sort_by start_dir =
     | 2 -> [|West; East; North; South|]
     | 3 | _ -> [|East; North; South; West|]
 
-let diff (x, y) dir =
+let adjacent (x, y) dir =
     match dir with
     | North -> [|add (x, y) (-1, -1);add (x, y) (0, -1);add (x, y) (1, -1)|]
     | South -> [|add (x, y) (-1, 1);add (x, y) (0, 1);add (x, y) (1, 1)|]
     | West -> [|add (x, y) (-1, -1);add (x, y) (-1, 0);add (x, y) (-1, 1)|]
     | East -> [|add (x, y) (1, -1);add (x, y) (1, 0);add (x, y) (1, 1)|]
 
-let next_place p existing start_dir (no_move, new_move, blocked) =
-    let no_adjacent = dirs |> Array.collect (diff p) |> Array.forall (fun o -> not (Set.contains o existing))
-    if no_adjacent then (Set.add p no_move), new_move, blocked
-    else
-        let next = sort_by start_dir |> Array.tryFind (fun d -> diff p |> Array.forall (fun o -> not (Set.contains o existing)))
-        match next with
-        | None -> (Set.add p no_move), new_move, blocked
-        | Some p when Set.contains p new_move -> Set.add
+let in_dir (x, y) dir =
+    match dir with
+    | North -> add (x, y) (0, -1)
+    | South -> add (x, y) (0, 1)
+    | West -> add (x, y) (-1, 0)
+    | East -> add (x, y) (1, 0)
 
-let is_available (x, y) dir existing =
-    Array.forall (fun p -> not (Set.contains p existing)) (diff (x, y) dir)
+let next_state elf existing dirs =
+    if dirs |> Array.collect (adjacent elf) |> Array.forall (fun p -> not (Set.contains p existing)) then
+        elf
+    else
+        let next = dirs |> Array.tryFind (fun d -> adjacent elf d |> Array.forall (fun p -> not (Set.contains p existing)))
+        match next with
+        | None -> elf
+        | Some(d) -> in_dir elf d
 
 let parse_elves () =
     let input = readEmbedded "day23"
@@ -44,6 +48,29 @@ let parse_elves () =
 let part1 () =
     let elves = parse_elves ()
 
+    // for each elf, test all directions. if all free, no move
+    // else find first free, then mark position to move to as (old, new) or new, [old]
+    // once all elves are processed, any new position with only one old is moved, else old positions are preserved
+
+    let count_free_spaces elves = 
+        let top = elves |> Array.minBy snd |> snd
+        let left = elves |> Array.minBy fst |> fst
+        let bottom = elves |> Array.maxBy snd |> snd
+        let right = elves |> Array.maxBy fst |> fst
+        let elves = Set.ofArray elves
+        [|top..bottom|] |> Array.collect (fun y -> [|left..right|] |> Array.filter (fun x -> not (Set.contains (x, y) elves))) |> Array.length
+
+    let rec processor elves turn =
+        let dirs = sort_by turn
+        let next_candidates = elves |> Set.toArray |> Array.map (fun e -> next_state e elves dirs, e) |> Array.groupBy fst
+        let after_rules = next_candidates |> Array.collect (fun (n, matches) -> if matches.Length = 1 then [|n|] else matches |> Array.map snd)
+        let next_turn = turn + 1
+        if next_turn < 10 then
+            processor (Set.ofArray after_rules) next_turn
+        else
+            count_free_spaces after_rules
+
+    processor elves 0
 
 let part2 () =
     0

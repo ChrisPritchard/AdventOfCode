@@ -3,9 +3,10 @@ module Day22
 open Common
 open System
 open System.Collections.Generic
-open SDL
-open System.Runtime.InteropServices
-open System.Threading
+// sdl reqs for rendering below
+// open SDL
+// open System.Runtime.InteropServices
+// open System.Threading
 
 type Instruction = 
     | Move of int

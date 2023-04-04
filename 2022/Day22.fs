@@ -87,25 +87,54 @@ let part2() =
 
     let portals = Dictionary<int * int * int, int * int * int>()
 
+    let dirs = function
+    | 0 -> 1, 0
+    | 1 -> 0, 1
+    | 2 -> -1, 0
+    | 3 | _ -> 0, -1
+
+    let inverse = function
+    | 0 -> 2
+    | 1 -> 3
+    | 2 -> 0
+    | 3 | _ -> 1
+
+    let over d = 
+        let (ox, oy) = dirs d
+        Array.map (fun (x, y) -> x + ox, y + oy, d)
+
+    let rev d = 
+        let rd = inverse d
+        Array.map (fun (x, y) -> x, y, rd)
+
     let edge (x1, y1, d1) (dx1, dy1) (x2, y2, d2) (dx2, dy2) =
         let edge1 = 
             if dx1 = 0 then
-                [|y1..dy1..y1 + dy1 * 49|] |> Array.map (fun y -> x1, y, d1)
+                [|y1..dy1..y1 + dy1 * 49|] |> Array.map (fun y -> x1, y)
             else
-                [|x1..dx1..x1 + dx1 * 49|] |> Array.map (fun x -> x, y1, d1)
+                [|x1..dx1..x1 + dx1 * 49|] |> Array.map (fun x -> x, y1)
         let edge2 = 
             if dx2 = 0 then
-                [|y2..dy2..y2 + dy2 * 49|] |> Array.map (fun y -> x2, y, d2)
+                [|y2..dy2..y2 + dy2 * 49|] |> Array.map (fun y -> x2, y)
             else
-                [|x2..dx2..x2 + dx2 * 49|] |> Array.map (fun x -> x, y2, d2)
+                [|x2..dx2..x2 + dx2 * 49|] |> Array.map (fun x -> x, y2)
         
-        Array.ForEach ((Array.zip edge1 edge2), fun (e1, e2) -> portals.Add(e1, e2))
-        Array.ForEach ((Array.zip edge2 edge1), fun (e2, e1) -> portals.Add(e2, e1))
+        Array.ForEach ((Array.zip (over d1 edge1) (rev d2 edge2)), fun (e1, e2) -> portals.Add(e1, e2))
+        Array.ForEach ((Array.zip (over d2 edge2) (rev d1 edge1)), fun (e2, e1) -> portals.Add(e2, e1))
 
-    edge (50, -1, 3) (1, 0) (0, 150, 0) (0, 1) // 0 up to 5 left side going right
-    edge (49, 0, 2) (0, 1) (0, 149, 0) (0, -1) // 0 left to 3 left side inverted going right
-    edge (100, -1, 3) (1, 0) (0, 199, 3) (1, 0) // 1 up to 5 down side going up
-    edge (150, 0, 0) (0, 1) (99, 149, 2) (0, -1) // 1 right to 4 right side inverted going left
-    edge (100, 50, 1) (1, 0) (99, 50, 2) (0, 1) // 1 down to 2 right side inverted going left
+    // (ds are 0=right,1=down,2=left,3=up)
 
-    printfn "%A" portals
+    edge (50, 0, 3) (1, 0) (0, 150, 2) (0, 1) // 0 up and 5 left
+    edge (50, 0, 2) (0, 1) (0, 149, 2) (0, -1) // 0 left and 3 left inverted
+    edge (100, 0, 3) (1, 0) (0, 199, 1) (1, 0) // 1 up and 5 down
+    edge (149, 0, 0) (0, 1) (99, 149, 0) (0, -1) // 1 right and 4 right inverted
+    edge (100, 49, 1) (1, 0) (99, 50, 0) (0, 1) // 1 down and 2 right
+    edge (50, 50, 2) (0, 1) (0, 100, 3) (1, 0) // 2 left and 3 up
+    edge (50, 149, 1) (1, 0) (49, 150, 0) (0, 1) // 4 down and 5 right
+
+    let checkForWrap _ nx ny d =
+        if portals.ContainsKey (nx, ny, d) then portals[(nx, ny, d)]
+        else nx, ny, d
+
+    let x = Seq.findIndex ((=) '.') map[0]
+    crawler map checkForWrap x 0 0 instructions

@@ -5,8 +5,7 @@ let games =
         line.Split [|':';';'|] |> fun segments -> 
             let num = segments[0].Substring(5) |> int32
             let draws = segments[1..] |> Array.map (fun draw -> 
-                let parts = draw.Split [|' ';','|] |> Array.filter ((<>) "") |> Array.chunkBySize 2 |> Array.map (fun pair -> pair[1], int pair[0]) |> dict
-                parts)
+                draw.Split [|' ';','|] |> Array.filter ((<>) "") |> Array.chunkBySize 2 |> Array.map (fun pair -> pair[1], int pair[0]) |> dict)
             num, draws)
 
 let mutable sum = 0

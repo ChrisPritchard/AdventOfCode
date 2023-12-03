@@ -64,7 +64,7 @@ for y in 0..lines.Length - 1 do
 let pairs = 
     numbers_with_gears 
     |> Set.toArray 
-    |> Array.groupBy fst 
+    |> Array.groupBy fst // all numbers that share a gear
     |> Array.map snd 
     |> Array.choose (fun numbers -> 
         if numbers.Length <> 2 then None else numbers |> Array.map snd |> Array.reduce (*) |> Some)

@@ -21,7 +21,7 @@ let light_to_temperature = conversionMap parts[5]
 let temperature_to_humidity = conversionMap parts[6]
 let humidity_to_location = conversionMap parts[7]
 
-let steps = [|seeds_to_soil;soil_to_fertilizer;fertilizer_to_water;water_to_light;light_to_temperature;temperature_to_humidity;humidity_to_location|]
+let steps = [|seeds_to_soil; soil_to_fertilizer; fertilizer_to_water; water_to_light; light_to_temperature; temperature_to_humidity; humidity_to_location|]
 
 for step in steps do
     seeds <- seeds |> Array.map (fun seed -> 
@@ -35,43 +35,45 @@ for step in steps do
 let smallest = Array.min seeds
 printfn "Part 1: %d" smallest
 
+let test_range_against (r1, r2) (dest, source, length) =
+    if r1 >= source && r2 < source + length then
+        [|dest + (r1 - source), dest + (r2 - source)|], [||]
+    else if r1 < source && r2 >= source && r2 < source + length then
+        [|dest, dest + (r2 - source)|], [|r1, source - 1L|]
+    else if r1 >= source && r1 < source + length && r2 >= source + length then
+        [|dest + (r1 - source), dest + length - 1L|],[|source + length, r2|]
+    else if r1 < source && r2 >= source + length then
+        [|dest, dest + length - 1L|],[|r1, source - 1L; source + length, r2|]
+    else
+        [||], [|r1, r2|]
+
 let mutable seed_ranges = parts[0] |> splitOn [|'\n'|] |> Array.head |> numbersFrom |> Array.chunkBySize 2 |> Array.map (fun a -> a[0], a[0] + a[1] - 1L)
 
-let test_range_against (r1, r2) (dest, source, range) =
-    if r1 >= source && r2 < source + range then
-        [|
-            dest + (r1 - source), dest + (r2 - source)
-        |]
-    else if r1 < source && r2 >= source && r2 < source + range then
-        [|
-            r1, source - 1L
-            dest, dest + (r2 - source)
-        |]
-    else if r1 >= source && r1 < source + range && r2 >= source + range then
-        [|
-            dest + (r1 - source), dest + range - 1L
-            source + range, r2
-        |]
-    else if r1 < source && r2 >= source + range then
-        [|
-            r1, source - 1L
-            dest, dest + range - 1L
-            source + range, r2
-        |]
-    else
-        [||]
+// whats the flaw here? we have a range, x-y, and a given transform might extract a chunk of that for the next layer.
+// the remainder from the original range can be extracted by additional transforms - the issue is that presumably the other transforms wont touch the extracted chunk but...
+// because the extracted chunk is still presented to those additional transforms, it ends up returned in its original form
+// so to fix this, as the seed range is tested if there are new chunks, they are removed from further consideration and only the remainders continue to be compared
 
-//printfn "start: %A" seed_ranges
 for step in steps do
-    //printfn "step: %A" step
-    seed_ranges <- seed_ranges |> Array.collect (fun range -> 
-        let new_ranges = step |> Array.collect (test_range_against range)
-        if Array.isEmpty new_ranges then [|range|] else new_ranges)
-    //printfn "result: %A" seed_ranges
+    seed_ranges <- seed_ranges |> Array.collect (fun seed_range ->
+        let mutable ranges_to_test = [|seed_range|]
+        let mutable all_new_ranges = Array.empty
+        for step_range in step do
+            for given_range in ranges_to_test do
+                let (new_ranges, leftovers) = test_range_against given_range step_range
+                all_new_ranges <- Array.append all_new_ranges new_ranges
+                ranges_to_test <- leftovers
+        Array.append all_new_ranges ranges_to_test)
 
-let smallest_from_ranges = seed_ranges |> Array.map fst |> Array.min
+let smallest_from_ranges = seed_ranges |> Array.minBy fst |> fst
 
 printfn "Part 2: %d" smallest_from_ranges
 
-// let range = (81L, 94L)
-// printfn "test: %A" <| test_range_against range (18L, 25L, 70L)
+// // testing logic
+
+// let range = (10L, 19L)
+// printfn "test 1: %A" <| test_range_against range (100L, 5L, 20L) // result should be 105-114 
+// printfn "test 2: %A" <| test_range_against range (100L, 15, 10L) // result should be 10-14, 100-104
+// printfn "test 3: %A" <| test_range_against range (100L, 5, 10L) // result should be 105-109, 15-19 
+// printfn "test 4: %A" <| test_range_against range (100L, 15, 2) // result should be 10-14, 100-101, 17-19
+// printfn "test 5: %A" <| test_range_against range (100L, 0, 5L) // should be blank

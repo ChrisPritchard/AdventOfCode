@@ -1,0 +1,4 @@
+module Input
+
+let value="""Time:        47     70     75     66
+Distance:   282   1079   1147   1062"""

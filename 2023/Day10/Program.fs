@@ -11,11 +11,6 @@ while sx = -1 do
     | None -> sy <- sy + 1
     | Some i -> sx <- i
 
-
-// idea: map each tile type to the possible before and after
-// find the next tile, to start crawling from
-// for each step of the crawl, track the previous tile position. match the previous position and current type to get next
-
 let tile_types = Map.ofArray [|
         '|', ((0, -1), (0, 1))
         '-', ((-1, 0), (1, 0))
@@ -37,17 +32,22 @@ let nx, ny =
 
 let add (ax, ay) (bx, by) = ax + bx, ay + by
 
-let rec crawler step_count last_pos current_pos = 
+let rec crawler all_visited step_count last_pos current_pos = 
+    let add_current = Set.add current_pos all_visited
     let tile = tile_at current_pos
-    if tile = 'S' then step_count
+    if tile = 'S' then add_current, step_count
     else
         let (diff_a, diff_b) = tile_types[tile]
         if add diff_a current_pos = last_pos then 
-            crawler (step_count + 1) current_pos (add diff_b current_pos)
+            crawler add_current (step_count + 1) current_pos (add diff_b current_pos)
         else
-            crawler (step_count + 1) current_pos (add diff_a current_pos)
+            crawler add_current (step_count + 1) current_pos (add diff_a current_pos)
 
-let total_steps = crawler 1 (sx, sy) (nx, ny)
+let visited, total_steps = crawler Set.empty 1 (sx, sy) (nx, ny)
 let half_way = total_steps / 2
 
 printfn "Part 1: %d" half_way
+
+// for part 2, create a position tester, maybe a bfs. it needs to expand outwards: if it hits an edge then the space its expanding is invalid
+// keep expanding until no empty tiles can be reached. if this is invalid then add to the global exclusion list.
+// to determine if a space is enclosed, all its edges must be part of the main loop

@@ -27,6 +27,13 @@ let part1 = grids |> Array.sumBy (fun (vertical_lines, horizontal_lines) ->
 
 printfn "Part 1: %d" part1
 
+let mirror_with_exclude exclude (grid: int[]): int option =
+    [0..grid.Length - 2] |> Seq.filter (fun i -> i + 1 <> exclude) |> Seq.tryFind (fun i -> 
+        let list_back = [i..(-1)..0]
+        let list_ford = [i+1..grid.Length - 1]
+        Seq.zip list_back list_ford |> Seq.forall (fun (i, j) -> grid[i] = grid[j]))
+    |> Option.map (fun i -> i + 1)
+
 let find_smudge (grid: string[]) = 
     let orig_vert = vertical_lines grid |> mirror |> Option.defaultValue -1
     let orig_hori = horizontal_lines grid |> mirror |> Option.defaultValue -1
@@ -41,22 +48,18 @@ let find_smudge (grid: string[]) =
             grid[i][j] <- if grid[i][j] = '#' then '.' else '#'
             let for_mapping = grid |> Array.map (fun a -> System.String a)
             let horizontal_lines = horizontal_lines for_mapping
-            match mirror horizontal_lines with 
-            | Some n when n <> orig_hori ->
+            match mirror_with_exclude orig_hori horizontal_lines with 
+            | Some n ->
                 found <- Some (n * 100)
             | _ -> 
                 let vertical_lines = vertical_lines for_mapping
-                match mirror vertical_lines with 
-                | Some n when n <> orig_vert ->
+                match mirror_with_exclude orig_vert vertical_lines with 
+                | Some n ->
                     found <- Some n
                 | _ -> grid[i][j] <- if grid[i][j] = '#' then '.' else '#'
             j <- j + 1
         i <- i + 1
-    match found with 
-    | Some v -> v
-    | _ -> 
-        printfn "%s\n" (String.concat "\n" (grid |> Array.map (fun a -> System.String(a))))
-        0
+    found.Value
 
 let raw_grids = input.Split "\n\n" |> Array.map (fun s -> s.Split [|'\n'|])
 

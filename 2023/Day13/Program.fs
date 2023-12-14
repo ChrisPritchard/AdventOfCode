@@ -21,9 +21,9 @@ let mirror (grid: int[]): int option =
     |> Option.map (fun n -> n + 1)
 
 let part1 = grids |> Array.sumBy (fun (vertical_lines, horizontal_lines) -> 
-    match mirror horizontal_lines with
-    | Some n -> 100 * n
-    | None -> match mirror vertical_lines with | Some n -> n | _ -> 0)
+    let horizontal_score = mirror horizontal_lines |> Option.map (fun n -> n * 100) |> Option.defaultValue 0
+    let vertical_score = mirror vertical_lines |> Option.defaultValue 0
+    horizontal_score + vertical_score)
 
 printfn "Part 1: %d" part1
 
@@ -34,24 +34,29 @@ let find_smudge (grid: string[]) =
     let grid = grid |> Array.map (fun s -> s.ToCharArray())
     let mutable i, j = 0, 0
     let mutable found = None
+
     while i < grid.Length && found = None do
         j <- 0
         while j < grid[i].Length && found = None do
             grid[i][j] <- if grid[i][j] = '#' then '.' else '#'
             let for_mapping = grid |> Array.map (fun a -> System.String a)
-            let vertical_lines = vertical_lines for_mapping
-            match mirror vertical_lines with 
-            | Some n when n <> orig_vert ->
-                found <- Some n
+            let horizontal_lines = horizontal_lines for_mapping
+            match mirror horizontal_lines with 
+            | Some n when n <> orig_hori ->
+                found <- Some (n * 100)
             | _ -> 
-                let horizontal_lines = horizontal_lines for_mapping
-                match mirror horizontal_lines with 
-                | Some n when n <> orig_hori ->
-                    found <- Some (n * 100)
+                let vertical_lines = vertical_lines for_mapping
+                match mirror vertical_lines with 
+                | Some n when n <> orig_vert ->
+                    found <- Some n
                 | _ -> grid[i][j] <- if grid[i][j] = '#' then '.' else '#'
             j <- j + 1
         i <- i + 1
-    match found with Some n -> n | _ -> if orig_vert <> -1 then orig_vert else orig_hori
+    match found with 
+    | Some v -> v
+    | _ -> 
+        printfn "%s\n" (String.concat "\n" (grid |> Array.map (fun a -> System.String(a))))
+        0
 
 let raw_grids = input.Split "\n\n" |> Array.map (fun s -> s.Split [|'\n'|])
 

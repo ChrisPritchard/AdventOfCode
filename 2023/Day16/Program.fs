@@ -33,10 +33,13 @@ let rec light_beam queue beams =
                 | East ->  x + 1, y, d)
             let new_queue = List.append new_tiles rem
             light_beam new_queue new_illuminated
-    | [] -> beams
+    | [] -> beams |> Set.map (fun (x, y, dir) -> x, y) |> Set.count
 
 let beams = light_beam [0, 0, East] Set.empty
-let just_illuminated = Set.map (fun (x, y, dir) -> x, y) beams
-let part1 = just_illuminated |> Set.count
-
+let part1 = beams
 printfn "Part 1: %d" part1
+
+let north_south_max = [|0..grid[0].Length-1|] |> Array.map (fun x -> max (light_beam [x, 0, South] Set.empty) (light_beam [x, grid.Length - 1, North] Set.empty)) |> Array.max
+let east_west_max = [|0..grid.Length-1|] |> Array.map (fun y -> max (light_beam [0, y, East] Set.empty) (light_beam [grid[y].Length - 1, y, West] Set.empty)) |> Array.max
+let part2 = max north_south_max east_west_max
+printfn "Part 2: %d" part2

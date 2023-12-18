@@ -1,4 +1,4 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
-printfn "%s" input
+printfn "%A" input
 

@@ -71,7 +71,7 @@ let goal = input[input.Length - 1].Length - 1, input.Length - 1
 
 //let path = a_star (0, 0) goal (distance goal) d_score neighbours
 let path = djikstra all_points ((=) goal) neighbours (fun _ p -> d_score p) (0, 0)
-let heat_loss = path.Value |> List.skip 1 |> List.sumBy (d_score >> int)
+let heat_loss = path.Value |> List.sumBy (d_score >> int)
 
 printfn "%d" heat_loss
 

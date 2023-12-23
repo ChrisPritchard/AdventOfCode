@@ -52,15 +52,16 @@ let neighbours (came_from: Dictionary<int * int, int * int>) point =
     // to calculate, need to find the last three tiles if possible, and calculate their offsets
     let previous = if came_from.ContainsKey point then Some came_from[point] else None
     let prev_previous = previous |> Option.bind (fun p -> if came_from.ContainsKey p then Some came_from[p] else None)
-    let last_three = [Some point; previous; prev_previous] |> List.choose id
+    let prev_prev_previous = prev_previous |> Option.bind (fun p -> if came_from.ContainsKey p then Some came_from[p] else None)
+    let last_four = [Some point; previous; prev_previous; prev_prev_previous] |> List.choose id
 
-    if last_three.Length = 1 then
+    if last_four.Length = 1 then
         [-1,0; 1,0; 0,-1; 0,1] |> List.map (add point) |> List.filter is_valid |> Seq.ofList
     else
         let in_a_line = 
-            last_three.Length = 3 && 
-            (last_three |> List.map fst |> List.distinct |> List.length = 1
-            || last_three |> List.map snd |> List.distinct |> List.length = 1)
+            last_four.Length = 4 && 
+            (last_four |> List.map fst |> List.distinct |> List.length = 1
+            || last_four |> List.map snd |> List.distinct |> List.length = 1)
         let forward = add point (sub point previous.Value)
         [-1,0; 1,0; 0,-1; 0,1] |> List.map (add point) |> List.filter (fun neighbour -> 
             is_valid neighbour && neighbour <> previous.Value && (not in_a_line || neighbour <> forward)) |> Seq.ofList
@@ -71,7 +72,7 @@ let goal = input[input.Length - 1].Length - 1, input.Length - 1
 
 //let path = a_star (0, 0) goal (distance goal) d_score neighbours
 let path = djikstra all_points ((=) goal) neighbours (fun _ p -> d_score p) (0, 0)
-let heat_loss = path.Value |> List.sumBy (d_score >> int)
+let heat_loss = path.Value |> List.skip 1 |> List.sumBy (d_score >> int)
 
 printfn "%d" heat_loss
 

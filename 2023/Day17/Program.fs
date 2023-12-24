@@ -1,92 +1,94 @@
 let input = System.IO.File.ReadAllLines "input.txt"
 
-// a* for part 1. algo taken from https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode
+// key to this challenge is the neighbour algorithm
+// and key to that is not just storing score and queue by position, but by position and direction
+// otherwise https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Pseudocode
 
-let distance (x1, y1) (x2, y2) = 
-    float (abs (x2 - x1) + abs (y2 - y1))
-let is_valid (x, y) = 
-    x >= 0 && y >= 0 && y < input.Length && x < input[y].Length
-let add (x1, y1) (x2, y2) = 
-    x1 + x2, y1 + y2
-let sub (x1, y1) (x2, y2) = 
-    x1 - x2, y1 - y2
-let get_val m p = Map.tryFind p m |> Option.defaultValue infinity
+// change is in neighbours processing. rather than go through adjacent positions to a given point,
+// we need to calculate the points along a line from that point. e.g. 321 - x 123. These points would be 
+// horizontal in this case, and each would be marked as the previous of the next if a score is better (lower)
 
-let d_score (x, y) = float (input[y][x] - '0')
+let djikstra neighbours edge start is_goal = 
+    let mutable distances = Map.empty.Add (start, 0.)
+    let mutable previous = Map.empty
+    let dist v = Map.tryFind v distances |> Option.defaultValue infinity
+    let mutable Q = [start]
 
-let add_sorted to_insert value_to_compare other_valuer list_set = 
-    let index_after = list_set |> List.tryFindIndex (fun p -> other_valuer p > value_to_compare)
-    match index_after with
-    | None -> 
-        List.append list_set [to_insert]
-    | Some index -> 
-        List.insertAt index to_insert list_set
+    let add_to_Q v = 
+        let index_after = Q |> List.tryFindIndex (fun p -> dist p > dist v)
+        match index_after with
+        | None -> Q <- List.append Q [v]
+        | Some index -> Q <- List.insertAt index v Q
 
-let rec reconstruct_path came_from current = 
-    let mutable total_path = [current]
-    let mutable current = current
-    while Map.containsKey current came_from do
-        current <- came_from[current]
-        total_path <- current::total_path
-    total_path
-
-let neighbours point came_from = 
-    // custom to challenge: can only turn left, right, or forward
-    // and only forward if not already 3 blocks in a row forward
-    // to calculate, need to find the last three tiles if possible, and calculate their offsets
-    let previous = Map.tryFind point came_from
-    let prev_previous = previous |> Option.bind (fun p -> Map.tryFind p came_from)
-    let prev_prev_previous = prev_previous |> Option.bind (fun p -> Map.tryFind p came_from)
-    let last_three = [Some point; previous; prev_previous; prev_prev_previous] |> List.choose id
-
-    if last_three.Length = 1 then
-        [-1,0; 1,0; 0,-1; 0,1] |> List.map (add point) |> List.filter is_valid
-    else
-        let in_a_line = 
-            last_three.Length = 4 && 
-            (last_three |> List.map fst |> List.distinct |> List.length = 1
-            || last_three |> List.map snd |> List.distinct |> List.length = 1)
-        let forward = add point (sub point previous.Value)
-        [-1,0; 1,0; 0,-1; 0,1] |> List.map (add point) |> List.filter (fun neighbour -> 
-            is_valid neighbour && neighbour <> previous.Value && (not in_a_line || neighbour <> forward))
-
-let a_star (start_x, start_y) (goal_x, goal_y) heuristic d_score neighbours =
-    let start = (start_x, start_y)
-    let goal = (goal_x, goal_y)
-
-    let mutable open_set = [start]
-    let mutable came_from = Map.empty
-
-    let mutable g_score = Map.empty.Add (start, 0.)
-    let mutable f_score = Map.empty.Add (start, heuristic start)
-
-    let rec run () =
-        match open_set with
+    let rec reconstruct_path current acc = 
+        let new_acc = current::acc
+        if previous.ContainsKey current then
+            reconstruct_path (previous[current]) new_acc
+        else
+            Some new_acc
+    
+    let rec proceed () =
+        match Q with
         | [] -> None
-        | current::remaining ->
-            if current = goal then
-                Some (reconstruct_path came_from goal)
+        | u::rem ->
+            if is_goal u then 
+                reconstruct_path u []
             else
-                open_set <- remaining
-                for neighbour in neighbours current came_from do
-                    let tentative_gscore = get_val g_score current + d_score neighbour
-                    if tentative_gscore < get_val g_score neighbour then
-                        came_from <- Map.add neighbour current came_from
-                        g_score <- Map.add neighbour tentative_gscore g_score
+                Q <- rem
+                for (v, prev) in neighbours u do
+                    let alt = dist u + edge u v
+                    if alt < dist v then
+                        distances <- distances.Add (v, alt)
+                        previous <- previous.Add (v, prev)
+                        add_to_Q v
+                proceed ()
+    proceed ()
 
-                        let neighbour_f_score = tentative_gscore + heuristic neighbour
-                        f_score <- Map.add neighbour neighbour_f_score f_score
-                        if not (List.contains neighbour open_set) then
-                            open_set <- add_sorted neighbour neighbour_f_score (get_val f_score) open_set
-                run ()
-    run ()
+type Direction = Vertical | Horizontal | Start
+let valid_directions dir = 
+    match dir with
+    | Vertical -> [-1,0; 1,0]
+    | Horizontal -> [0,-1; 0,1]
+    | Start -> [-1,0; 1,0; 0,-1; 0,1]
+let dir_from (dx, dy) = if dx = 0 then Vertical else Horizontal
+let is_valid (x, y) = x >= 0 && y >= 0 && y < input.Length && x < input[y].Length
 
+let neighbours min_size max_size (x, y, dir) = 
+    let directions = valid_directions dir
+    seq {
+        for (dx, dy) in directions do
+            let mutable prev = (x, y, dir)
+            let new_dir = dir_from (dx, dy)
+            for size in 1..max_size + 1 do 
+                let nx, ny = x + (dx * size), y + (dy * size)
+                if is_valid (nx, ny) then
+                    yield (nx, ny, new_dir), prev
+                    prev <- (nx, ny, new_dir)
+    }
+
+let start = 0, 0, Start
 let goal = input[input.Length - 1].Length - 1, input.Length - 1
-let path = a_star (0, 0) goal (distance goal) d_score neighbours
-let heat_loss = path.Value |> List.skip 1 |> List.sumBy (d_score >> int)
-printfn "%d" heat_loss
+let is_goal (x, y, _) = (x, y) = goal
+let m (x, y) = int (input[y][x]) - int '0'
+let edge (sx, sy, _) (tx, ty, _) = 
+    if tx <> sx then
+        if sx > tx then
+            [tx..sx-1] |> List.sumBy (fun ox -> m (ox, ty)) |> float
+        else
+            [sx+1..tx] |> List.sumBy (fun ox -> m (ox, ty))
+    else
+        if sy > ty then
+            [ty..sy-1] |> List.sumBy (fun oy -> m (tx, oy))
+        else
+            [sy+1..ty] |> List.sumBy (fun oy -> m (tx, oy))
+
+let path = djikstra (neighbours 1 3) edge start is_goal
 
 for y in 0..input.Length - 1 do
     for x in 0..input[y].Length - 1 do
-        if List.contains (x, y) path.Value then printf "#" else printf "%c" (input[y][x])
+        match List.tryFind (fun (ox, oy, _) -> x = ox && y = oy) path.Value with
+        | Some (_, _, Horizontal) -> printf "-"
+        | Some (_, _, Vertical) -> printf "|"
+        | _ -> printf "%d" (m (x, y))
     printf "\n"
+//printfn "%A" part1

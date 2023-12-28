@@ -35,14 +35,20 @@ let djikstra neighbours edge start is_goal =
                 reconstruct_path u []
             else
                 Q <- rem
+                let mutable cont = true
                 for (v, prev) in neighbours u do
-                    let alt = dist u + edge u v
-                    if alt < dist v then
-                        distances <- distances.Add (v, alt)
-                        previous <- previous.Add (v, prev)
-                        add_to_Q v
+                    if cont then
+                        let alt = dist u + edge u v
+                        if alt < dist v then
+                            distances <- distances.Add (v, alt)
+                            previous <- previous.Add (v, prev)
+                            add_to_Q v
+                        else
+                            cont <- false
                 proceed ()
     proceed ()
+
+// flaw - previous should only be set for complete paths where alt is set
 
 type Direction = Vertical | Horizontal | Start
 let valid_directions dir = 
@@ -59,7 +65,7 @@ let neighbours min_size max_size (x, y, dir) =
         for (dx, dy) in directions do
             let mutable prev = (x, y, dir)
             let new_dir = dir_from (dx, dy)
-            for size in 1..max_size + 1 do 
+            for size in 1..max_size do 
                 let nx, ny = x + (dx * size), y + (dy * size)
                 if is_valid (nx, ny) then
                     yield (nx, ny, new_dir), prev
@@ -83,6 +89,7 @@ let edge (sx, sy, _) (tx, ty, _) =
             [sy+1..ty] |> List.sumBy (fun oy -> m (tx, oy))
 
 let path = djikstra (neighbours 1 3) edge start is_goal
+printfn "%A" path
 
 for y in 0..input.Length - 1 do
     for x in 0..input[y].Length - 1 do
@@ -91,4 +98,7 @@ for y in 0..input.Length - 1 do
         | Some (_, _, Vertical) -> printf "|"
         | _ -> printf "%d" (m (x, y))
     printf "\n"
-//printfn "%A" part1
+
+let part1 = path.Value |> List.sumBy (fun (x, y, _) -> m (x, y))
+printfn "%d" part1
+

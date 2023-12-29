@@ -46,27 +46,55 @@ let rec evaluate (rating: int []) workflow =
 let part1 = ratings |> List.sumBy (fun r -> evaluate r "in")
 printfn "Part 1: %d" part1
 
-// for part 2, instead of evaluating ranges, we need to go through the workflows can calculate which possible values will avoid rejects
-// for a given workflow, go through rules:
-// if rule results in rejected, exclude its condiction from the min maxes
-// if rule results in accepted, multiply its condition by ranges for other values and add to total
-// if rule results in workflow, add the result of recursive calling on that workflow
-// apply above for the default
-// might just be avoiding all rejecteds
+// start with full range
+// for a given rule we need to calculate a split, less than vs greater than
+// we could work out all values that are rejected, those get added to totals, then remove those from 4000
 
-let rec all_combos (mins: int[]) (maxes: int[]) workflow total =
-    let rules, default_result = workflows[workflow]
-    let mutable mins, maxes, total = mins, maxes, total
-    for rule in rules do
-        match rule with
-        | LessThan (index, to_check, next) ->
+let empty () = [|0;0;0;0|]
+
+let rec all_failures (min: int[]) (max: int[]) workflow =
+    let rules, default_result = workflows[workflow] 
+    let acc = [|0;0;0;0|]
+    let rec evaluate = function
+        | [] -> ()
+        | next::rem ->
             match next with
-            | Rejected ->
-                mins[index] <- to_check
-            | _ -> ()
-        | GreaterThan (index, to_check, next) ->
-            match next with
-            | Rejected ->
-                maxes[index] <- to_check
-            | _ -> ()
-    
+            | LessThan (index, to_check, next) ->
+                match next with 
+                | Rejected -> 
+                    acc[index] <- acc[index] + (to_check - min[index])
+                | Workflow s ->
+                    let res = all_failures min max s
+                    for (i, v) in Array.indexed res do
+                        acc[i] <- acc[i] + v
+                | _ -> ()
+                min[index] <- to_check
+                evaluate rem
+            | GreaterThan (index, to_check, next) ->
+                match next with 
+                | Rejected -> 
+                    acc[index] <- acc[index] + (max[index] - to_check)
+                | Workflow s ->
+                    let res = all_failures min max s
+                    for (i, v) in Array.indexed res do
+                        acc[i] <- acc[i] + v
+                | _ -> ()
+                max[index] <- to_check
+                evaluate rem
+    evaluate rules
+    match default_result with 
+    | Rejected -> 
+        for (i, v) in Array.indexed acc do
+            acc[i] <- acc[i] + (max[i] - min[i])
+    | Workflow s ->
+        let res = all_failures min max s
+        for (i, v) in Array.indexed res do
+            acc[i] <- acc[i] + v
+    | _ -> ()
+    acc
+
+let failures = all_failures [|0;0;0;0|] [|4000;4000;4000;4000|] "test"
+printfn "%A" failures
+
+let part2 = 0
+printfn "Part 2: %d" part2

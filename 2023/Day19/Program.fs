@@ -45,3 +45,28 @@ let rec evaluate (rating: int []) workflow =
 
 let part1 = ratings |> List.sumBy (fun r -> evaluate r "in")
 printfn "Part 1: %d" part1
+
+// for part 2, instead of evaluating ranges, we need to go through the workflows can calculate which possible values will avoid rejects
+// for a given workflow, go through rules:
+// if rule results in rejected, exclude its condiction from the min maxes
+// if rule results in accepted, multiply its condition by ranges for other values and add to total
+// if rule results in workflow, add the result of recursive calling on that workflow
+// apply above for the default
+// might just be avoiding all rejecteds
+
+let rec all_combos (mins: int[]) (maxes: int[]) workflow total =
+    let rules, default_result = workflows[workflow]
+    let mutable mins, maxes, total = mins, maxes, total
+    for rule in rules do
+        match rule with
+        | LessThan (index, to_check, next) ->
+            match next with
+            | Rejected ->
+                mins[index] <- to_check
+            | _ -> ()
+        | GreaterThan (index, to_check, next) ->
+            match next with
+            | Rejected ->
+                maxes[index] <- to_check
+            | _ -> ()
+    

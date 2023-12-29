@@ -93,8 +93,9 @@ let rec all_failures (min: int[]) (max: int[]) workflow =
     | _ -> ()
     acc
 
-let failures = all_failures [|0;0;0;0|] [|4000;4000;4000;4000|] "test"
-printfn "%A" failures
+let valids = all_failures [|0;0;0;0|] [|4000;4000;4000;4000|] "in"
+printfn "%A" valids
+printfn "%d" <| (valids |> Seq.map uint64 |> Seq.reduce (*))
 
 let part2 = 0
 printfn "Part 2: %d" part2

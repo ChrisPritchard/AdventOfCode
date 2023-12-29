@@ -50,52 +50,51 @@ printfn "Part 1: %d" part1
 // for a given rule we need to calculate a split, less than vs greater than
 // we could work out all values that are rejected, those get added to totals, then remove those from 4000
 
-let empty () = [|0;0;0;0|]
+let rec all_failures (min: uint64[]) (max: uint64[]) workflow =
 
-let rec all_failures (min: int[]) (max: int[]) workflow =
+    let get_total_except index = [0..3] |> List.except [index] |> List.map (fun i -> (max[i] - min[i]) + 1UL) |> List.reduce (*)
+    let array_copy_but (a: uint64[]) index change = [|0..3|] |> Array.map (fun i -> if i <> index then a[i] else change a[i])
+
     let rules, default_result = workflows[workflow] 
-    let acc = [|0;0;0;0|]
-    let rec evaluate = function
-        | [] -> ()
-        | next::rem ->
-            match next with
-            | LessThan (index, to_check, next) ->
-                match next with 
-                | Rejected -> 
-                    acc[index] <- acc[index] + (to_check - min[index])
+    let mutable total_failures = 0UL
+    for rule in rules do
+        match rule with 
+
+        | GreaterThan (index, to_check, next) ->
+            if max[index] > uint64 to_check then
+                match next with
+                | Rejected ->
+                    total_failures <- total_failures + (get_total_except index * (max[index] - uint64 (to_check + 1)))
+                    max[index] <- uint64 to_check
+                | Accepted -> 
+                    max[index] <- uint64 to_check
                 | Workflow s ->
-                    let res = all_failures min max s
-                    for (i, v) in Array.indexed res do
-                        acc[i] <- acc[i] + v
-                | _ -> ()
-                min[index] <- to_check
-                evaluate rem
-            | GreaterThan (index, to_check, next) ->
-                match next with 
-                | Rejected -> 
-                    acc[index] <- acc[index] + (max[index] - to_check)
+                    let new_min = array_copy_but min index (fun v -> uint64 (to_check + 1))
+                    total_failures <- total_failures + all_failures new_min (Array.copy max) s
+                    max[index] <- uint64 to_check
+
+        | LessThan (index, to_check, next) ->
+            if min[index] < uint64 to_check then
+                match next with
+                | Rejected ->
+                    total_failures <- total_failures + (get_total_except index * (uint64 (to_check - 1) - min[index]))
+                    min[index] <- uint64 to_check
+                | Accepted -> 
+                    min[index] <- uint64 to_check
                 | Workflow s ->
-                    let res = all_failures min max s
-                    for (i, v) in Array.indexed res do
-                        acc[i] <- acc[i] + v
-                | _ -> ()
-                max[index] <- to_check
-                evaluate rem
-    evaluate rules
-    match default_result with 
-    | Rejected -> 
-        for (i, v) in Array.indexed acc do
-            acc[i] <- acc[i] + (max[i] - min[i])
+                    let new_max = array_copy_but max index (fun v -> uint64 (to_check - 1))
+                    total_failures <- total_failures + all_failures (Array.copy min) new_max s
+                    min[index] <- uint64 to_check
+
+    match default_result with
+    | Rejected ->
+        total_failures <- total_failures + (get_total_except -1)
+    | Accepted -> ()
     | Workflow s ->
-        let res = all_failures min max s
-        for (i, v) in Array.indexed res do
-            acc[i] <- acc[i] + v
-    | _ -> ()
-    acc
+        total_failures <- total_failures + all_failures (Array.copy min) (Array.copy max) s
 
-let valids = all_failures [|0;0;0;0|] [|4000;4000;4000;4000|] "in"
-printfn "%A" valids
-printfn "%d" <| (valids |> Seq.map uint64 |> Seq.reduce (*))
+    total_failures
 
-let part2 = 0
+let failures = all_failures [|1UL;1UL;1UL;1UL|] [|4000UL;4000UL;4000UL;4000UL|] "in"
+let part2 = (pown 4000UL 4) - failures
 printfn "Part 2: %d" part2

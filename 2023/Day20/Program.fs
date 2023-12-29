@@ -21,7 +21,6 @@ let mutable conjunctions =
 let broadcaster_dests = parsed |> Array.pick (fun (k, (t, o)) -> if t = 'b' then Some o else None)
 
 let rec pulser (pulses: (string * string * bool)[]) low_count high_count =
-    printfn "%A" pulses
     if Array.isEmpty pulses then
         low_count, high_count
     else
@@ -42,12 +41,21 @@ let rec pulser (pulses: (string * string * bool)[]) low_count high_count =
                 let pulse_strength = not (Map.forall (fun _ b -> b) new_states)
                 let pulses = dests |> Array.map (fun d -> dest, d, pulse_strength)
                 if pulse_strength then high_count <- high_count + dests.Length else low_count <- low_count + dests.Length
+                conjunctions <- conjunctions.Add (dest, (new_states, dests))
                 new_pulses <- Array.append new_pulses pulses
         pulser new_pulses low_count high_count
 
 let start_pulses = broadcaster_dests |> Array.map (fun d -> "broadcaster", d, false)
-let low, high = pulser start_pulses (start_pulses.Length + 1) 0
+let low, high = 
+    [1..1000] |> List.fold (fun (low, high) _ -> 
+        let nlow, nhigh = pulser start_pulses (start_pulses.Length + 1) 0
+        low + nlow, high + nhigh) (0, 0)
+        
+printfn "Part 1: %d" (low * high)
 
-printfn "Part 1: %d" (low * high * 1000000)
-// need to keep state for flip flops
-// but more tricky, all remembered for conjunctions
+flip_flops <- Map.map (fun _ (_, dests) -> false, dests) flip_flops
+conjunctions <- Map.map (fun _ (a, dests) -> Map.map (fun _ _ -> false) a, dests) conjunctions
+
+// brute force is not viable for part 2
+// rz comes from a conjunction. the conjunction will only send a low pulse when all its inputs are high
+// calculate the frequency its various inputs send a high value, then gcd to get the time when they all do

@@ -51,7 +51,6 @@ printfn "Part 1: %d" part1
 // we could work out all values that are rejected, those get added to totals, then remove those from 4000
 
 let rec all_failures (min: uint64[]) (max: uint64[]) workflow =
-
     let get_total_except index = [0..3] |> List.except [index] |> List.map (fun i -> (max[i] - min[i]) + 1UL) |> List.reduce (*)
     let array_copy_but (a: uint64[]) index change = [|0..3|] |> Array.map (fun i -> if i <> index then a[i] else change a[i])
 
@@ -64,7 +63,7 @@ let rec all_failures (min: uint64[]) (max: uint64[]) workflow =
             if max[index] > uint64 to_check then
                 match next with
                 | Rejected ->
-                    total_failures <- total_failures + (get_total_except index * (max[index] - uint64 (to_check + 1)))
+                    total_failures <- total_failures + (get_total_except index * (max[index] - uint64 to_check))
                     max[index] <- uint64 to_check
                 | Accepted -> 
                     max[index] <- uint64 to_check
@@ -77,7 +76,7 @@ let rec all_failures (min: uint64[]) (max: uint64[]) workflow =
             if min[index] < uint64 to_check then
                 match next with
                 | Rejected ->
-                    total_failures <- total_failures + (get_total_except index * (uint64 (to_check - 1) - min[index]))
+                    total_failures <- total_failures + (get_total_except index * (uint64 to_check - min[index]))
                     min[index] <- uint64 to_check
                 | Accepted -> 
                     min[index] <- uint64 to_check

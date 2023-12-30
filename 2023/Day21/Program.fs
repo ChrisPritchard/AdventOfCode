@@ -27,3 +27,8 @@ let rec stepper rem queue =
 let part1 = stepper 64 [|start|]
 printfn "Part 1: %d" part1
 
+// when a cell is visited, it will be visited ever second step after that
+// this means we need not re-evaluate it or its neibours, just track when it was first visited
+// for ever expanding neighbours, its possible the same map tile (but with different coords) will be visited for the 'first' time more than once
+// could track each of these subsequent first visits by coord, against the original tile
+// after the large step count (which is possibly small enough it could be iterated?) simply go through each tile, sum the mod2s of each visit, and thats the total

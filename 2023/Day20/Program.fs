@@ -20,7 +20,7 @@ let mutable conjunctions =
     ) |> Map.ofArray
 let broadcaster_dests = parsed |> Array.pick (fun (k, (t, o)) -> if t = 'b' then Some o else None)
 
-let rec pulser (pulses: (string * string * bool)[]) low_count high_count =
+let rec pulser (pulses: (string * string * bool)[]) low_count high_count pulse_check =
     if Array.isEmpty pulses then
         low_count, high_count
     else
@@ -43,12 +43,13 @@ let rec pulser (pulses: (string * string * bool)[]) low_count high_count =
                 if pulse_strength then high_count <- high_count + dests.Length else low_count <- low_count + dests.Length
                 conjunctions <- conjunctions.Add (dest, (new_states, dests))
                 new_pulses <- Array.append new_pulses pulses
-        pulser new_pulses low_count high_count
+        pulse_check pulses
+        pulser new_pulses low_count high_count pulse_check
 
 let start_pulses = broadcaster_dests |> Array.map (fun d -> "broadcaster", d, false)
 let low, high = 
     [1..1000] |> List.fold (fun (low, high) _ -> 
-        let nlow, nhigh = pulser start_pulses (start_pulses.Length + 1) 0
+        let nlow, nhigh = pulser start_pulses (start_pulses.Length + 1) 0 (fun _ -> ())
         low + nlow, high + nhigh) (0, 0)
         
 printfn "Part 1: %d" (low * high)
@@ -56,6 +57,22 @@ printfn "Part 1: %d" (low * high)
 flip_flops <- Map.map (fun _ (_, dests) -> false, dests) flip_flops
 conjunctions <- Map.map (fun _ (a, dests) -> Map.map (fun _ _ -> false) a, dests) conjunctions
 
-// brute force is not viable for part 2
-// rz comes from a conjunction. the conjunction will only send a low pulse when all its inputs are high
-// calculate the frequency its various inputs send a high value, then gcd to get the time when they all do
+// rx is fed by kh
+// kh is a conjunction fed by hz, pv, xm, qh
+// find when all four will feed true at once
+
+let mutable cycles = Map.empty
+Seq.initInfinite id |> Seq.find (fun i -> 
+    let mutable found = false
+    pulser start_pulses (start_pulses.Length + 1) 0 (fun a -> 
+        let hits = a |> Array.filter (fun (k, d, s) -> d = "kh" && s) |> Array.map (fun (k, _, _) -> k)
+        for k in hits do
+            if not (Map.containsKey k cycles) then
+                cycles <- cycles.Add (k, i + 1)) |> ignore
+    cycles.Count = 4) |> ignore
+
+let rec gcd a b = if b = 0UL then a else gcd b (a % b)
+let lcm = cycles |> Seq.map (fun kv -> uint64 kv.Value) |> Seq.reduce (fun a b -> (a * b) / gcd a b)
+
+let part2 = lcm
+printfn "Part 2: %d" part2

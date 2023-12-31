@@ -3,40 +3,41 @@ let input = System.IO.File.ReadAllLines "input.txt"
 let start = input |> Array.indexed |> Array.pick (fun (y, line) ->
     input[y].ToCharArray() |> Array.indexed |> Array.tryPick (fun (x, c) -> if c = 'S' then Some (x, y) else None))
 
-let is_clear (x, y) = 
-    let dy = y % input.Length
-    let dy = if dy < 0 then input.Length + dy else dy
-    let dx = x % input[dy].Length
-    let dx = if dx < 0 then input[dy].Length + dx else dx
-    if dx < 0 then 
-        failwithf "something wrong %d %d v %d %d" x y input.Length input[dy].Length
-    input[dy][dx] <> '#'
-
-let all_valid_tiles = 
-    [0..input.Length-1] |> List.collect (fun y -> 
-        [0..input[y].Length-1] |> List.choose (fun x -> let point = (x, y) in if is_clear point then Some point else None))
-        |> Array.ofList
-
-let neighbours (x, y) = 
-    [|-1,0; 1,0; 0,-1; 0,1|] 
-    |> Array.map (fun (dx, dy) -> x + dx, y + dy) 
-    |> Array.filter is_clear
-
-let all_neighbours = all_valid_tiles |> Array.map (fun p -> p, neighbours p) |> Map.ofArray
+let add (x1, y1) (x2, y2) = x1 + x2, y1 + y2
+let is_valid (x, y) = x >= 0 && y >= 0 && y < input.Length && x < input[y].Length
+let is_clear (x, y) = input[y][x] <> '#'
 
 let distances =
-    let mutable result = Map.empty.Add (start, 0)
+    let mutable visited = Map.empty
     let mutable queue = System.Collections.Generic.PriorityQueue()
-    queue.Enqueue (start, 0)
+    queue.Enqueue ((0, start), 0)
     while queue.Count > 0 do
-        let next = queue.Dequeue ()
-        if Map.containsKey next all_neighbours then
-            let neighbours = all_neighbours[next] |> Array.filter (fun p -> not (Map.containsKey p result))
-            let dist = result[next] + 1
-            for n in neighbours do
-                result <- result.Add (n, dist)
-                queue.Enqueue (n, dist)
-    result
+        let (dist, next) = queue.Dequeue ()
+        if not (visited.ContainsKey next) then
+            visited <- visited.Add (next, dist)
+            for delta in [|-1,0; 1,0; 0,-1; 0,1|] do
+                let n = add next delta
+                if is_valid n then
+                    if not (visited.ContainsKey n) && is_clear n then
+                        queue.Enqueue ((dist + 1, n), dist + 1)
+    visited
 
-printfn "Part 1: %d" <| (Map.filter (fun _ d -> d <= 64 && d % 2 = 64 % 2) distances).Count
+printfn "Part 1: %d" <| (Map.filter (fun _ d -> d <= 64 && d % 2 = 0) distances).Count
 
+// part 2 is based on the excellent https://github.com/villuna/aoc23/wiki/A-Geometric-solution-to-advent-of-code-2023,-day-21
+// which also verified my approach to part 1 (revised from the original stepper)
+
+let even_corners = uint64 (Map.filter (fun  _ d -> d > 65 && d % 2 = 0) distances).Count
+let odd_corners = uint64 (Map.filter (fun  _ d -> d > 65 && d % 2 = 1) distances).Count
+
+let even_full = uint64 (Map.filter (fun _ d -> d % 2 = 0) distances).Count
+let odd_full = uint64 (Map.filter (fun _ d -> d % 2 = 1) distances).Count
+
+let n = uint64 ((26501365 - (input[0].Length / 2)) / input[0].Length)
+
+let even = n * n
+let odd = (n + 1UL) * (n + 1UL)
+
+let part2 = odd * odd_full + even * even_full - (n + 1UL) * odd_corners + n * even_corners
+
+printfn "Part 2: %d" part2

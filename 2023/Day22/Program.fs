@@ -39,21 +39,28 @@ let doesnt_support_or_partially_supports = with_supported_by |> Array.filter (fu
 
 printfn "Part 1: %d" doesnt_support_or_partially_supports.Length
 
-let mutable remove_effect: Map<Brick[], int> = Map.empty
-let rec find_all_supports bricks_to_remove =
-    if remove_effect.ContainsKey bricks_to_remove then remove_effect[bricks_to_remove]
-    else
-        let supportless = with_supported_by |> Array.choose (fun (b, supported_by) -> if supported_by.Length > 0 && (Array.except bricks_to_remove supported_by).Length = 0 then Some b else None)
-        if supportless.Length = 0 then 0 
-        else 
-            let total = supportless.Length + find_all_supports supportless
-            remove_effect <- remove_effect.Add (bricks_to_remove, total)
-            total
+// this takes a few seconds to run
 
-// perhaps a loop with a clone:
-    // remove one brick, remove it from all support lists
-    // any with empty list can be removed
-    // repeat process until no empty support lists remain
-    // if we start at the heighest, we can memoise: all bricks that will be removed by a removal
+let mutable removal_effects = Map.empty // all bricks removed if a given brick is removed
+for brick in Array.rev lowest_sorted do
+    let mutable to_remove = [|brick|]
+    let mutable total_removed = Array.empty
+    let mutable stack = with_supported_by
+    while to_remove.Length > 0 do
+        let mutable new_removes = Array.empty
+        stack <- stack |> Array.choose (fun (b, supported_by) ->
+            if Array.contains b to_remove || supported_by.Length = 0 then None
+            else
+                let new_supported_by = Array.except to_remove supported_by
+                if new_supported_by.Length = 0 then
+                    let affected = removal_effects.TryFind b |> Option.defaultValue Array.empty
+                    let affected_with_brick = Array.append [|b|] affected
+                    new_removes <- Array.append new_removes affected_with_brick
+                    None
+                else
+                    Some (b, new_supported_by))
+        total_removed <- Array.append total_removed new_removes
+        to_remove <- new_removes
+    removal_effects <- removal_effects.Add (brick, total_removed)
 
-printfn "Part 2: %d" <| Array.sumBy find_all_supports (Array.map (Array.create 1) lowest_sorted)
+printfn "Part 2: %d" <| (Map.values removal_effects |> Seq.sumBy (Seq.length))

@@ -12,7 +12,7 @@ foldername=Day$(printf %02d $day)
 mkdir $foldername
 
 # project file, just including Program.fs
-echo -e "<Project Sdk=\"Microsoft.NET.Sdk\">\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t\t<TargetFramework>net8.0</TargetFramework>\n\t</PropertyGroup>\n\t<ItemGroup>\t\t<Compile Include=\"Program.fs\" />\n\t</ItemGroup>\n</Project>" > $foldername/$foldername.fsproj
+echo -e "<Project Sdk=\"Microsoft.NET.Sdk\">\n\t<PropertyGroup>\n\t\t<OutputType>Exe</OutputType>\n\t\t<TargetFramework>net8.0</TargetFramework>\n\t</PropertyGroup>\n\t<ItemGroup>\n\t\t<Compile Include=\"Program.fs\" />\n\t</ItemGroup>\n</Project>" > $foldername/$foldername.fsproj
 
 curl -s --cookie $cookie https://adventofcode.com/$year/day/$day/input -fo $foldername/input.txt
 if [ -f $foldername/input.txt ]; then

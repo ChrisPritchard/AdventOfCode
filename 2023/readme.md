@@ -1,6 +1,6 @@
 # Advent of Code 2023
 
-Hardest rooms (so far) were 12, 17, 21 (part 2 I couldn't figure out).
+Hardest rooms were 12, 17 and 21.
 
 New technique for this year was generating projects and downloading the problem text using bash scripts: [create-day.sh](./create-day.sh), which also creates a 'get-readme.sh' script to use when the problem is finished.
 

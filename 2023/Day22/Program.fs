@@ -50,4 +50,10 @@ let rec find_all_supports bricks_to_remove =
             remove_effect <- remove_effect.Add (bricks_to_remove, total)
             total
 
+// perhaps a loop with a clone:
+    // remove one brick, remove it from all support lists
+    // any with empty list can be removed
+    // repeat process until no empty support lists remain
+    // if we start at the heighest, we can memoise: all bricks that will be removed by a removal
+
 printfn "Part 2: %d" <| Array.sumBy find_all_supports (Array.map (Array.create 1) lowest_sorted)

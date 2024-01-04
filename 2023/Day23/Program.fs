@@ -41,6 +41,15 @@ for (ingress, edge) in vertices.Values |> Seq.collect id do
                 visited <- visited.Add current
         let finish = ungrouped_edges[current] |> Array.find (fun (_, n) -> vertices.ContainsKey n) |> snd
         let cliff_end = (egress = '>' && fst finish > fst current) || (egress = 'v' && snd finish > snd current)
-        edges <- Array.append edges [|(start, cliff_start, finish, cliff_end, length)|]
+        edges <- Array.append edges [|(start, finish <> target && not cliff_end || cliff_start, finish, not cliff_start || cliff_end, length)|]
 
-printfn "%A" edges
+let vertices_with_edges = 
+    let starting = Array.groupBy (fun (start, _, _, _, _) -> start) edges
+                |> Array.map (fun (vertex, edges) -> vertex, edges |> Array.map (fun (_, cliff, finish, _, length) -> (finish, cliff, length)))
+    let ending = Array.groupBy (fun (_, _, finish, _, _) -> finish) edges
+                |> Array.map (fun (vertex, edges) -> vertex, edges |> Array.map (fun (start, _, _, cliff, length) -> (start, cliff, length)))
+    let ending_map = Map.ofArray ending
+    starting |> Array.map (fun (s, a) -> if ending_map.ContainsKey s then s, Array.append a ending_map[s] else s, a)
+                |> Map.ofArray
+
+printfn "%A" vertices_with_edges

@@ -29,13 +29,13 @@ for (ingress, edge) in vertices.Values |> Seq.collect id do
         let cliff_start = (ingress = '>' && fst start > fst edge) || (ingress = 'v' && snd start > snd edge)
         let mutable current, egress, length, finished = edge, ingress, 1, false
         while not finished do
+            length <- length + 1
             let next = 
                 ungrouped_edges[current] 
                 |> Array.filter (fun (_, e) -> Map.containsKey e ungrouped_edges && not (Set.contains e visited))
             if next.Length = 0 then
                 finished <- true
             else
-                length <- length + 1
                 current <- snd next[0]
                 egress <- fst next[0]
                 visited <- visited.Add current
@@ -45,11 +45,29 @@ for (ingress, edge) in vertices.Values |> Seq.collect id do
 
 let vertices_with_edges = 
     let starting = Array.groupBy (fun (start, _, _, _, _) -> start) edges
-                |> Array.map (fun (vertex, edges) -> vertex, edges |> Array.map (fun (_, cliff, finish, _, length) -> (finish, cliff, length)))
+                |> Array.map (fun (vertex, edges) -> vertex, edges |> Array.map (fun (_, cliff, finish, _, length) -> (finish, cliff, length))) |> Map.ofArray
     let ending = Array.groupBy (fun (_, _, finish, _, _) -> finish) edges
-                |> Array.map (fun (vertex, edges) -> vertex, edges |> Array.map (fun (start, _, _, cliff, length) -> (start, cliff, length)))
-    let ending_map = Map.ofArray ending
-    starting |> Array.map (fun (s, a) -> if ending_map.ContainsKey s then s, Array.append a ending_map[s] else s, a)
-                |> Map.ofArray
+                |> Array.map (fun (vertex, edges) -> vertex, edges |> Array.map (fun (start, _, _, cliff, length) -> (start, cliff, length))) |> Map.ofArray
+    vertices |> Map.map (fun k _ -> Array.append (starting.TryFind k |> Option.defaultValue Array.empty) (ending.TryFind k |> Option.defaultValue Array.empty))
 
-printfn "%A" vertices_with_edges
+let rec dfs stack can_climb_cliffs max_so_far = 
+    match stack with
+    | [] -> max_so_far
+    | (next, steps, visited)::rem ->
+        let new_visited = Set.add next visited
+        let mutable new_max, new_stack = max_so_far, rem
+        if not (vertices_with_edges.ContainsKey next) then
+            failwithf "couldnt find %A" next
+        for (n, cliff, length) in vertices_with_edges[next] do
+            if not (visited.Contains n) && (not cliff || can_climb_cliffs) then
+                if n = target then
+                    new_max <- max max_so_far (steps + length)
+                else
+                    new_stack <- (n, steps + length, new_visited)::new_stack
+        dfs new_stack can_climb_cliffs new_max
+
+let part1 = dfs [start,0,Set.empty] false 0
+printfn "Part 1: %d" part1
+
+let part2 = dfs [start,0,Set.empty] true 0
+printfn "Part 2: %d" part2

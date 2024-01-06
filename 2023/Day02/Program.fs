@@ -1,7 +1,7 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
 let games = 
-    input.Split [|'\n'|] |> Array.map (fun line -> 
+    input |> Array.map (fun line -> 
         line.Split [|':';';'|] |> fun segments -> 
             let num = segments[0].Substring(5) |> int32
             let draws = segments[1..] |> Array.map (fun draw -> 

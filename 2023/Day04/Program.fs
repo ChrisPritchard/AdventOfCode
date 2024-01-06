@@ -1,9 +1,9 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
 let splitOn (s: System.String) (a: char[]) = s.Split (a, System.StringSplitOptions.RemoveEmptyEntries)
 
 let all_cards = 
-    input.Split [|'\n'|] 
+    input 
     |> Array.map (fun line -> 
         let parts = splitOn line [|':';'|'|]
         let winning_numbers = splitOn parts[1] [|' '|] |> Array.map int |> Set.ofArray

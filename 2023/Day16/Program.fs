@@ -1,6 +1,6 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
-let grid = input.Split [|'\n'|]
+let grid = input
 
 type Dir = North | East | South | West
 

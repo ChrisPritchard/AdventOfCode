@@ -1,4 +1,4 @@
-let input = Input.value
+let input = System.IO.File.ReadAllText "input.txt"
 
 let splitOn (a: char[]) (s: System.String) = s.Split (a, System.StringSplitOptions.RemoveEmptyEntries)
 

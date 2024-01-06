@@ -1,7 +1,7 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
 let springs = 
-    input.Split [|'\n'|] |> Array.map (fun line -> 
+    input |> Array.map (fun line -> 
         let parts = line.Split [|' '|]
 
         parts[0], (parts[1].Split [|','|] |> Array.map int))

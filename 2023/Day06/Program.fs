@@ -1,11 +1,10 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
 let splitOn (a: char[]) (s: System.String) = s.Split (a, System.StringSplitOptions.RemoveEmptyEntries)
 
 let races = 
-    let lines = splitOn [|'\n'|] input
-    let times = splitOn [|' '|] lines[0] |> Array.skip 1 |> Array.map int
-    let records = splitOn [|' '|] lines[1] |> Array.skip 1 |> Array.map int
+    let times = splitOn [|' '|] input[0] |> Array.skip 1 |> Array.map int
+    let records = splitOn [|' '|] input[1] |> Array.skip 1 |> Array.map int
     Array.zip times records
 
 let rec find_wins so_far current_time max_time record = 
@@ -22,9 +21,8 @@ let total = races |> Array.map (fun (time, record) -> find_wins 0 0L time record
 printfn "Part 1: %d" total
 
 let (longer_time, longerRecord) = 
-    let lines = splitOn [|'\n'|] input
-    let time = splitOn [|':'|] lines[0] |> fun s -> s[1].Replace(" ", "") |> int64
-    let record = splitOn [|':'|] lines[1] |> fun s -> s[1].Replace(" ", "") |> int64
+    let time = splitOn [|':'|] input[0] |> fun s -> s[1].Replace(" ", "") |> int64
+    let record = splitOn [|':'|] input[1] |> fun s -> s[1].Replace(" ", "") |> int64
     time, record
 
 let win_chances = find_wins 0 0L longer_time longerRecord

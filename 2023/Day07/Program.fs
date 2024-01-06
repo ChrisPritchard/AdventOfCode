@@ -1,9 +1,9 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
 let splitOn (a: char[]) (s: System.String) = s.Split (a, System.StringSplitOptions.RemoveEmptyEntries)
 
 let hands = 
-    input |> splitOn [|'\n'|] |> Array.map (fun line -> let parts = splitOn [|' '|] line in parts[0].ToCharArray(), int parts[1])
+    input |> Array.map (fun line -> let parts = splitOn [|' '|] line in parts[0].ToCharArray(), int parts[1])
 
 let get_groups allow_jokers (a: char[]) = 
     let to_group = 

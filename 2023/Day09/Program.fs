@@ -1,6 +1,6 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
-let lines = input.Split [|'\n'|] |> Array.map (fun line -> line.Split [|' '|] |> Array.map int64)
+let lines = input |> Array.map (fun line -> line.Split [|' '|] |> Array.map int64)
 
 let rec find_next (line: int64[]) =
     let diffs = line |> Array.windowed 2 |> Array.map (fun window -> window[1] - window[0])

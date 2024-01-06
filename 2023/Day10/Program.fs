@@ -1,6 +1,6 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
-let grid = input.Split [|'\n'|] |> Array.map (fun s -> s.ToCharArray())
+let grid = input |> Array.map (fun s -> s.ToCharArray())
 
 let tile_at (x, y) = grid[y][x]
 

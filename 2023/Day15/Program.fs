@@ -1,4 +1,4 @@
-let input = Input.value
+let input = System.IO.File.ReadAllText "input.txt"
 
 let segments = input.Split [|','|]
 

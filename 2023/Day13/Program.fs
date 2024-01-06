@@ -1,4 +1,4 @@
-let input = Input.value
+let input = System.IO.File.ReadAllText "input.txt"
 
 let horizontal_lines (grid: string[]) = 
     grid |> Array.map (fun s -> System.Convert.ToInt32(s.Replace('.', '0').Replace('#', '1'), 2))

@@ -1,9 +1,7 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
-let lines = input.Split [|'\n'|]
-
-let instructions = lines[0].ToCharArray()
-let map = lines |> Array.skip 2 |> Array.map (fun s -> 
+let instructions = input[0].ToCharArray()
+let map = input |> Array.skip 2 |> Array.map (fun s -> 
     let parts = s.Split ([|' ';'=';'(';',';')'|], System.StringSplitOptions.RemoveEmptyEntries)
     parts[0], (parts[1], parts[2])) |> Map.ofArray
 

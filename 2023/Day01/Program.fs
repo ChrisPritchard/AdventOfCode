@@ -1,11 +1,9 @@
 
-let input = Input.value
-
-let lines = input.Split [|'\n'|]
+let input = System.IO.File.ReadAllLines "input.txt"
 
 let mutable sum = 0;
 
-for line in lines do
+for line in input do
     let digits = line.ToCharArray() |> Array.filter System.Char.IsAsciiDigit
     let s = sprintf "%c%c" digits[0] digits[digits.Length - 1]
     sum <- sum + int32 s
@@ -25,7 +23,7 @@ let rec replaceNumbers (line: string) =
         let pre = line[..pos] + n
         pre + replaceNumbers line[pos+1..]
 
-for line in lines do
+for line in input do
     let line = replaceNumbers line
     let digits = line.ToCharArray() |> Array.filter System.Char.IsAsciiDigit
     let s = sprintf "%c%c" digits[0] digits[digits.Length - 1]

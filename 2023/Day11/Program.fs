@@ -1,14 +1,12 @@
-let input = Input.value
-
-let grid = input.Split [|'\n'|]
+let input = System.IO.File.ReadAllLines "input.txt"
 
 let points = 
-    grid |> Array.indexed |> Array.collect (fun (y, line) -> 
+    input |> Array.indexed |> Array.collect (fun (y, line) -> 
         line.ToCharArray() |> Array.indexed |> Array.choose (fun (x, c) -> 
             if c = '#' then Some (x, y) else None))
 
-let updown = [|0..grid.Length - 1|]
-let across = [|0..grid[0].Length - 1|]
+let updown = [|0..input.Length - 1|]
+let across = [|0..input[0].Length - 1|]
 let empty_rows = 
     updown |> Array.filter (fun y -> across |> Array.forall (fun x -> not (Array.contains (x, y) points)))
 let empty_cols = 

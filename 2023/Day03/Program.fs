@@ -1,6 +1,6 @@
-let input = Input.value
+let input = System.IO.File.ReadAllLines "input.txt"
 
-let lines = input.Split [|'\n'|] |> Array.map (fun s -> s.ToCharArray())
+let lines = input |> Array.map (fun s -> s.ToCharArray())
 
 let is_number oc = System.Char.IsAsciiDigit oc
 let is_symbol oc = oc <> '.' && not (is_number oc)

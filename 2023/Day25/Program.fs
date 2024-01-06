@@ -9,50 +9,60 @@ let connections =
         let connected = a |> Array.collect (snd >> id) |> Array.distinct
         k, connected)
 
-printfn "%A" connections
+// solution based on https://github.com/WilliamVernaschi/aoc2023/blob/main/Cpp/day25.cpp
 
-let tarjan = 
-    let mutable index = 0
-    let mutable SCC = []
-    let mutable S = []
+let E_map = Map.ofArray connections
+let vertices = connections |> Array.map fst
 
-    let E = connections |> Map.ofArray
-    let V = connections |> Array.map fst
-    let indexes = Array.create V.Length -1
-    let low_link = Array.create V.Length -1
-    let on_stack = Array.create V.Length false
+let dfs E v =
+    let mutable visited = Set.empty
+    let rec dfs v = 
+        visited <- visited.Add v
+        for w in Map.find v E do
+            if not (visited.Contains w) then
+                dfs w
+    dfs v
+    visited
 
-    let rec strong_connect iv = 
-        indexes[iv] <- index
-        low_link[iv] <- index
-        index <- index + 1
-        S <- V[iv]::S
-        on_stack[iv] <- true
+let mutable dist = Map.empty
+let bfs start = 
+    let q = System.Collections.Generic.PriorityQueue()
+    q.Enqueue (start, 0)
+    dist <- dist |> Map.add start (Map.empty.Add (start, 0))
+    while q.Count > 0 do
+        let u = q.Dequeue()
+        for v in E_map[u] do
+            if not (Map.containsKey v dist[start]) then
+                let v_dist = dist[start][u] + 1
+                dist <- dist |> Map.add start (dist[start].Add (v, v_dist))
+                q.Enqueue (v, v_dist)
+for v in vertices do
+    bfs v
 
-        for w in E[V[iv]] do
-            let iw = Array.findIndex ((=) w) V
-            if indexes[iw] = -1 then
-                strong_connect iw
-                low_link[iv] <- min low_link[iv] low_link[iw]
-            else if on_stack[iw] then
-                low_link[iv] <- min low_link[iv] indexes[iw]
+let rand = System.Random()
+let can_be_bridge (u, v) =
+    let mutable tries, failures = 300, 0
+    for i in 0..tries-1 do
+        let random_v = vertices[rand.Next (0,vertices.Length)]
+        if abs (dist[u][random_v] - dist[v][random_v]) = 0 then
+            failures <- failures + 1
+    float failures <= 0.05 * float tries
 
-        if low_link[iv] = indexes[iv] then
-            let mutable new_scc = []
-            let mutable cont = true
-            while not (List.isEmpty S) && cont do
-                let w = List.head S
-                let iw = Array.findIndex ((=) w) V
-                on_stack[iw] <- false
-                new_scc <- w::new_scc
-                S <- List.tail S
-                if w = V[iv] then cont <- false
-            SCC <- (List.toArray new_scc)::SCC
+let all_edges = connections |> Array.collect (fun (k, a) -> a |> Array.map (fun v -> if k > v then k, v else v, k)) |> Array.distinct
+let remove_edge (a, b) (E: Map<string, string[]>) =
+    Map.add a (Array.except [|b|] E[a]) E
+    |> Map.add b (Array.except [|a|] E[b])
 
-    for iv in 0..V.Length - 1 do
-        if indexes[iv] = -1 then
-            strong_connect iv
-
-    List.toArray SCC
-
-printfn "%A" tarjan
+try
+    for i in 0..all_edges.Length-1 do
+        if can_be_bridge all_edges[i] then
+            for j in i+1..all_edges.Length-1 do
+                if can_be_bridge all_edges[j] then
+                    for k in j+1..all_edges.Length-1 do
+                        if can_be_bridge all_edges[k] then
+                            let E = E_map |> remove_edge all_edges[i] |> remove_edge all_edges[j] |> remove_edge all_edges[k]
+                            let res = dfs E (fst connections[0])
+                            if res.Count < connections.Length then
+                                failwithf "%d" (res.Count * (connections.Length - res.Count))
+with
+| e -> printfn "Part 1 (no part 2): %s" e.Message

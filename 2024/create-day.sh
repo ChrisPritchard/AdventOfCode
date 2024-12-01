@@ -1,3 +1,5 @@
+# update the year, ensure the full cookie is in a .env file (format is 'session=sdadadasd' etc)
+# run as `bash create-day.sh 1` etc, note the non-padded day number; it will be padded in the folder creation automatically`
 
 year=2024
 cookie=$(cat .env)

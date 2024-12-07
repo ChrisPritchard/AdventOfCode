@@ -8,78 +8,56 @@ let starting_position =
         |> Seq.indexed
         |> Seq.tryPick (fun (j, c) -> if c = '^' then Some(j, i) else None))
 
-let rec march acc (x, y) dir =
-    let (dx, dy) =
-        match dir with
-        | 0 -> 0, -1
-        | 1 -> 1, 0
-        | 2 -> 0, 1
-        | _ -> -1, 0
+let delta =
+    function
+    | 0 -> 0, -1
+    | 1 -> 1, 0
+    | 2 -> 0, 1
+    | _ -> -1, 0
 
+let turn dir = if dir = 3 then 0 else dir + 1
+
+
+
+// revised version: starting position. calculate next
+// if blocked, then turn and recheck
+// else add vector and calculate next
+// feels a bit ass backward, but will ensure each coords are only added once
+
+type Pathing =
+    | Normal of ((int * int) * int) list
+    | Loop
+
+let rec march block_checker acc (x, y) dir =
+
+    let (dx, dy) = delta dir
     let nx, ny = x + dx, y + dy
 
     if nx < 0 || nx = input[0].Length || ny < 0 || ny = input.Length then
-        acc
+        Normal(((x, y), dir) :: acc)
+    else if List.contains ((nx, ny), dir) acc then
+        Loop
+    else if block_checker (nx, ny) then
+        march block_checker acc (x, y) (turn dir)
     else
-        match input[ny][nx] with
-        | '.'
-        | '^' -> march (Set.add (nx, ny) acc) (nx, ny) dir
-        | _ -> march acc (x, y) (if dir = 3 then 0 else dir + 1)
+        march block_checker (((x, y), dir) :: acc) (nx, ny) dir
 
-let path = march (Set.empty.Add starting_position) starting_position 0
-let sum = Set.count path
+let blocked (x, y) =
+    let c = input[y][x] in c <> '.' && c <> '^'
 
-printfn "Part 1: %d" sum
+match march blocked [] starting_position 0 with
+| Normal path ->
+    let sum = List.map fst path |> Set.ofList |> Set.count
+    printfn "Part 1: %d" sum
+| _ -> printfn "Part 1 failed: hit a loop"
 
-// for part 2, calculate a vector at each point and also march a line in the turn direction
-// if the marched line will hit and turn to match an existing vector, we have a loop
-
-let rec marcher (x, y) dir =
-    let (dx, dy) =
-        match dir with
-        | 0 -> 0, -1
-        | 1 -> 1, 0
-        | 2 -> 0, 1
-        | _ -> -1, 0
-
-    let nx, ny = x + dx, y + dy
-
-    if nx < 0 || nx = input[0].Length || ny < 0 || ny = input.Length then
-        None
-    else
-        match input[ny][nx] with
-        | '.'
-        | '^' -> marcher (nx, ny) dir
-        | _ -> Some((nx, ny), if dir = 3 then 0 else dir + 1)
-
-let rec check_turn (x, y) dir =
-    marcher (x, y) (if dir = 3 then 0 else dir + 1)
-
-let rec new_march loops (acc: Set<(int * int) * int>) (x, y) dir =
-    let (dx, dy) =
-        match dir with
-        | 0 -> 0, -1
-        | 1 -> 1, 0
-        | 2 -> 0, 1
-        | _ -> -1, 0
-
-    let nx, ny = x + dx, y + dy
-
-    if nx < 0 || nx = input[0].Length || ny < 0 || ny = input.Length then
-        loops
-    else
-        match input[ny][nx] with
-        | '.'
-        | '^' ->
-            let new_loops =
-                match check_turn (nx, ny) dir with
-                | Some vector when acc.Contains vector -> loops + 1
-                | _ -> loops
-
-            new_march new_loops (Set.add ((nx, ny), dir) acc) (nx, ny) dir
-        | _ -> new_march loops (Set.add ((nx, ny), dir) acc) (x, y) (if dir = 3 then 0 else dir + 1)
-
-let loop_possibles =
-    new_march 0 (Set.empty.Add(starting_position, 0)) starting_position 0
-
-printfn "Part 2: %d" loop_possibles
+// for ((x, y), dir) in path do
+//     printfn
+//         "%d %d %s"
+//         x
+//         y
+//         (match dir with
+//          | 0 -> "up"
+//          | 1 -> "right"
+//          | 2 -> "down"
+//          | _ -> "left")

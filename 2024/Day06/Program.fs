@@ -8,6 +8,15 @@ let starting_position =
         |> Seq.indexed
         |> Seq.tryPick (fun (j, c) -> if c = '^' then Some(j, i) else None))
 
+let blocks =
+    input
+    |> Array.indexed
+    |> Seq.collect (fun (i, line) ->
+        line
+        |> Seq.indexed
+        |> Seq.choose (fun (j, c) -> if c = '#' then Some(j, i) else None))
+    |> Set.ofSeq
+
 let delta =
     function
     | 0 -> 0, -1
@@ -17,47 +26,61 @@ let delta =
 
 let turn dir = if dir = 3 then 0 else dir + 1
 
-
-
-// revised version: starting position. calculate next
-// if blocked, then turn and recheck
-// else add vector and calculate next
-// feels a bit ass backward, but will ensure each coords are only added once
-
 type Pathing =
     | Normal of ((int * int) * int) list
     | Loop
 
-let rec march block_checker acc (x, y) dir =
+let rec march blockers acc (x, y) dir =
 
     let (dx, dy) = delta dir
     let nx, ny = x + dx, y + dy
 
+    let add x y dir = ((x, y), dir) :: acc
+
     if nx < 0 || nx = input[0].Length || ny < 0 || ny = input.Length then
-        Normal(((x, y), dir) :: acc)
+        Normal(List.rev acc)
     else if List.contains ((nx, ny), dir) acc then
         Loop
-    else if block_checker (nx, ny) then
-        march block_checker acc (x, y) (turn dir)
+    else if Set.contains (nx, ny) blockers then
+        march blockers acc (x, y) (turn dir)
     else
-        march block_checker (((x, y), dir) :: acc) (nx, ny) dir
+        march blockers (add nx ny dir) (nx, ny) dir
 
-let blocked (x, y) =
-    let c = input[y][x] in c <> '.' && c <> '^'
+let path =
+    match march blocks [ starting_position, 0 ] starting_position 0 with
+    | Normal path -> path
+    | _ -> failwith "loop for part 1"
 
-match march blocked [] starting_position 0 with
-| Normal path ->
-    let sum = List.map fst path |> Set.ofList |> Set.count
-    printfn "Part 1: %d" sum
-| _ -> printfn "Part 1 failed: hit a loop"
+let sum = List.map fst path |> Set.ofList |> Set.count
+printfn "Part 1: %d" sum
 
-// for ((x, y), dir) in path do
-//     printfn
-//         "%d %d %s"
-//         x
-//         y
-//         (match dir with
-//          | 0 -> "up"
-//          | 1 -> "right"
-//          | 2 -> "down"
-//          | _ -> "left")
+let path_array = Array.ofList path
+
+let folder (loops, acc, blockers_tested) index =
+    let new_acc = path_array[index] :: acc
+
+    if snd path[index] <> snd path_array[index + 1] then
+        loops, new_acc, blockers_tested // skip existing turns
+    else
+        // printfn "testing %A" path_array[index]
+
+        let (x, y), dir = path_array[index]
+        let ahead = let dx, dy = delta dir in x + dx, y + dy
+
+        if Set.contains ahead blockers_tested then
+            loops, new_acc, blockers_tested
+        else
+            let new_blockers_tested = Set.add ahead blockers_tested
+            let custom_blocks = Set.add ahead blocks
+            let new_dir = turn dir
+
+            match march custom_blocks new_acc (x, y) new_dir with
+            | Loop ->
+                // printfn "loop found with blocker at %A" ahead
+                loops + 1, new_acc, new_blockers_tested
+            | _ -> loops, new_acc, new_blockers_tested
+
+let loops, _, _ =
+    [ 0 .. path_array.Length - 2 ] |> List.fold folder (0, [], Set.empty)
+
+printfn "Part 2: %d" loops

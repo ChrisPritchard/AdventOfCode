@@ -52,7 +52,6 @@ let new_antinodes =
         let repeats = [| x1, y1 |]
         let down = repeater repeats (x1, y1) (-dx, -dy)
         repeater down (x1, y1) (dx, dy))
-    |> Array.filter (fun p -> not (out_of_bounds p))
     |> Set.ofArray
 
 printfn "Part 2: %d" <| Set.count new_antinodes

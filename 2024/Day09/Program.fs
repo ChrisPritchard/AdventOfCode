@@ -1,10 +1,37 @@
 let input = System.IO.File.ReadAllLines "input.txt"
 
-printfn "%A %d" (input[0] |> Seq.sumBy int) input[0].Length
+let values = input[0] |> Seq.toArray |> Array.map (fun c -> int c - int '0')
 
-// too big to make an array and do manually... or is it... million strong anyway
-// but len is only 19999 with every % 2 num a file, so possible to fold calculate
+let memory = Array.create (Array.sum values) -1
 
-// three tracked values: position in input, reverse file being considered, current index of output
+let rec layout i j =
+    if i = values.Length then
+        ()
+    else
+        if i % 2 = 0 then
+            for k in [ j .. j + values[i] - 1 ] do
+                memory[k] <- i / 2
 
-// certain values can be calculated, e.g. the position in the output would be the sum of inputs to date.
+        layout (i + 1) (j + values[i])
+
+let rec compact i j =
+    if i = memory.Length || i > j then
+        ()
+    else if memory[i] <> -1 then
+        compact (i + 1) j
+    else if memory[j] = -1 then
+        compact i (j - 1)
+    else
+        memory[i] <- memory[j]
+        memory[j] <- -1
+        compact (i + 1) (j - 1)
+
+layout 0 0
+compact 0 (memory.Length - 1)
+
+let checksum =
+    memory
+    |> Seq.indexed
+    |> Seq.sumBy (fun (i, v) -> if v = -1 then 0L else int64 (i * v))
+
+printfn "Part 1: %d" checksum

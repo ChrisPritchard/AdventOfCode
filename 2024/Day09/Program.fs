@@ -32,44 +32,50 @@ compact 0 (memory.Length - 1)
 let checksum =
     memory
     |> Seq.indexed
-    |> Seq.sumBy (fun (i, v) -> if v = -1 then 0L else int64 (i * v))
+    |> Seq.sumBy (fun (i, data_id) -> if data_id = -1 then 0L else int64 (i * data_id))
 
 printfn "Part 1: %d" checksum
 
-let rec compressor sum head forward_index back_index space_available =
-    printfn "sum: %d head: %d forward: %d backward: %d space: %d" sum head forward_index back_index space_available
+for i in [ 0 .. memory.Length - 1 ] do
+    memory[i] <- -1
 
-    if forward_index = values.Length || forward_index > back_index then
-        sum
-    else if forward_index % 2 = 0 then
-        printfn "data %d size %d at position %d" (forward_index / 2) values[forward_index] head
+layout 0 0
 
-        let new_sum =
-            sum
-            + int64 (
-                [ 0 .. values[forward_index] - 1 ]
-                |> Seq.sumBy (fun i -> (head + i) * (forward_index / 2))
-            )
+let spaces =
+    values
+    |> Array.indexed
+    |> Array.filter (fun (i, _) -> i % 2 = 1)
+    |> Array.map (fun (i, space_available) -> Array.sum values[0 .. i - 1], space_available)
 
-        let new_head = head + values[forward_index]
-        compressor new_sum new_head (forward_index + 1) back_index (values[forward_index + 1])
-    else if values[back_index] > space_available then
-        printfn "not enough space for %d size %d at %d" (back_index / 2) values[back_index] head
-        compressor sum (head + space_available) (forward_index + 1) back_index 0
-    else
-        printfn "moved data %d size %d to position %d" (back_index / 2) values[back_index] head
+let data =
+    values
+    |> Array.indexed
+    |> Array.filter (fun (i, _) -> i % 2 = 0)
+    |> Array.map (fun (i, data_size) -> i / 2, Array.sum values[0 .. i - 1], data_size)
 
-        let new_sum =
-            sum
-            + int64 (
-                [ 0 .. values[back_index] - 1 ]
-                |> Seq.sumBy (fun i -> (head + i) * (back_index / 2))
-            )
+for i in [ data.Length - 1 .. (-1) .. 0 ] do
+    let data_id, data_index, data_size = data[i]
 
-        let new_space_available = space_available - values[back_index]
-        let new_head = head + values[back_index]
-        compressor sum new_head forward_index (back_index - 1) new_space_available
+    let found =
+        spaces
+        |> Array.tryFindIndex (fun (space_index, space) -> space_index < data_index && space >= data_size)
 
-let new_checksum = compressor 0 0 0 (values.Length - 1) 0
+    match found with
+    | None -> ()
+    | Some space_index ->
+        let i, space = spaces[space_index]
+
+        for j in [ i .. i + data_size - 1 ] do
+            memory[j] <- data_id
+
+        for j in [ data_index .. data_index + data_size - 1 ] do
+            memory[j] <- -1
+
+        spaces[space_index] <- (i + data_size, space - data_size)
+
+let new_checksum =
+    memory
+    |> Seq.indexed
+    |> Seq.sumBy (fun (i, data_id) -> if data_id = -1 then 0L else int64 (i * data_id))
 
 printfn "Part 2: %d" new_checksum

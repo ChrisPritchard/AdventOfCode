@@ -1,15 +1,16 @@
 let input = System.IO.File.ReadAllLines "input.txt"
 
-let mutable stones = input[0].Split(" ")
+let mutable stones = input[0].Split(" ") |> Array.map int64
 
-let split (num: string) =
+let split n =
+    let num = n.ToString()
     let left = num[0 .. num.Length / 2 - 1].TrimStart([| '0' |])
     let right = num[num.Length / 2 ..].TrimStart([| '0' |])
 
-    [| if left = "" then "0" else left
-       if right = "" then "0" else right |]
+    [| if left = "" then 0L else System.Int64.Parse left
+       if right = "" then 0L else System.Int64.Parse right |]
 
-let memo = System.Collections.Generic.Dictionary<string, string[]>()
+let memo = System.Collections.Generic.Dictionary<int64, int64[]>()
 
 let blink num =
     if memo.ContainsKey num then
@@ -17,34 +18,36 @@ let blink num =
     else
         let result =
             match num with
-            | "0" -> [| "1" |]
-            | n when n.Length % 2 = 0 -> split n
-            | n -> [| (System.Int64.Parse(n) * 2024L).ToString() |]
+            | 0L -> [| 1L |]
+            | n when (int (System.Math.Floor(System.Math.Log10(float n))) + 1) % 2 = 0 -> split n
+            | n -> [| n * 2024L |]
 
         memo.Add(num, result)
         result
 
 for _ = 1 to 25 do
-    let prelen = stones.Length
     stones <- Array.collect blink stones
-    printfn "  %d" (stones.Length - prelen)
-    printfn "%d" stones.Length
 
 printfn "Part 1: %d" stones.Length
 
-let mutable initial_stones = input[0].Split(" ")[1..1]
+let counts = input[0].Split(" ") |> Array.map int64
+let mutable dict = System.Collections.Generic.Dictionary<int64, int64>()
 
-let mutable sum = 0L
+for n in counts do
+    dict[n] <- if dict.ContainsKey n then dict[n] + 1L else 1L
 
-for stone in initial_stones do
-    let mutable stone_set = [| stone |]
-    let mutable last_size = 0
+for _ in 1..75 do
+    let new_dict = System.Collections.Generic.Dictionary<int64, int64>()
 
-    while stone_set.Length - last_size > 0 || stone_set.Length < 1000 do
-        last_size <- stone_set.Length
-        stone_set <- Array.collect blink stone_set
-        printfn "%d" stone_set.Length
+    for k in dict.Keys do
+        for n in blink k do
+            new_dict[n] <-
+                if new_dict.ContainsKey n then
+                    new_dict[n] + dict[k]
+                else
+                    dict[k]
 
-    sum <- sum + int64 stone_set.Length
+    dict <- new_dict
 
-printfn "Part 2: %d" sum
+let new_sum = dict.Values |> Seq.sum
+printfn "Part 2: %d" new_sum

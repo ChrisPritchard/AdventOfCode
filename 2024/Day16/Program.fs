@@ -1,16 +1,23 @@
 let input = System.IO.File.ReadAllLines "input.txt"
 
-let rec path_finder queue memo =
+let target = input[0].Length - 2, 1
+let memo = System.Collections.Generic.Dictionary<int * int, int>()
+
+let rec path_finder queue =
     match queue with
-    | [] -> memo
-    | (n, dir, cost, parent) :: remainder ->
-        if Map.containsKey n memo && (let (o, _) = memo[n] in o < cost) then
-            path_finder remainder memo
+    | [] -> ()
+    | (_, _, cost) :: remainder when memo.ContainsKey target && memo[target] < cost -> path_finder remainder
+    | (n, dir, cost) :: remainder ->
+        if memo.ContainsKey(n) && memo[n] < cost then
+            path_finder remainder
+        else if n = target then
+            memo[n] <- cost
+            path_finder remainder
         else
-            let new_memo = Map.add n (cost, parent) memo
+            memo[n] <- cost
             let neighbours = find_neighbours n dir cost
             let new_queue = List.append neighbours remainder
-            path_finder new_queue new_memo
+            path_finder new_queue
 
 and find_neighbours (x, y) current_dir current_cost =
     let candidates =
@@ -44,12 +51,13 @@ and find_neighbours (x, y) current_dir current_cost =
         then
             None
         else
-            Some((nx, ny), dir, cost, (x, y)))
+            Some((nx, ny), dir, cost))
 
 let start = 1, input.Length - 2
 
-let all_costs = path_finder [ start, '>', 0, (-1, -1) ] Map.empty
+path_finder [ start, '>', 0 ]
 
-let target = input[0].Length - 2, 1
+let best_cost = memo[target]
+printfn "Part 1: %d" best_cost
 
-printfn "%A" all_costs[target]
+// calculate all paths

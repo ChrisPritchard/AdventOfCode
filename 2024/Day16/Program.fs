@@ -60,4 +60,18 @@ path_finder [ start, '>', 0 ]
 let best_cost = memo[target]
 printfn "Part 1: %d" best_cost
 
-// calculate all paths
+
+// // use a DFS for part 2
+// // search down until finding the target or exceeding cost/options
+// // then walk back to last untested (node plus parent?) and test
+// // when a tendril finds the target, walk back all its parents and add to the visited set
+
+// let tendril_start = Set.empty.Add((start, '>'), (-1,-1))
+
+// // we track the current path. each iteration we find its neighbours, and add them to the queue, with the path being the first
+// // if there are no neighbours or a neighbour is the target, take the next item off the queue and walk back to that?
+// // or track invalids/visited/exhausted? walk back until one isnt exhausted?
+
+// track path. keep adding first neighbour not in path
+// when reaching the target, walk back through path and add to all
+// walk back to first path item that doesnt have a neighbour in path

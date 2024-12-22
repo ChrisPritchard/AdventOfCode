@@ -1,5 +1,7 @@
 let input = System.IO.File.ReadAllLines "input.txt"
 
+// note the solution for this one can take half a minute on a good pc.
+
 type QueueItem =
     { point: int * int
       dir: char

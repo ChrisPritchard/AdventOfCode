@@ -14,22 +14,45 @@ let combo =
     | 6 -> reg_c
     | n -> failwithf "invalid combo operand: %d" n
 
+let combo_print =
+    function
+    | n when n <= 3 -> n.ToString()
+    | 4 -> "a"
+    | 5 -> "b"
+    | 6 -> "c"
+    | n -> failwithf "invalid combo operand: %d" n
+
 let mutable ip = 0
+let instructions = System.Collections.Generic.List<string>()
 
 let exec opcode operand =
     let mutable output = None
 
     match opcode with
-    | 0 (* adv *) -> reg_a <- reg_a >>> int (combo operand)
-    | 1 (* bxl *) -> reg_b <- reg_b ^^^ uint64 operand
-    | 2 (* bst *) -> reg_b <- combo operand % 8UL
+    | 0 (* adv *) ->
+        reg_a <- reg_a >>> int (combo operand)
+        instructions.Add(sprintf "a <- a >>> %s" (combo_print operand))
+    | 1 (* bxl *) ->
+        reg_b <- reg_b ^^^ uint64 operand
+        instructions.Add(sprintf "b <- b ^^^ %d" operand)
+    | 2 (* bst *) ->
+        reg_b <- combo operand % 8UL
+        instructions.Add(sprintf "b <- %s %% 8" (combo_print operand))
     | 3 (* jnz *) ->
         if reg_a <> 0UL then
             ip <- operand
-    | 4 (* bxc *) -> reg_b <- reg_b ^^^ reg_c
-    | 5 (* out *) -> output <- Some(combo operand % 8UL)
-    | 6 (* bdv *) -> reg_b <- reg_a >>> int (combo operand)
-    | 7 (* cdv *) -> reg_c <- reg_a >>> int (combo operand)
+    | 4 (* bxc *) ->
+        reg_b <- reg_b ^^^ reg_c
+        instructions.Add(sprintf "b <- b ^^^ c")
+    | 5 (* out *) ->
+        output <- Some(combo operand % 8UL)
+        instructions.Add(sprintf "printf \"%%d\" (%s %% 8)" (combo_print operand))
+    | 6 (* bdv *) ->
+        reg_b <- reg_a >>> int (combo operand)
+        instructions.Add(sprintf "b <- a >>> %s" (combo_print operand))
+    | 7 (* cdv *) ->
+        reg_c <- reg_a >>> int (combo operand)
+        instructions.Add(sprintf "c <- a >>> %s" (combo_print operand))
     | n -> failwithf "unknown opcode: %d" n
 
     if opcode <> 3 || reg_a = 0UL then
@@ -47,40 +70,9 @@ while ip < program.Length do
 
 printfn "Part 1: %s" result
 
-reg_a <- 10000UL
-reg_b <- 0UL
-reg_c <- 0UL
+printfn "\ninstructions:"
+
+for ins in instructions do
+    printfn "%s" ins
 
 printfn ""
-printfn "let mutable a = %d" reg_a
-printfn "let mutable b = %d" reg_a
-printfn "let mutable c = %d" reg_a
-printfn ""
-
-ip <- 0
-
-let combo_print =
-    function
-    | n when n <= 3 -> n.ToString()
-    | 4 -> "a"
-    | 5 -> "b"
-    | 6 -> "c"
-    | n -> failwithf "invalid combo operand: %d" n
-
-while ip < program.Length do
-    match program[ip] with
-    | 0 -> printfn "a <- a >>> %s" (combo_print program[ip + 1])
-    | 1 -> printfn "b <- b ^^^ %d" program[ip + 1]
-
-    | 2 -> printfn "b <- %s %% 8" (combo_print program[ip + 1])
-    | 3 ->
-        if reg_a <> 0UL then
-            ip <- program[ip + 1]
-    | 4 -> printfn "b <- b ^^^ c"
-    | 5 (* out *) -> printfn "printf \"%%d\" (%s %% 8)" (combo_print program[ip + 1])
-    | 6 (* bdv *) -> printfn "b <- a >>> %s" (combo_print program[ip + 1])
-    | 7 (* cdv *) -> printfn "c <- a >>> %s" (combo_print program[ip + 1])
-    | _ -> ()
-
-    if program[ip] <> 3 || reg_a = 0UL then
-        ip <- ip + 2

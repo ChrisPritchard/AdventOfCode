@@ -24,8 +24,8 @@ let rec pathfinder acc (x, y) =
     else
         pathfinder (next[0] :: acc) next[0]
 
-let path = pathfinder [ start ] start
-let set = Set.ofList path
+let path = pathfinder [ start ] start |> Array.ofList
+let set = Set.ofArray path
 let indexed = path |> Seq.indexed |> Seq.map (fun (i, p) -> p, i) |> Map.ofSeq
 
 let skips =
@@ -42,3 +42,24 @@ let skips =
     |> Array.ofSeq
 
 printfn "Part 1: %d" (skips |> Array.filter (fun amt -> amt >= 100) |> Array.length)
+
+let dist (x1, y1) (x2, y2) = abs (x1 - x2) + abs (y1 - y2)
+
+let candidates =
+    path
+    |> Array.map (fun p ->
+        p,
+        path
+        |> Array.skip (indexed[p] + 1)
+        |> Array.choose (fun o ->
+            if indexed[o] - indexed[p] < 100 then
+                None
+            else
+                let d = dist o p
+
+                if d > 1 && d <= 20 then
+                    Some(o, indexed[o] - indexed[p])
+                else
+                    None))
+
+printfn "%A" candidates

@@ -22,6 +22,3 @@ if [ -f $foldername/input.txt ]; then
 else
     echo -e "\nprintfn \"hello\"\n" >> $foldername/Program.fs
 fi
-
-# script that will fetch and create the readme with the challenge page content
-echo -e "curl -s --cookie \$(cat ../.env) https://adventofcode.com/$year/day/$day | pandoc -f html -t markdown -o readme.md\nrm get-readme.sh" > $foldername/get-readme.sh

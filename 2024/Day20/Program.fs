@@ -25,41 +25,34 @@ let rec pathfinder acc (x, y) =
         pathfinder (next[0] :: acc) next[0]
 
 let path = pathfinder [ start ] start |> Array.ofList
-let set = Set.ofArray path
-let indexed = path |> Seq.indexed |> Seq.map (fun (i, p) -> p, i) |> Map.ofSeq
+let path_set = Set.ofArray path
+let path_indexed = path |> Seq.indexed |> Seq.map (fun (i, p) -> p, i) |> Map.ofSeq
 
-let skips =
-    path
-    |> Seq.collect (fun (x, y) ->
-        directions
-        |> Array.map (fun (dx, dy) -> (x + dx, y + dy), (x + (2 * dx), y + (2 * dy)))
-        |> Array.choose (fun (adj, past) ->
-            if not (map.ContainsKey adj) || not (map[adj] = '#') || not (set.Contains past) then
-                None
-            else
-                Some((indexed[past] - indexed[x, y]) - 2)))
-    |> Seq.filter (fun n -> n > 0)
-    |> Array.ofSeq
+let within_two min (x, y) =
+    directions
+    |> Array.map (fun (dx, dy) -> (x + dx, y + dy), (x + 2 * dx, y + 2 * dy))
+    |> Array.where (fun (adj, past) -> map.ContainsKey adj && map[adj] = '#' && path_set.Contains past)
+    |> Array.map (fun (_, past) -> path_indexed[past] - path_indexed[x, y] - 2)
+    |> Array.where (fun n -> n >= min)
+    |> Array.length
 
-printfn "Part 1: %d" (skips |> Array.filter (fun amt -> amt >= 100) |> Array.length)
+printfn "Part 1: %d" (Seq.sumBy (within_two 100) path)
+
+let all_possibles =
+    [| -20 .. 20 |]
+    |> Array.collect (fun dy ->
+        [| -20 .. 20 |]
+        |> Array.where (fun dx -> abs dx + abs dy <= 20)
+        |> Array.map (fun dx -> dx, dy))
 
 let dist (x1, y1) (x2, y2) = abs (x1 - x2) + abs (y1 - y2)
 
-let candidates =
-    path
-    |> Array.map (fun p ->
-        p,
-        path
-        |> Array.skip (indexed[p] + 1)
-        |> Array.choose (fun o ->
-            if indexed[o] - indexed[p] < 100 then
-                None
-            else
-                let d = dist o p
+let within_twenty min (x, y) =
+    all_possibles
+    |> Array.map (fun (dx, dy) -> (x + dx, y + dy))
+    |> Array.where (fun target -> path_set.Contains target)
+    |> Array.map (fun target -> path_indexed[target] - path_indexed[x, y] - dist target (x, y))
+    |> Array.where (fun n -> n >= min)
+    |> Array.length
 
-                if d > 1 && d <= 20 then
-                    Some(o, indexed[o] - indexed[p])
-                else
-                    None))
-
-printfn "%A" candidates
+printfn "Part 2: %d" (Seq.sumBy (within_twenty 100) path)

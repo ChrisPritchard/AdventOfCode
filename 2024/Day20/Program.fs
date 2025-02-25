@@ -28,15 +28,15 @@ let path = pathfinder [ start ] start |> Array.ofList
 let path_set = Set.ofArray path
 let path_indexed = path |> Seq.indexed |> Seq.map (fun (i, p) -> p, i) |> Map.ofSeq
 
-let within_two min (x, y) =
+let within_two (x, y) =
     directions
-    |> Array.map (fun (dx, dy) -> (x + dx, y + dy), (x + 2 * dx, y + 2 * dy))
-    |> Array.where (fun (adj, past) -> map.ContainsKey adj && map[adj] = '#' && path_set.Contains past)
-    |> Array.map (fun (_, past) -> path_indexed[past] - path_indexed[x, y] - 2)
-    |> Array.where (fun n -> n >= min)
+    |> Array.map (fun (dx, dy) -> x + 2 * dx, y + 2 * dy)
+    |> Array.where (fun target -> path_set.Contains target)
+    |> Array.map (fun target -> path_indexed[target] - path_indexed[x, y] - 2)
+    |> Array.where (fun n -> n >= 100)
     |> Array.length
 
-printfn "Part 1: %d" (Seq.sumBy (within_two 100) path)
+printfn "Part 1: %d" (Seq.sumBy within_two path)
 
 let all_possibles =
     [| -20 .. 20 |]
@@ -47,12 +47,12 @@ let all_possibles =
 
 let dist (x1, y1) (x2, y2) = abs (x1 - x2) + abs (y1 - y2)
 
-let within_twenty min (x, y) =
+let within_twenty (x, y) =
     all_possibles
     |> Array.map (fun (dx, dy) -> (x + dx, y + dy))
     |> Array.where (fun target -> path_set.Contains target)
     |> Array.map (fun target -> path_indexed[target] - path_indexed[x, y] - dist target (x, y))
-    |> Array.where (fun n -> n >= min)
+    |> Array.where (fun n -> n >= 100)
     |> Array.length
 
-printfn "Part 2: %d" (Seq.sumBy (within_twenty 100) path)
+printfn "Part 2: %d" (Seq.sumBy within_twenty path)

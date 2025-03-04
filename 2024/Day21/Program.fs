@@ -22,7 +22,7 @@ let final_steps a b =
     let x2, y2 = keypad[b]
 
     seq {
-        if (y1 = 3 && y2 <> 3) || (y1 <> 3 && y2 = 3) then
+        if y1 = 3 && x2 = 0 || x1 = 0 && y2 = 3 then
             if y2 < y1 then
                 yield! System.String('^', y1 - y2).ToCharArray()
 
@@ -75,7 +75,6 @@ let mid_steps a b =
     | _ -> failwithf "unknown input: %c %c" a b
     |> fun s -> s + "A"
 
-
 let find_path keypad to_type =
     let rec path_steps acc a rem =
         match rem with
@@ -86,15 +85,23 @@ let find_path keypad to_type =
 
     path_steps "" 'A' to_type
 
-let full_path target_sequence =
-    find_path final_steps target_sequence
-    |> find_path mid_steps
-    |> find_path mid_steps
+let full_path robot_count target_sequence =
+    let final_keypad = find_path final_steps target_sequence
 
-let sub_result (target_sequence: string) =
+    let rec robot_keypads n acc =
+        if n = 0 then
+            acc
+        else
+            printfn "robot n = %d" n
+            robot_keypads (n - 1) (find_path mid_steps acc)
+
+    robot_keypads robot_count final_keypad
+
+let sub_result robot_count (target_sequence: string) =
     let index_num = System.Int32.Parse target_sequence[0 .. target_sequence.Length - 2]
-    let full_path = full_path target_sequence
-    printfn "%s: %d * %d = %d, %s" target_sequence full_path.Length index_num (index_num * full_path.Length) full_path
+    let full_path = full_path robot_count target_sequence
+    // printfn "%s: %d * %d = %d, %s" target_sequence full_path.Length index_num (index_num * full_path.Length) full_path
     index_num * full_path.Length
 
-printfn "Part 1: %d" (Array.sumBy sub_result input)
+printfn "Part 1: %d" (Array.sumBy (sub_result 2) input)
+printfn "Part 1: %d" (Array.sumBy (sub_result 25) input)

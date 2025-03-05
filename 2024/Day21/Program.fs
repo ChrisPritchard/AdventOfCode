@@ -95,7 +95,7 @@ let find_path keypad to_type =
 // so say path is 019A and this becomes >>>vvA^^<A etc. we sum the total cost for each step in this path, by calling a recursive function on each
 // each function call will take the step it has to follow, and will assume it starts at A. it calculates a new path - if the robots are 0 it returns the length, else it repeats the recursive function call for each char
 
-let memo = System.Collections.Generic.Dictionary<(int * char * char), int>()
+let memo = System.Collections.Generic.Dictionary<(int * char * char), uint64>()
 
 let full_path robot_count target_sequence =
     let final_keys = find_path final_keypad target_sequence
@@ -107,10 +107,10 @@ let full_path robot_count target_sequence =
             let keys = robot_keypad pos target
 
             if robots_remaining = 0 then
-                memo[(0, pos, target)] <- keys.Length
-                target, keys.Length
+                memo[(0, pos, target)] <- uint64 keys.Length
+                target, uint64 keys.Length
             else
-                let _, final_sum = Seq.fold (folder (robots_remaining - 1)) ('A', 0) keys
+                let _, final_sum = Seq.fold (folder (robots_remaining - 1)) ('A', 0UL) keys
                 memo[(robots_remaining, pos, target)] <- final_sum
                 target, final_sum
 
@@ -118,13 +118,13 @@ let full_path robot_count target_sequence =
         let n, s = robot_steps nr k c
         n, sum + s
 
-    Seq.fold (folder (robot_count - 1)) ('A', 0) final_keys |> snd
+    Seq.fold (folder (robot_count - 1)) ('A', 0UL) final_keys |> snd
 
 let sub_result robot_count (target_sequence: string) =
     let index_num = System.Int32.Parse target_sequence[0 .. target_sequence.Length - 2]
     let cost = full_path robot_count target_sequence
     // printfn "%s: %d * %d = %d, %s" target_sequence full_path.Length index_num (index_num * full_path.Length) full_path
-    index_num * cost
+    uint64 index_num * cost
 
 printfn "Part 1: %d" (Array.sumBy (sub_result 2) input)
 printfn "Part 2: %d" (Array.sumBy (sub_result 25) input)

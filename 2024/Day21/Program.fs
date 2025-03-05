@@ -21,31 +21,34 @@ let final_steps a b =
     let x1, y1 = keypad[a]
     let x2, y2 = keypad[b]
 
+    let rep symbol count =
+        System.String(symbol, count).ToCharArray()
+
     seq {
-        if y1 = 3 && x2 = 0 || x1 = 0 && y2 = 3 then
+        if y1 = 3 && x2 = 0 || x1 = 0 && y2 = 3 then // different order if there is a chance of passing through the dead tile in the bottom left
             if y2 < y1 then
-                yield! System.String('^', y1 - y2).ToCharArray()
+                yield! rep '^' (y1 - y2)
 
             if x2 > x1 then
-                yield! System.String('>', x2 - x1).ToCharArray()
+                yield! rep '>' (x2 - x1)
 
             if y2 > y1 then
-                yield! System.String('v', y2 - y1).ToCharArray()
+                yield! rep 'v' (y2 - y1)
 
             if x2 < x1 then
-                yield! System.String('<', x1 - x2).ToCharArray()
+                yield! rep '<' (x1 - x2)
         else
             if x2 < x1 then
-                yield! System.String('<', x1 - x2).ToCharArray()
+                yield! rep '<' (x1 - x2)
 
             if y2 > y1 then
-                yield! System.String('v', y2 - y1).ToCharArray()
+                yield! rep 'v' (y2 - y1)
 
             if y2 < y1 then
-                yield! System.String('^', y1 - y2).ToCharArray()
+                yield! rep '^' (y1 - y2)
 
             if x2 > x1 then
-                yield! System.String('>', x2 - x1).ToCharArray()
+                yield! rep '>' (x2 - x1)
     }
     |> fun c -> new System.String(Array.ofSeq c) + "A"
 
@@ -85,17 +88,14 @@ let find_path keypad to_type =
 
     path_steps "" 'A' to_type
 
-let full_path robot_count target_sequence =
-    let final_keypad = find_path final_steps target_sequence
+// calculating the full sequence for each mid keypad is not practical once the number of robots is over 10 or so (for part 2, which uses 25)
+// instead, we used a depth memo approach: each first step is calculated in turn
 
-    let rec robot_keypads n acc =
-        if n = 0 then
-            acc
-        else
-            printfn "robot n = %d" n
-            robot_keypads (n - 1) (find_path mid_steps acc)
+// we start with the first character, we find the steps to execute it for a robot, we sub and find the steps for the next robot
+// given a sequence to type, and a starting position, we get the path from the mid steps
+// we then get the cost by recursively running
 
-    robot_keypads robot_count final_keypad
+let full_path robot_count target_sequence = ""
 
 let sub_result robot_count (target_sequence: string) =
     let index_num = System.Int32.Parse target_sequence[0 .. target_sequence.Length - 2]

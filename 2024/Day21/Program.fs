@@ -102,21 +102,21 @@ let full_path robot_count target_sequence =
 
     let rec robot_steps robots_remaining pos target =
         if memo.ContainsKey(robots_remaining, pos, target) then
-            target, memo[(robots_remaining, pos, target)]
+            memo[(robots_remaining, pos, target)]
         else
             let keys = robot_keypad pos target
 
             if robots_remaining = 0 then
                 memo[(0, pos, target)] <- uint64 keys.Length
-                target, uint64 keys.Length
+                uint64 keys.Length
             else
                 let _, final_sum = Seq.fold (folder (robots_remaining - 1)) ('A', 0UL) keys
                 memo[(robots_remaining, pos, target)] <- final_sum
-                target, final_sum
+                final_sum
 
-    and folder nr (k, sum) c =
-        let n, s = robot_steps nr k c
-        n, sum + s
+    and folder robots_remaining (start, sum) target =
+        let extra_cost = robot_steps robots_remaining start target
+        target, sum + extra_cost
 
     Seq.fold (folder (robot_count - 1)) ('A', 0UL) final_keys |> snd
 

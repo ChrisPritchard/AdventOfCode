@@ -42,13 +42,26 @@ let rec processor wires (circuits: (string * string * string * string)[]) =
 
 let final_wires = processor input_wires input_circuits
 
-let out =
+let find_number start_char =
     final_wires
     |> Map.toArray
-    |> Array.filter (fun (k, _) -> k[0] = 'z')
+    |> Array.filter (fun (k, _) -> k[0] = start_char)
     |> Array.sortBy fst
     |> Array.map (snd >> fun v -> if v then '1' else '0')
     |> Array.rev
     |> System.String
+    |> fun s -> System.Convert.ToUInt64(s, 2)
 
-printfn "Part 1: %d" <| System.Convert.ToUInt64(out, 2)
+printfn "Part 1: %d" (find_number 'z')
+
+let input_1 = find_number 'x'
+let input_2 = find_number 'y'
+let current_out = find_number 'z'
+let expected_out = input_1 + input_2
+
+printfn "%d" input_1
+printfn "%d" input_2
+printfn "current out:  %d" current_out
+printfn "%s" <| System.Convert.ToString(int64 current_out, 2)
+printfn "expected out: %d" expected_out
+printfn "%s" <| System.Convert.ToString(int64 expected_out, 2)

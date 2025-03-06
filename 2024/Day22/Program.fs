@@ -22,7 +22,7 @@ let rec prices n secret =
     seq {
         yield secret % 10L
 
-        if n > 1 then
+        if n > 0 then
             yield! prices (n - 1) (next secret)
     }
 

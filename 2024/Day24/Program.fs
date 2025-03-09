@@ -25,11 +25,13 @@ for i1, i2, op, out in input_circuits do
         Map.add
             out
             (fun () ->
-                gate_log out
                 stack_depth <- stack_depth + 1
 
                 if stack_depth > max_depth_of_stack then
                     failwith "loop detected"
+
+                gate_log i1
+                gate_log i2
 
                 match op with
                 | "AND" -> full_circuit[i1]() && full_circuit[i2]()
@@ -37,10 +39,6 @@ for i1, i2, op, out in input_circuits do
                 | "XOR" -> full_circuit[i1]() <> full_circuit[i2]()
                 | _ -> failwithf "invalid op: %s" op)
             full_circuit
-
-let get_output i =
-    stack_depth <- 0
-    full_circuit[sprintf "z%02d" i]()
 
 let set_input (key: char) (bits: bool array) =
     for i, b in Array.indexed bits do
@@ -63,80 +61,66 @@ let y_s =
 set_input 'x' x_s
 set_input 'y' y_s
 
-let out_length = x_s.Length + 1
-
-let z_s = Array.init out_length get_output
-
-let as_num =
-    z_s
+let as_num bits =
+    bits
     |> Array.rev
     |> Array.map (fun v -> if v then '1' else '0')
     |> System.String
     |> fun s -> System.Convert.ToUInt64(s, 2)
 
-printfn "Part 1: %d" as_num
+let out_length =
+    input_circuits
+    |> List.choose (fun (_, _, _, out) ->
+        if out.StartsWith "z" then
+            Some(System.Int32.Parse out[1..])
+        else
+            None)
+    |> List.max
+    |> (+) 1
 
-// set_input 'y' (Array.init y_s.Length (fun i -> if i = 0 then true else false))
-// set_input 'x' (Array.init x_s.Length (fun i -> false))
+let z_s =
+    Array.init out_length (fun i ->
+        stack_depth <- 0
+        full_circuit[sprintf "z%02d" i]())
 
-// let test_out = Array.init out_length get_output
-// printfn "%A" test_out
+printfn "Part 1: %d" <| as_num z_s
 
-let mutable swapped: string list = []
+// following rules defined in the code here: https://www.bytesizego.com/blog/aoc-day24-golang
 
-let check up_to =
-    let new_z = Array.init out_length get_output
+let invalid =
+    input_circuits
+    |> Seq.choose (fun (i1, i2, op, out) ->
+        if out[0] = 'z' && out <> sprintf "z%02d" (z_s.Length - 1) && op <> "XOR" then
+            Some out
+        else if
+            out[0] <> 'z'
+            && i1[0] <> 'x'
+            && i2[0] <> 'x'
+            && i1[0] <> 'y'
+            && i2[0] <> 'y'
+            && op = "XOR"
+        then
+            Some out
+        else if
+            (i1[0] = 'x' && i2[0] = 'y' || i1[0] = 'y' && i2[0] = 'x')
+            && i1 <> "x00"
+            && i1 <> "y00"
+            && i2 <> "x00"
+            && i2 <> "y00"
+        then
+            if
+                op = "XOR"
+                && List.tryFind (fun (oi1, oi2, oop, _) -> oop = "XOR" && (oi1 = out || oi2 = out)) input_circuits = None
+            then
+                Some out
+            else if
+                op = "AND"
+                && List.tryFind (fun (oi1, oi2, oop, _) -> oop = "OR" && (oi1 = out || oi2 = out)) input_circuits = None
+            then
+                Some out
+            else
+                None
+        else
+            None)
 
-    let rec adder i carry =
-        let expected = x_s[i] <> y_s[i] <> carry
-        let new_carry = x_s[i] && y_s[i] || x_s[i] && carry || y_s[i] && carry
-
-        if new_z[i] <> expected then false
-        else if i = up_to then true
-        else adder (i + 1) new_carry
-
-    adder 0 false
-
-let mutable gates = []
-
-gate_log <-
-    fun o ->
-        if not (o.StartsWith "z") && not (List.contains o swapped) then
-            gates <- o :: gates
-
-for i in 0 .. out_length - 2 do
-    gates <- []
-
-    if not (check i) then
-        printfn "failed at bit %i" i
-
-        let possible_pairs =
-            [ for i in 0 .. gates.Length - 2 do
-                  for j in i + 1 .. gates.Length - 1 do
-                      yield gates[i], gates[j] ]
-
-        let rec find_swap =
-            function
-            | [] -> failwith "couldn't find correction"
-            | (a, b) :: rem ->
-                let a_f = full_circuit[a]
-                let b_f = full_circuit[b]
-                full_circuit <- Map.add a b_f full_circuit
-                full_circuit <- Map.add b a_f full_circuit
-
-                let result =
-                    try
-                        check i
-                    with _ ->
-                        false
-
-                if result then
-                    swapped <- a :: b :: swapped
-                    printfn "fixed with swap %s <-> %s" a b
-                    ()
-                else
-                    full_circuit <- Map.add a a_f full_circuit
-                    full_circuit <- Map.add b b_f full_circuit
-                    find_swap rem
-
-        find_swap possible_pairs
+printfn "Part 2: %s" <| (invalid |> Seq.sort |> String.concat ",")

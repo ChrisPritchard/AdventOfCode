@@ -15,23 +15,12 @@ let input_folder (wires, circuits) (line: string) =
 let input_wires, input_circuits = Array.fold input_folder ([], []) input
 
 let mutable full_circuit = Map.empty
-let mutable gate_log = fun out -> ()
-let mutable stack_depth = 0
-
-let max_depth_of_stack = 100
 
 for i1, i2, op, out in input_circuits do
     full_circuit <-
         Map.add
             out
             (fun () ->
-                stack_depth <- stack_depth + 1
-
-                if stack_depth > max_depth_of_stack then
-                    failwith "loop detected"
-
-                gate_log i1
-                gate_log i2
 
                 match op with
                 | "AND" -> full_circuit[i1]() && full_circuit[i2]()
@@ -78,10 +67,7 @@ let out_length =
     |> List.max
     |> (+) 1
 
-let z_s =
-    Array.init out_length (fun i ->
-        stack_depth <- 0
-        full_circuit[sprintf "z%02d" i]())
+let z_s = Array.init out_length (fun i -> full_circuit[sprintf "z%02d" i]())
 
 printfn "Part 1: %d" <| as_num z_s
 

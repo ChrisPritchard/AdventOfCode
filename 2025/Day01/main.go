@@ -29,9 +29,10 @@ func main() {
 				pos++
 			}
 
-			if pos == 100 {
+			switch pos {
+			case 100:
 				pos = 0
-			} else if pos == -1 {
+			case -1:
 				pos = 99
 			}
 

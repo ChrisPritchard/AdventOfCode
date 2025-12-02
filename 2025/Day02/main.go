@@ -16,7 +16,8 @@ func main() {
 	scanner.Scan()
 	line := scanner.Text()
 
-	total := 0
+	part1 := 0
+	part2 := 0
 
 	for r := range strings.SplitSeq(line, ",") {
 		ends := strings.Split(r, "-")
@@ -25,23 +26,35 @@ func main() {
 
 		for i := start; i <= end; i++ {
 			cur := strconv.Itoa(i)
-			if len(cur)%2 != 0 {
-				continue
-			}
-			valid := true
-			for j := 0; j < len(cur)/2; j++ {
-				if cur[j] != cur[len(cur)/2+j] {
-					valid = false
+			l := len(cur)
+
+			for k := 2; k <= l; k++ {
+
+				valid := true
+				if l%k != 0 {
+					continue
+				}
+				jmp := l / k
+				for j := 0; j < jmp && valid; j++ {
+					c := cur[j]
+					for m := 1; m < k && valid; m++ {
+						if cur[m*jmp+j] != c {
+							valid = false
+						}
+					}
+				}
+
+				if valid {
+					if k == 2 {
+						part1 += i
+					}
+					part2 += i
 					break
 				}
-			}
-			if valid {
-				fmt.Println(cur)
-				total += i
 			}
 		}
 	}
 
-	fmt.Println("Day 02 Part 01: ", total)
-	// fmt.Println("Day 01 Part 02: ", pass2)
+	fmt.Println("Day 02 Part 01: ", part1)
+	fmt.Println("Day 02 Part 02: ", part2)
 }

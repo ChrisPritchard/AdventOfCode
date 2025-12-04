@@ -29,8 +29,6 @@ func main() {
 	defer input_file.Close()
 
 	scanner := bufio.NewScanner(input_file)
-	part1 := 0
-	part2 := 0
 
 	roll_pos := make([]point, 0)
 	roll_map := make(map[point]struct{}, 0)
@@ -48,15 +46,38 @@ func main() {
 		y++
 	}
 
-	for _, p := range roll_pos {
-		c := 0
-		for _, n := range p.Neighbours() {
-			if _, exists := roll_map[n]; exists {
-				c++
+	find_removable := func() []point {
+		r := make([]point, 0)
+		for _, p := range roll_pos {
+			if _, exists := roll_map[p]; !exists {
+				continue
+			}
+			c := 0
+			for _, n := range p.Neighbours() {
+				if _, exists := roll_map[n]; exists {
+					c++
+				}
+			}
+			if c < 4 {
+				r = append(r, p)
 			}
 		}
-		if c < 4 {
-			part1++
+		return r
+	}
+
+	part1 := len(find_removable())
+
+	part2 := 0
+	for {
+		r := find_removable()
+		if len(r) == 0 {
+			break
+		}
+
+		part2 += len(r)
+
+		for _, p := range r {
+			delete(roll_map, p)
 		}
 	}
 

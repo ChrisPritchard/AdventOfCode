@@ -52,12 +52,11 @@ func main() {
 	for i, o := range ranges {
 		c := o
 		for j, r := range ranges {
-			if i == j {
+			if i == j || r.start == -1 {
 				continue
 			}
 			if c.start >= r.start && c.end <= r.end {
-				c.start = 0
-				c.end = 0
+				c.start = -1
 				break
 			}
 			if c.start >= r.start && c.start <= r.end {
@@ -73,7 +72,9 @@ func main() {
 	part2 := 0
 
 	for _, nr := range ranges {
-		part2 += (nr.end - nr.start) + 1
+		if nr.start != -1 {
+			part2 += (nr.end - nr.start) + 1
+		}
 	}
 
 	fmt.Println("Day 05 Part 01: ", part1)

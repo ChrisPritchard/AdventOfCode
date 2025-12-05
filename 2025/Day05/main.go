@@ -49,7 +49,30 @@ func main() {
 		}
 	}
 
+	new_ranges := make([]fresh_range, 0)
+	for i, o := range ranges {
+		c := o
+		for _, r := range ranges {
+			if r == o {
+				continue
+			}
+			if c.start > r.start && c.start < r.end {
+				c.start = r.end + 1
+			}
+			if c.end > r.start && c.end < r.end {
+				c.end = r.start - 1
+			}
+		}
+		ranges[i] = c
+		new_ranges = append(new_ranges, c)
+	}
+
 	part2 := 0
+
+	for _, nr := range new_ranges {
+		fmt.Println(nr)
+		part2 += (nr.end - nr.start) + 1
+	}
 
 	fmt.Println("Day 05 Part 01: ", part1)
 	fmt.Println("Day 05 Part 02: ", part2)

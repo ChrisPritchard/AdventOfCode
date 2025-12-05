@@ -49,28 +49,30 @@ func main() {
 		}
 	}
 
-	new_ranges := make([]fresh_range, 0)
 	for i, o := range ranges {
 		c := o
-		for _, r := range ranges {
-			if r == o {
+		for j, r := range ranges {
+			if i == j {
 				continue
 			}
-			if c.start > r.start && c.start < r.end {
+			if c.start >= r.start && c.end <= r.end {
+				c.start = 0
+				c.end = 0
+				break
+			}
+			if c.start >= r.start && c.start <= r.end {
 				c.start = r.end + 1
 			}
-			if c.end > r.start && c.end < r.end {
+			if c.end >= r.start && c.end <= r.end {
 				c.end = r.start - 1
 			}
 		}
 		ranges[i] = c
-		new_ranges = append(new_ranges, c)
 	}
 
 	part2 := 0
 
-	for _, nr := range new_ranges {
-		fmt.Println(nr)
+	for _, nr := range ranges {
 		part2 += (nr.end - nr.start) + 1
 	}
 

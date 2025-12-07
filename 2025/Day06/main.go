@@ -12,52 +12,73 @@ func main() {
 	input_file, _ := os.Open("input.txt")
 	defer input_file.Close()
 
+	input := make([]string, 0)
 	scanner := bufio.NewScanner(input_file)
-
-	input := make([][]int, 0)
-
-	part1 := 0
-
 	for scanner.Scan() {
-		line := scanner.Text()
-		p := strings.Split(line, " ")
-
-		row := make([]int, 0)
-		for _, s := range p {
-			if s == "" {
-				continue
-			}
-			switch s {
-			case "+":
-				row = append(row, 0)
-			case "*":
-				row = append(row, 1)
-			default:
-				i, _ := strconv.Atoi(s)
-				row = append(row, i)
-			}
-		}
-
-		input = append(input, row)
+		input = append(input, scanner.Text())
 	}
 
-	for j, o := range input[len(input)-1] {
-		if o == 0 {
-			r := 0
-			for i := 0; i < len(input)-1; i++ {
-				r += input[i][j]
-			}
-			part1 += r
-		} else {
-			r := 1
-			for i := 0; i < len(input)-1; i++ {
-				r *= input[i][j]
-			}
-			part1 += r
-		}
-	}
-
+	op_row := len(input) - 1
+	part1 := 0
 	part2 := 0
+
+	s := 2 // start high for last col
+	for i := len(input[op_row]) - 1; i >= 0; i-- {
+		switch input[op_row][i] {
+		case ' ':
+			s++
+		case '+':
+			r1 := 0
+			for j := range op_row {
+				n := input[j][i : i+s]
+				v, _ := strconv.Atoi(strings.TrimSpace(n))
+				r1 += v
+			}
+			part1 += r1
+
+			r2 := 0
+			for k := range s {
+				v := 0
+				for j := range op_row {
+					c := input[j][i+k]
+					if c != ' ' {
+						v += int(c) - int('0')
+						v *= 10
+					}
+				}
+				fmt.Println(v)
+				r2 += v
+			}
+			part2 += r2
+
+			s = 0
+		case '*':
+			r1 := 1
+			for j := range op_row {
+				n := input[j][i : i+s]
+				v, _ := strconv.Atoi(strings.TrimSpace(n))
+				r1 *= v
+			}
+			part1 += r1
+
+			r2 := 1
+			for k := range s {
+				v := 0
+				for j := range op_row {
+					c := input[j][i+k]
+					if c != ' ' {
+						v += int(c) - int('0')
+						v *= 10
+					}
+				}
+				fmt.Println(v)
+				r2 *= v
+			}
+			part2 += r2
+
+			s = 0
+		}
+	}
 
 	fmt.Println("Day 06 Part 01: ", part1)
 	fmt.Println("Day 06 Part 02: ", part2)

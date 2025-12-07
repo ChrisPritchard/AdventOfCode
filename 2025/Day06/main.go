@@ -25,14 +25,14 @@ func main() {
 		row := make([]int, 0)
 		for _, s := range p {
 			if s == "" {
-				fmt.Println("skipping empty")
 				continue
 			}
-			if s == "+" {
+			switch s {
+			case "+":
 				row = append(row, 0)
-			} else if s == "*" {
+			case "*":
 				row = append(row, 1)
-			} else {
+			default:
 				i, _ := strconv.Atoi(s)
 				row = append(row, i)
 			}
@@ -44,13 +44,13 @@ func main() {
 	for j, o := range input[len(input)-1] {
 		if o == 0 {
 			r := 0
-			for i := 0; i < len(input)-2; i++ {
+			for i := 0; i < len(input)-1; i++ {
 				r += input[i][j]
 			}
 			part1 += r
 		} else {
 			r := 1
-			for i := 0; i < len(input)-2; i++ {
+			for i := 0; i < len(input)-1; i++ {
 				r *= input[i][j]
 			}
 			part1 += r

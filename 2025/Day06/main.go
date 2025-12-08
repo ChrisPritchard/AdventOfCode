@@ -22,62 +22,58 @@ func main() {
 	part1 := 0
 	part2 := 0
 
-	s := 2 // start high for last col
-	for i := len(input[op_row]) - 1; i >= 0; i-- {
-		switch input[op_row][i] {
-		case ' ':
-			s++
-		case '+':
-			r1 := 0
-			for j := range op_row {
-				n := input[j][i : i+s]
-				v, _ := strconv.Atoi(strings.TrimSpace(n))
-				r1 += v
-			}
-			part1 += r1
+	read_val_1 := func(j, i, s int) int {
+		n := input[j][i : i+s]
+		v, _ := strconv.Atoi(strings.TrimSpace(n))
+		return v
+	}
 
-			r2 := 0
-			for k := range s {
-				v := 0
-				for j := range op_row {
-					c := input[j][i+k]
-					if c != ' ' {
-						v += int(c) - int('0')
-						v *= 10
-					}
+	read_val_2 := func(i, k int) int {
+		v := 0
+		for j := range op_row {
+			c := input[j][i+k]
+			if c != ' ' {
+				if v != 0 {
+					v *= 10
 				}
-				fmt.Println(v)
-				r2 += v
+				v += int(c) - int('0')
 			}
-			part2 += r2
-
-			s = 0
-		case '*':
-			r1 := 1
-			for j := range op_row {
-				n := input[j][i : i+s]
-				v, _ := strconv.Atoi(strings.TrimSpace(n))
-				r1 *= v
-			}
-			part1 += r1
-
-			r2 := 1
-			for k := range s {
-				v := 0
-				for j := range op_row {
-					c := input[j][i+k]
-					if c != ' ' {
-						v += int(c) - int('0')
-						v *= 10
-					}
-				}
-				fmt.Println(v)
-				r2 *= v
-			}
-			part2 += r2
-
-			s = 0
 		}
+		return v
+	}
+
+	s := 0
+	for i := len(input[op_row]) - 1; i >= 0; i-- {
+		c := input[op_row][i]
+		if c == ' ' {
+			s++
+			continue
+		}
+
+		d := 0
+		op := func(i *int, j int) {
+			*i += j
+		}
+		if c == '*' {
+			d = 1
+			op = func(i *int, j int) {
+				*i *= j
+			}
+		}
+
+		r1 := d
+		for j := range op_row {
+			op(&r1, read_val_1(j, i, s))
+		}
+		part1 += r1
+
+		r2 := d
+		for k := range s {
+			op(&r2, read_val_2(i, k))
+		}
+		part2 += r2
+
+		s = 0
 	}
 
 	fmt.Println("Day 06 Part 01: ", part1)

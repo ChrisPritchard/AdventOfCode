@@ -28,7 +28,10 @@ func main() {
 		junctions = append(junctions, junction{x, y, z})
 	}
 
-	dists := make(map[junction]map[junction]float64)
+	junction_to_junction := make(map[junction]map[junction]float64)
+	all_distances := make([]float64, 0)
+	distance_to_junctions := make(map[float64][]junction)
+
 	sq := func(a int) float64 {
 		return math.Pow(float64(a), float64(2))
 	}
@@ -38,33 +41,41 @@ func main() {
 			if j == k {
 				continue
 			}
-			if d, exists := dists[k]; exists {
+			if d, exists := junction_to_junction[k]; exists {
 				if _, exists := d[j]; exists {
 					continue
 				}
-			} else if d, exists := dists[j]; exists {
+			} else if d, exists := junction_to_junction[j]; exists {
 				if _, exists := d[k]; exists {
 					continue
 				}
 			}
+
 			distance := math.Sqrt(sq(k.x-j.x) + sq(k.y-j.y) + sq(k.z-j.z))
-			if d, exists := dists[j]; exists {
-				d[k] = distance
+			all_distances = append(all_distances, distance)
+			if d, exists := distance_to_junctions[distance]; exists {
+				d = append(append(d, j), k)
 			} else {
-				dists[j] = make(map[junction]float64)
-				dists[j][k] = distance
+				distance_to_junctions[distance] = []junction{j, k}
 			}
 
-			if d, exists := dists[k]; exists {
+			if d, exists := junction_to_junction[j]; exists {
+				d[k] = distance
+			} else {
+				junction_to_junction[j] = make(map[junction]float64)
+				junction_to_junction[j][k] = distance
+			}
+
+			if d, exists := junction_to_junction[k]; exists {
 				d[j] = distance
 			} else {
-				dists[k] = make(map[junction]float64)
-				dists[k][j] = distance
+				junction_to_junction[k] = make(map[junction]float64)
+				junction_to_junction[k][j] = distance
 			}
 		}
 	}
 
-	fmt.Println(dists)
+	fmt.Println(distance_to_junctions)
 
 	part1 := 0
 	part2 := 0

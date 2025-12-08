@@ -18,24 +18,29 @@ func main() {
 	}
 
 	part1 := 0
-	part2 := 1
+	part2 := 0
 
 	start := strings.Index(input[0], "S")
-	beams := make(map[int]struct{})
-	beams[start] = struct{}{}
+	beams := make(map[int]int)
+	beams[start] = 1
 
 	for i := 1; i < len(input); i++ {
 		for j, c := range input[i] {
 			if c == '^' {
-				if _, exists := beams[j]; exists {
+				if n, exists := beams[j]; exists {
 					delete(beams, j)
-					beams[j-1] = struct{}{}
-					beams[j+1] = struct{}{}
+					l := beams[j-1]
+					beams[j-1] = l + n
+					r := beams[j+1]
+					beams[j+1] = r + n
 					part1++
-					part2 *= 2
 				}
 			}
 		}
+	}
+
+	for _, v := range beams {
+		part2 += v
 	}
 
 	fmt.Println("Day 07 Part 01: ", part1)

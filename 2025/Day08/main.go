@@ -12,21 +12,12 @@ import (
 	"strings"
 )
 
-type gap struct {
-	distance               float64
-	junction_a, junction_b junction
-}
-
 type junction struct {
 	x, y, z int
 }
 
 type pair struct {
 	a, b junction
-}
-
-func (o pair) has(c junction) bool {
-	return o.a == c || o.b == c
 }
 
 func (o pair) rev() pair {
@@ -81,14 +72,14 @@ func straight_line(a, b junction) float64 {
 	return math.Sqrt(sq(b.x-a.x) + sq(b.y-a.y) + sq(b.z-a.z))
 }
 
-func find[t any](a []t, selector func(t) bool) (t, bool) {
-	for _, o := range a {
-		if selector(o) {
-			return o, true
+func find(a []circuit, j junction) (circuit, bool, int) {
+	for i, o := range a {
+		if o.contains(j) {
+			return o, true, i
 		}
 	}
-	var zero t
-	return zero, false
+	var z circuit
+	return z, false, 0
 }
 
 func main() {
@@ -103,44 +94,40 @@ func main() {
 		conn_count = 1000 // real input data
 	}
 
-	i := 0
-	for range conn_count {
-		for {
-			candidate := distances[i]
-			i++
-			circ_a, exists_a := find(circuits, func(c circuit) bool {
-				return c.contains(candidate.pair.a)
-			})
-			circ_b, exists_b := find(circuits, func(c circuit) bool {
-				return c.contains(candidate.pair.b)
-			})
+	part1 := 0
+	part2 := 0
 
-			if exists_a && exists_b && circ_a.id == circ_b.id {
-				continue
-			}
+	for i, candidate := range distances {
+		circ_a, exists_a, index := find(circuits, candidate.pair.a)
+		circ_b, exists_b, _ := find(circuits, candidate.pair.b)
 
-			if exists_a && exists_b {
-				circ_a.merge_into(circ_b)
-			} else if exists_a {
-				circ_a.add(candidate.pair.b)
-			} else if exists_b {
-				circ_b.add(candidate.pair.a)
-			} else {
-				circuits = append(circuits, new_circuit(i, candidate.pair.a, candidate.pair.b))
-			}
+		if exists_a && exists_b && circ_a.id == circ_b.id {
+			// do nothing
+		} else if exists_a && exists_b {
+			circ_a.merge_into(circ_b)
+			circuits = slices.Delete(circuits, index, index+1)
+		} else if exists_a {
+			circ_a.add(candidate.pair.b)
+		} else if exists_b {
+			circ_b.add(candidate.pair.a)
+		} else {
+			circuits = append(circuits, new_circuit(i, candidate.pair.a, candidate.pair.b))
+		}
+
+		if i == conn_count-1 {
+			slices.SortFunc(circuits, func(a, b circuit) int {
+				return -1 * cmp.Compare(a.size(), b.size())
+			})
+			part1 = circuits[0].size() * circuits[1].size() * circuits[2].size()
+		}
+		if len(circuits) == 1 && circuits[0].size() == len(junctions) {
+			part2 = candidate.pair.a.x * candidate.pair.b.x
 			break
 		}
 	}
 
-	slices.SortFunc(circuits, func(a, b circuit) int {
-		return -1 * cmp.Compare(a.size(), b.size())
-	})
-
-	fmt.Println(circuits[0].size(), circuits[1].size(), circuits[2].size())
-	part1 := circuits[0].size() * circuits[1].size() * circuits[2].size()
-
 	fmt.Println("Day 08 Part 01: ", part1)
-	//fmt.Println("Day 08 Part 02: ", part2)
+	fmt.Println("Day 08 Part 02: ", part2)
 }
 
 func read_input() []junction {

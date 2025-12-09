@@ -106,6 +106,7 @@ func main() {
 	for range conn_count {
 		for {
 			candidate := distances[i]
+			i++
 			circ_a, exists_a := find(circuits, func(c circuit) bool {
 				return c.contains(candidate.pair.a)
 			})
@@ -116,6 +117,7 @@ func main() {
 			if exists_a && exists_b && circ_a.id == circ_b.id {
 				continue
 			} else if exists_a && exists_b {
+				fmt.Println("merging for ", candidate)
 				circ_a.merge_into(circ_b)
 				break
 			} else if exists_a {
@@ -129,13 +131,14 @@ func main() {
 				break
 			}
 		}
-		i++
+		fmt.Println(circuits)
 	}
 
 	slices.SortFunc(circuits, func(a, b circuit) int {
 		return -1 * cmp.Compare(a.size(), b.size())
 	})
 
+	fmt.Println(circuits[0].size(), circuits[1].size(), circuits[2].size())
 	part1 := circuits[0].size() * circuits[1].size() * circuits[2].size()
 
 	fmt.Println("Day 08 Part 01: ", part1)

@@ -95,6 +95,7 @@ func main() {
 
 	junctions := read_input()
 	distances := find_unique_connections(junctions)
+
 	circuits := make([]circuit, 0)
 
 	conn_count := 10
@@ -116,22 +117,19 @@ func main() {
 
 			if exists_a && exists_b && circ_a.id == circ_b.id {
 				continue
-			} else if exists_a && exists_b {
-				fmt.Println("merging for ", candidate)
+			}
+
+			if exists_a && exists_b {
 				circ_a.merge_into(circ_b)
-				break
 			} else if exists_a {
 				circ_a.add(candidate.pair.b)
-				break
 			} else if exists_b {
 				circ_b.add(candidate.pair.a)
-				break
 			} else {
 				circuits = append(circuits, new_circuit(i, candidate.pair.a, candidate.pair.b))
-				break
 			}
+			break
 		}
-		fmt.Println(circuits)
 	}
 
 	slices.SortFunc(circuits, func(a, b circuit) int {

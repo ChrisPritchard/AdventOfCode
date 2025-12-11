@@ -1,3 +1,5 @@
+# https://github.com/mgtezak/Advent_of_Code/blob/master/2025/09/p2.py
+
 def part2(puzzle_input):
     corners = [tuple(map(int, line.split(','))) for line in puzzle_input.splitlines()]
     n = len(corners)

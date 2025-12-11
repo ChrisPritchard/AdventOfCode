@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"cmp"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -16,33 +18,22 @@ type edge struct {
 	a, b point
 }
 
-func (e edge) top_left() point {
-	if e.a.x <= e.b.x && e.a.y <= e.b.y {
-		return e.a
-	}
-	return e.b
-}
-
-func (e edge) bottom_right() point {
-	if e.top_left() == e.a {
-		return e.b
-	}
-	return e.a
-}
-
-func (e edge) vertical() bool {
-	return e.a.x == e.b.x
+type rect struct {
+	size int
+	a, b point
 }
 
 func main() {
 
 	all_points := parse_input()
+	all_rects := all_possible_rects(all_points)
 
-	part1 := find_largest_rect(all_points)
+	part1 := all_rects[0].size
+
+	// for part 2 i needed to work with https://github.com/mgtezak/Advent_of_Code/blob/master/2025/09/p2.py
 
 	edges := get_edges(all_points)
-
-	part2 := find_largest_interior_rect(all_points, edges)
+	part2 := first_uncrossed_rect(edges, all_rects)
 
 	fmt.Println("Day 09 Part 01: ", part1)
 	fmt.Println("Day 09 Part 02: ", part2)
@@ -64,20 +55,37 @@ func parse_input() []point {
 	return input
 }
 
-func find_largest_rect(all_points []point) int {
-	max_size := 0
+func abs(i int) int {
+	if i < 0 {
+		i *= -1
+	}
+	return i
+}
+
+func get_size(a, b point) int {
+	return (abs(b.x-a.x) + 1) * (abs(b.y-a.y) + 1)
+}
+
+func all_possible_rects(all_points []point) []rect {
+	rects := []rect{}
 	for i, a := range all_points {
-		for j, b := range all_points {
+		for j, b := range all_points[i+1:] {
 			if i == j {
 				continue
 			}
-			size := ((b.x - a.x) + 1) * ((b.y - a.y) + 1)
-			if size > max_size {
-				max_size = size
+			size := get_size(a, b)
+			new_rect := rect{size, a, b}
+			if a.x >= b.x && a.y >= b.y {
+				new_rect.a = b
+				new_rect.b = a
 			}
+			rects = append(rects, new_rect)
 		}
 	}
-	return max_size
+	slices.SortFunc(rects, func(a, b rect) int {
+		return -1 * cmp.Compare(a.size, b.size)
+	})
+	return rects
 }
 
 func get_edges(all_points []point) []edge {
@@ -89,54 +97,39 @@ func get_edges(all_points []point) []edge {
 		} else {
 			b = all_points[i-1]
 		}
-		edges = append(edges, edge{a, b})
+		new_edge := edge{a, b}
+		if a.x >= b.x && a.y >= b.y {
+			new_edge = edge{b, a}
+		}
+		edges = append(edges, new_edge)
 	}
+	slices.SortFunc(edges, func(a, b edge) int {
+		return -1 * cmp.Compare(get_size(a.a, a.b), get_size(b.a, b.b))
+	})
 	return edges
 }
 
-func edge_intercects(e edge, tl point, br point) bool {
-	a := e.top_left()
-	b := e.bottom_right()
-	if e.vertical() {
-		if e.a.x <= tl.x || e.a.x >= br.x {
-			return false
-		} else if b.y <= tl.y || a.y >= br.y {
-			return false
-		}
-		return true
-	} else {
-		if e.a.y <= tl.y || e.a.y >= br.y {
-			return false
-		} else if b.x <= tl.x || a.x >= br.x {
-			return false
-		}
-		return true
-	}
-}
+func first_uncrossed_rect(edges []edge, rects []rect) int {
+	for _, rect := range rects {
+		valid := true
+		x1 := rect.a.x
+		x2 := rect.b.x
+		y1 := rect.a.y
+		y2 := rect.b.y
+		for _, edge := range edges {
+			x3 := edge.a.x
+			x4 := edge.b.x
+			y3 := edge.a.y
+			y4 := edge.b.y
 
-func find_largest_interior_rect(all_points []point, edges []edge) int {
-	max_size := 0
-	for i, a := range all_points {
-		for j, b := range all_points {
-			if i == j {
-				continue
-			}
-			size := ((b.x - a.x) + 1) * ((b.y - a.y) + 1)
-			if size > max_size {
-				tl := point{x: min(a.x, b.x), y: min(a.y, b.y)}
-				br := point{x: max(a.x, b.x), y: max(a.y, b.y)}
-				valid := true
-				for _, e := range edges {
-					if edge_intercects(e, tl, br) {
-						valid = false
-						break
-					}
-				}
-				if valid {
-					max_size = size
-				}
+			if x4 > x1 && x3 < x2 && y4 > y1 && y3 < y2 {
+				valid = false
+				break
 			}
 		}
+		if valid {
+			return rect.size
+		}
 	}
-	return max_size
+	return -1
 }

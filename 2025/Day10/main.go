@@ -9,18 +9,25 @@ import (
 )
 
 type machine struct {
-	lights  []bool
-	buttons [][]int
-	volts   []int
+	light_mask int
+	buttons    []int
+	volts      []int
 }
 
 func main() {
 	machines := parse_input()
 
-	fmt.Println(machines)
-
 	part1 := 0
 	part2 := 0
+
+	for _, m := range machines {
+		path, exists := find_min_presses(m.buttons, m.light_mask)
+		if !exists {
+			fmt.Println("could not find sequence for", m)
+		} else {
+			part1 += len(path)
+		}
+	}
 
 	fmt.Println("Day 10 Part 01: ", part1)
 	fmt.Println("Day 10 Part 02: ", part2)
@@ -41,14 +48,21 @@ func parse_input() []machine {
 		for i := range len(lights) {
 			lights[i] = parts[0][i+1] == '#'
 		}
+		light_mask := 0
+		for i, b := range lights {
+			if b {
+				light_mask |= 1 << i
+			}
+		}
 
-		buttons := make([][]int, len(parts)-2)
+		buttons := make([]int, len(parts)-2)
 		for i := range len(buttons) {
 			text := parts[i+1]
 			indices := strings.Split(text[1:len(text)-1], ",")
-			button := make([]int, len(indices))
+			button := 0
 			for j := range len(indices) {
-				button[j], _ = strconv.Atoi(indices[j])
+				n, _ := strconv.Atoi(indices[j])
+				button |= 1 << n
 			}
 			buttons[i] = button
 		}
@@ -60,8 +74,49 @@ func parse_input() []machine {
 			volts[i], _ = strconv.Atoi(values[i])
 		}
 
-		machines = append(machines, machine{lights, buttons, volts})
+		machines = append(machines, machine{light_mask, buttons, volts})
 	}
 
 	return machines
+}
+
+func find_min_presses(buttons []int, target int) ([]int, bool) {
+
+	// BFS
+	start := 0
+	queue := []int{start}
+	prev := make(map[int]int)   // state -> previous state
+	action := make(map[int]int) // state -> button pressed to get here
+	visited := make(map[int]bool)
+	visited[start] = true
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+
+		if current == target {
+			// Reconstruct path
+			path := []int{}
+			state := current
+			for state != start {
+				btn := action[state]
+				path = append([]int{btn}, path...)
+				state = prev[state]
+			}
+			return path, true
+		}
+
+		// Try all buttons
+		for btn := range buttons {
+			next := current ^ buttons[btn]
+			if !visited[next] {
+				visited[next] = true
+				prev[next] = current
+				action[next] = btn
+				queue = append(queue, next)
+			}
+		}
+	}
+
+	return nil, false
 }

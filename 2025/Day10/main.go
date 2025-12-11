@@ -9,9 +9,10 @@ import (
 )
 
 type machine struct {
-	light_mask int
-	buttons    []int
-	volts      []int
+	light_mask   int
+	buttons      [][]int
+	button_masks []int
+	volts        []int
 }
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 	part2 := 0
 
 	for _, m := range machines {
-		path, exists := find_min_presses(m.buttons, m.light_mask)
+		path, exists := find_min_presses(m.button_masks, m.light_mask)
 		if !exists {
 			fmt.Println("could not find sequence for", m)
 		} else {
@@ -55,16 +56,20 @@ func parse_input() []machine {
 			}
 		}
 
-		buttons := make([]int, len(parts)-2)
+		buttons := make([][]int, len(parts)-2)
+		button_masks := make([]int, len(parts)-2)
 		for i := range len(buttons) {
 			text := parts[i+1]
 			indices := strings.Split(text[1:len(text)-1], ",")
-			button := 0
+			button := make([]int, len(indices))
+			button_mask := 0
 			for j := range len(indices) {
 				n, _ := strconv.Atoi(indices[j])
-				button |= 1 << n
+				button[j] = n
+				button_mask |= 1 << n
 			}
 			buttons[i] = button
+			button_masks[i] = button_mask
 		}
 
 		last := parts[len(parts)-1]
@@ -74,7 +79,7 @@ func parse_input() []machine {
 			volts[i], _ = strconv.Atoi(values[i])
 		}
 
-		machines = append(machines, machine{light_mask, buttons, volts})
+		machines = append(machines, machine{light_mask, buttons, button_masks, volts})
 	}
 
 	return machines
@@ -82,7 +87,6 @@ func parse_input() []machine {
 
 func find_min_presses(buttons []int, target int) ([]int, bool) {
 
-	// BFS
 	start := 0
 	queue := []int{start}
 	prev := make(map[int]int)   // state -> previous state
@@ -95,7 +99,6 @@ func find_min_presses(buttons []int, target int) ([]int, bool) {
 		queue = queue[1:]
 
 		if current == target {
-			// Reconstruct path
 			path := []int{}
 			state := current
 			for state != start {
@@ -106,7 +109,6 @@ func find_min_presses(buttons []int, target int) ([]int, bool) {
 			return path, true
 		}
 
-		// Try all buttons
 		for btn := range buttons {
 			next := current ^ buttons[btn]
 			if !visited[next] {

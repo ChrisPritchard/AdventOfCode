@@ -3,16 +3,16 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
 )
 
 type machine struct {
-	light_mask   int
-	buttons      [][]int
-	button_masks []int
-	volts        []int
+	lights  []bool
+	buttons [][]int
+	volts   []int
 }
 
 func main() {
@@ -22,11 +22,18 @@ func main() {
 	part2 := 0
 
 	for _, m := range machines {
-		path, exists := find_min_presses(m.button_masks, m.light_mask)
+		press_count, exists := find_light_button_combo_length(m.buttons, m.lights)
 		if !exists {
-			fmt.Println("could not find sequence for", m)
+			fmt.Println("could not find light combo sequence for", m)
 		} else {
-			part1 += len(path)
+			part1 += press_count
+		}
+
+		press_count, exists = find_voltage_button_combo_length(m.buttons, m.volts)
+		if !exists {
+			fmt.Println("could not find voltage combo sequence for", m)
+		} else {
+			part2 += press_count
 		}
 	}
 
@@ -49,27 +56,17 @@ func parse_input() []machine {
 		for i := range len(lights) {
 			lights[i] = parts[0][i+1] == '#'
 		}
-		light_mask := 0
-		for i, b := range lights {
-			if b {
-				light_mask |= 1 << i
-			}
-		}
 
 		buttons := make([][]int, len(parts)-2)
-		button_masks := make([]int, len(parts)-2)
 		for i := range len(buttons) {
 			text := parts[i+1]
 			indices := strings.Split(text[1:len(text)-1], ",")
 			button := make([]int, len(indices))
-			button_mask := 0
-			for j := range len(indices) {
-				n, _ := strconv.Atoi(indices[j])
+			for j, b := range indices {
+				n, _ := strconv.Atoi(b)
 				button[j] = n
-				button_mask |= 1 << n
 			}
 			buttons[i] = button
-			button_masks[i] = button_mask
 		}
 
 		last := parts[len(parts)-1]
@@ -79,46 +76,125 @@ func parse_input() []machine {
 			volts[i], _ = strconv.Atoi(values[i])
 		}
 
-		machines = append(machines, machine{light_mask, buttons, button_masks, volts})
+		machines = append(machines, machine{lights, buttons, volts})
 	}
 
 	return machines
 }
 
-func find_min_presses(buttons []int, target int) ([]int, bool) {
+// simple bfs for part 1
+func find_light_button_combo_length(buttons [][]int, lights []bool) (int, bool) {
 
-	start := 0
-	queue := []int{start}
-	prev := make(map[int]int)   // state -> previous state
-	action := make(map[int]int) // state -> button pressed to get here
-	visited := make(map[int]bool)
-	visited[start] = true
+	// optimise by converting int arrays to bit masks
+
+	light_mask := 0
+	for i, b := range lights {
+		if b {
+			light_mask |= 1 << i
+		}
+	}
+
+	button_masks := make([]int, len(buttons))
+	for i, b := range buttons {
+		mask := 0
+		for _, n := range b {
+			mask |= 1 << n
+		}
+		button_masks[i] = mask
+	}
+
+	// bfs starts here
+
+	queue := []int{0}
+	path := make(map[int]int) // curr -> prev
+	visited := make(map[int]struct{})
 
 	for len(queue) > 0 {
 		current := queue[0]
 		queue = queue[1:]
 
-		if current == target {
-			path := []int{}
-			state := current
-			for state != start {
-				btn := action[state]
-				path = append([]int{btn}, path...)
-				state = prev[state]
+		if current == light_mask {
+			// reconstruct steps
+			count := 0
+			for current != 0 {
+				current = path[current]
+				count++
 			}
-			return path, true
+
+			return count, true
 		}
 
-		for btn := range buttons {
-			next := current ^ buttons[btn]
-			if !visited[next] {
-				visited[next] = true
-				prev[next] = current
-				action[next] = btn
-				queue = append(queue, next)
+		for _, b := range button_masks {
+			candidate := current ^ b
+			if _, e := visited[candidate]; e {
+				continue
 			}
+			visited[candidate] = struct{}{}
+			path[candidate] = current
+			queue = append(queue, candidate)
 		}
 	}
 
-	return nil, false
+	return 0, false
+}
+
+func find_voltage_button_combo_length(buttons [][]int, volts []int) (int, bool) {
+
+	type node struct {
+		state [10]int
+		count int
+		index int
+	}
+
+	max_presses := func(button []int, target []int, current [10]int) int {
+		max := math.MaxInt
+		for _, n := range button {
+			diff := target[n] - current[n]
+			if diff < max {
+				max = diff
+			}
+		}
+		return max
+	}
+
+	apply_button := func(button []int, count int, current [10]int) [10]int {
+		new := [10]int{}
+		for _, n := range button {
+			new[n] = current[n] + count
+		}
+		return new
+	}
+
+	target_state := [10]int{}
+	copy(target_state[:], volts)
+
+	start := node{[10]int{}, 0, 0}
+	queue := []node{start}
+
+	for len(queue) > 0 {
+		current := queue[0]
+		if current.state[0] == target_state[0] && current.state[1] == target_state[1] {
+			fmt.Println(current)
+		}
+		queue = queue[1:]
+
+		if current.state == target_state {
+			return current.count, true
+		}
+
+		if current.index == len(buttons) {
+			continue
+		}
+
+		button := buttons[current.index]
+		max := max_presses(button, volts, current.state)
+
+		for n := range max + 1 {
+			new_state := apply_button(button, n, current.state)
+			next := node{new_state, current.count + n, current.index + 1}
+			queue = append(queue, next)
+		}
+	}
+
+	return 0, false
 }

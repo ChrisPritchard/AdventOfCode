@@ -21,7 +21,8 @@ func main() {
 	part1 := 0
 	part2 := 0
 
-	for _, m := range machines {
+	for i, m := range machines {
+		fmt.Printf("processing %d/%d\n", i, len(machines))
 		press_count, exists := find_light_button_combo_length(m.buttons, m.lights)
 		if !exists {
 			fmt.Println("could not find light combo sequence for", m)
@@ -141,9 +142,10 @@ func find_light_button_combo_length(buttons [][]int, lights []bool) (int, bool) 
 func find_voltage_button_combo_length(buttons [][]int, volts []int) (int, bool) {
 
 	type node struct {
-		state [10]int
-		count int
-		index int
+		state    [10]int
+		count    int
+		index    int
+		sequence []int
 	}
 
 	max_presses := func(button []int, target []int, current [10]int) int {
@@ -159,6 +161,7 @@ func find_voltage_button_combo_length(buttons [][]int, volts []int) (int, bool) 
 
 	apply_button := func(button []int, count int, current [10]int) [10]int {
 		new := [10]int{}
+		copy(new[:], current[:])
 		for _, n := range button {
 			new[n] = current[n] + count
 		}
@@ -168,22 +171,14 @@ func find_voltage_button_combo_length(buttons [][]int, volts []int) (int, bool) 
 	target_state := [10]int{}
 	copy(target_state[:], volts)
 
-	start := node{[10]int{}, 0, 0}
-	queue := []node{start}
-
-	for len(queue) > 0 {
-		current := queue[0]
-		if current.state[0] == target_state[0] && current.state[1] == target_state[1] {
-			fmt.Println(current)
-		}
-		queue = queue[1:]
-
+	var dfs func(current node) int
+	dfs = func(current node) int {
 		if current.state == target_state {
-			return current.count, true
+			return current.count
 		}
 
 		if current.index == len(buttons) {
-			continue
+			return -1
 		}
 
 		button := buttons[current.index]
@@ -191,10 +186,19 @@ func find_voltage_button_combo_length(buttons [][]int, volts []int) (int, bool) 
 
 		for n := range max + 1 {
 			new_state := apply_button(button, n, current.state)
-			next := node{new_state, current.count + n, current.index + 1}
-			queue = append(queue, next)
+			next := node{new_state, current.count + n, current.index + 1, append(current.sequence, n)}
+			r := dfs(next)
+			if r != -1 {
+				return r
+			}
 		}
+
+		return -1
 	}
 
-	return 0, false
+	start := node{[10]int{}, 0, 0, []int{}}
+	r := dfs(start)
+	fmt.Println(r)
+
+	return r, r != -1
 }

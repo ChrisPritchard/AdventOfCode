@@ -3,10 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/draffensperger/golp"
 )
 
 type machine struct {
@@ -21,21 +23,9 @@ func main() {
 	part1 := 0
 	part2 := 0
 
-	for i, m := range machines {
-		fmt.Printf("processing %d/%d\n", i, len(machines))
-		press_count, exists := find_light_button_combo_length(m.buttons, m.lights)
-		if !exists {
-			fmt.Println("could not find light combo sequence for", m)
-		} else {
-			part1 += press_count
-		}
-
-		press_count, exists = find_voltage_button_combo_length(m.buttons, m.volts)
-		if !exists {
-			fmt.Println("could not find voltage combo sequence for", m)
-		} else {
-			part2 += press_count
-		}
+	for _, m := range machines {
+		part1 += find_light_button_combo_length(m.buttons, m.lights)
+		part2 += find_voltage_button_combo_length(m.buttons, m.volts)
 	}
 
 	fmt.Println("Day 10 Part 01: ", part1)
@@ -84,7 +74,7 @@ func parse_input() []machine {
 }
 
 // simple bfs for part 1
-func find_light_button_combo_length(buttons [][]int, lights []bool) (int, bool) {
+func find_light_button_combo_length(buttons [][]int, lights []bool) int {
 
 	// optimise by converting int arrays to bit masks
 
@@ -122,7 +112,7 @@ func find_light_button_combo_length(buttons [][]int, lights []bool) (int, bool) 
 				count++
 			}
 
-			return count, true
+			return count
 		}
 
 		for _, b := range button_masks {
@@ -136,69 +126,34 @@ func find_light_button_combo_length(buttons [][]int, lights []bool) (int, bool) 
 		}
 	}
 
-	return 0, false
+	panic("no solution found")
 }
 
-func find_voltage_button_combo_length(buttons [][]int, volts []int) (int, bool) {
+// using integer linear programming via draffensperger/golp && LPSolve
+func find_voltage_button_combo_length(buttons [][]int, volts []int) int {
 
-	type node struct {
-		state    [10]int
-		count    int
-		index    int
-		sequence []int
-	}
-
-	max_presses := func(button []int, target []int, current [10]int) int {
-		max := math.MaxInt
-		for _, n := range button {
-			diff := target[n] - current[n]
-			if diff < max {
-				max = diff
+	lp := golp.NewLP(0, len(buttons))
+	for i, v := range volts {
+		constraints := make([]golp.Entry, 0)
+		for j, b := range buttons {
+			if slices.Contains(b, i) {
+				constraints = append(constraints, golp.Entry{Col: j, Val: 1.0})
 			}
 		}
-		return max
+		lp.AddConstraintSparse(constraints, golp.EQ, float64(v))
 	}
 
-	apply_button := func(button []int, count int, current [10]int) [10]int {
-		new := [10]int{}
-		copy(new[:], current[:])
-		for _, n := range button {
-			new[n] = current[n] + count
-		}
-		return new
+	for i := range buttons {
+		lp.SetInt(i, true)
 	}
 
-	target_state := [10]int{}
-	copy(target_state[:], volts)
-
-	var dfs func(current node) int
-	dfs = func(current node) int {
-		if current.state == target_state {
-			return current.count
-		}
-
-		if current.index == len(buttons) {
-			return -1
-		}
-
-		button := buttons[current.index]
-		max := max_presses(button, volts, current.state)
-
-		for n := range max + 1 {
-			new_state := apply_button(button, n, current.state)
-			next := node{new_state, current.count + n, current.index + 1, append(current.sequence, n)}
-			r := dfs(next)
-			if r != -1 {
-				return r
-			}
-		}
-
-		return -1
+	obj := make([]float64, 0)
+	for range buttons {
+		obj = append(obj, 1.0)
 	}
 
-	start := node{[10]int{}, 0, 0, []int{}}
-	r := dfs(start)
-	fmt.Println(r)
+	lp.SetObjFn(obj)
+	lp.Solve()
 
-	return r, r != -1
+	return int(lp.Objective())
 }

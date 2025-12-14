@@ -5,3 +5,5 @@ This year it was announced that the challenge would last only **twelve** days, n
 Additionally I did the days with Go, instead of F# as usual (though I plan on coming back and doing them with F#) - this was because Go is now my major work language and even though as a manager I don't cut with it directly, usually, I do need to get a little sharper at it.
 
 Challenge wise, it started to get hard as of Day 8 part 2. My favourite was Day 11, where I accidentally solved part 2 while trying to optimise a searching algorithm (my optimisation, compressing the input, ended up compressing down to the answer so I didn't need to search at all!)
+
+The final day was somewhat similar: I did a prefilter of the input space and thought, for a laugh, what if that was the answer. It was :) Nice, because otherwise the answer looked like it was going to be really, really hard :D

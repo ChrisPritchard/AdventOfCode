@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"maps"
 	"os"
 	"strings"
 )
@@ -13,7 +12,13 @@ func main() {
 	devices := parse_input()
 
 	part1 := all_paths(devices)
-	part2 := valid_paths(devices)
+
+	compressed := compress(devices)
+	count := 0
+	for _, j := range compressed["svr"] {
+		count += j.counts.both
+	}
+	part2 := count
 
 	fmt.Println("Day 11 Part 01: ", part1)
 	fmt.Println("Day 11 Part 02: ", part2)
@@ -59,38 +64,144 @@ func all_paths(devices map[string][]string) int {
 	return count
 }
 
-type path struct {
-	visited map[string]struct{}
-	head    string
+type end_counts struct {
+	normal, fft, dac, both int
 }
 
-func valid_paths(devices map[string][]string) int {
-	count := 0
-	queue := []path{{visited: map[string]struct{}{"svr": {}}, head: "svr"}}
+func (e *end_counts) merge(o end_counts) {
+	e.normal += o.normal
+	e.dac += o.dac
+	e.fft += o.fft
+	e.both += o.both
+}
 
-	for len(queue) > 0 {
-		n := queue[0]
-		queue = queue[1:]
+type junction struct {
+	counts end_counts
+	name   string
+}
 
-		if n.head == "out" {
-			_, a := n.visited["dac"]
-			_, b := n.visited["fft"]
-			if a && b {
-				count++
+func (j junction) is_name() bool {
+	return len(j.name) != 0
+}
+
+func compress(devices map[string][]string) map[string][]junction {
+
+	// find all a -> b mappings (only a single result for a given key)
+	equivs := make(map[string]string)
+	for k, v := range devices {
+		if k == "dac" || k == "fft" || k == "svr" {
+			continue
+		}
+		if len(v) == 1 {
+			equivs[k] = v[0]
+		}
+	}
+
+	// combine multiple single chains into one, a -> b -> c becomes a -> c
+	// repeat until no more such chains can be reduced
+	for {
+		compressable := false
+		for a, b := range equivs {
+			if c, e := equivs[b]; e {
+				compressable = true
+				equivs[a] = c
 			}
+		}
+		if !compressable {
+			break
+		}
+	}
+
+	// convert device map to a new map with the chains replaced with their outcome
+	compressed := make(map[string][]string)
+	for k, v := range devices {
+		if _, e := equivs[k]; e {
 			continue
 		}
 
-		for _, d := range devices[n.head] {
-			if _, e := n.visited[d]; e {
-				continue
+		new_values := []string{}
+		for _, o := range v {
+			if r, e := equivs[o]; e {
+				new_values = append(new_values, r)
+			} else {
+				new_values = append(new_values, o)
 			}
-			nm := make(map[string]struct{})
-			maps.Copy(nm, n.visited)
-			nm[d] = struct{}{}
-			new := path{visited: nm, head: d}
-			queue = append(queue, new)
+		}
+
+		compressed[k] = new_values
+	}
+
+	// convert compressed into a reduced map, with more info on junctions (used for next step)
+	reduced := make(map[string][]junction)
+	for k, v := range compressed {
+		junctions := []junction{}
+		for _, o := range v {
+			junctions = append(junctions, junction{end_counts{}, o})
+		}
+		reduced[k] = junctions
+	}
+
+	for {
+		can_reduce := false
+
+		replacements := make(map[string]junction)
+		for k, v := range reduced {
+			all_ends := true
+			counts := end_counts{}
+			for _, o := range v {
+				if o.is_name() && o.name != "out" {
+					all_ends = false
+					break
+				} else if o.is_name() {
+					counts.normal++
+				} else {
+					counts.merge(o.counts)
+				}
+			}
+			if all_ends {
+				can_reduce = true
+				if k == "dac" {
+					counts.both += counts.fft
+					counts.dac += counts.normal
+					counts.fft = 0
+					counts.normal = 0
+				}
+				if k == "fft" {
+					counts.both += counts.dac
+					counts.fft += counts.normal
+					counts.dac = 0
+					counts.normal = 0
+				}
+				replacements[k] = junction{counts, ""}
+			}
+		}
+
+		if !can_reduce {
+			return reduced
+		} else {
+			new_reduced := make(map[string][]junction)
+			for k, v := range reduced {
+				if _, e := replacements[k]; e {
+					continue
+				}
+				junctions := []junction{}
+				for _, o := range v {
+					if !o.is_name() {
+						junctions = append(junctions, o)
+					} else if o.is_name() {
+						if r, e := replacements[o.name]; e {
+							junctions = append(junctions, r)
+						} else {
+							junctions = append(junctions, o)
+						}
+					}
+				}
+				new_reduced[k] = junctions
+			}
+			if len(new_reduced) == 1 {
+				return new_reduced
+			}
+			reduced = new_reduced
 		}
 	}
-	return count
 }

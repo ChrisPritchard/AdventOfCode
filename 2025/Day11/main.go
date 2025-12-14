@@ -12,13 +12,7 @@ func main() {
 	devices := parse_input()
 
 	part1 := all_paths(devices)
-
-	compressed := compress(devices)
-	count := 0
-	for _, j := range compressed["svr"] {
-		count += j.counts.both
-	}
-	part2 := count
+	part2 := compress(devices)
 
 	fmt.Println("Day 11 Part 01: ", part1)
 	fmt.Println("Day 11 Part 02: ", part2)
@@ -84,7 +78,8 @@ func (j junction) is_name() bool {
 	return len(j.name) != 0
 }
 
-func compress(devices map[string][]string) map[string][]junction {
+// i wrote this in an attempt to speed up my part 2 search, and accidentally discovered it compresses down to nothing so i can just solve it this way
+func compress(devices map[string][]string) int {
 
 	// find all a -> b mappings (only a single result for a given key)
 	equivs := make(map[string]string)
@@ -144,6 +139,7 @@ func compress(devices map[string][]string) map[string][]junction {
 	for {
 		can_reduce := false
 
+		// find all junctions whose children / out links are all either 'out' or some count of out values
 		replacements := make(map[string]junction)
 		for k, v := range reduced {
 			all_ends := true
@@ -177,8 +173,9 @@ func compress(devices map[string][]string) map[string][]junction {
 		}
 
 		if !can_reduce {
-			return reduced
+			panic("assumption that it can be reduced to nothing failed")
 		} else {
+			// create new reduced with values that have been compressed into a single junction inserted
 			new_reduced := make(map[string][]junction)
 			for k, v := range reduced {
 				if _, e := replacements[k]; e {
@@ -199,7 +196,12 @@ func compress(devices map[string][]string) map[string][]junction {
 				new_reduced[k] = junctions
 			}
 			if len(new_reduced) == 1 {
-				return new_reduced
+				final_count := 0
+				// we assume this is the svr node
+				for _, v := range new_reduced["svr"] {
+					final_count += v.counts.both
+				}
+				return final_count
 			}
 			reduced = new_reduced
 		}

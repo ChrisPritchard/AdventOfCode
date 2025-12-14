@@ -11,12 +11,11 @@ import (
 func main() {
 
 	presents, areas := parse_input()
+	areas = only_possible(presents, areas)
 
-	part1 := presents
-	part2 := areas
+	part1 := len(areas) // dont know why this worked....
 
-	fmt.Println("Day 12 Part 01: ", part1)
-	fmt.Println("Day 12 Part 02: ", part2)
+	fmt.Println("Day 12: ", part1)
 }
 
 type area struct {
@@ -73,4 +72,31 @@ func parse_input() ([6][3][3]bool, []area) {
 	}
 
 	return shapes, areas
+}
+
+// removes any area whose space is not sufficient to hold the required number of presents
+func only_possible(presents [6][3][3]bool, areas []area) []area {
+	totals := [6]int{}
+	for i, s := range presents {
+		for _, r := range s {
+			for _, c := range r {
+				if c {
+					totals[i] += 1
+				}
+			}
+		}
+	}
+
+	possible := []area{}
+	for _, a := range areas {
+		total := 0
+		for i, count := range a.required {
+			total += totals[i] * count
+		}
+		if total < a.width*a.height {
+			possible = append(possible, a)
+		}
+	}
+
+	return possible
 }
